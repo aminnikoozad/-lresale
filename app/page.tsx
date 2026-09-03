@@ -1,15 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Baby, BadgeCheck, Gavel, Laptop, PackageCheck, ShieldCheck, Shirt, Sparkles, WalletCards } from "lucide-react";
+import { ArrowRight, BadgeCheck, Gavel, PackageCheck, ShieldCheck, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ShopCatalog } from "./shop-catalog";
 
-const categories = [
-  { name: "Women", note: "Clothing, shoes & accessories", icon: Sparkles },
-  { name: "Men", note: "Everyday and occasion wear", icon: Shirt },
-  { name: "Kids", note: "Fresh finds for growing wardrobes", icon: Baby },
-  { name: "Electronics", note: "Phones, laptops, PCs & more", icon: Laptop },
-];
 const brands = ["Aritzia", "COS", "Zara", "Nike", "Adidas", "Levi’s", "Lululemon", "Ralph Lauren", "The North Face", "H&M", "Mango", "Coach"];
 const featured = [
   { type: "Wool coat", brand: "Aritzia", price: "$89", crop: 0 },

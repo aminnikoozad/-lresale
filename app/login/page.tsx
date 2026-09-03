@@ -1,19 +1,16 @@
-"use client";
 import Link from "next/link";
 import "../auth.css";
 
 export default function LoginPage(){
   return <main className="auth-page"><section className="auth-card">
     <Link href="/" className="brand">REWEAR<span>.</span></Link>
-    <h1>Welcome back</h1>
-    <p>Sign in to view your balance, items, requests and payouts.</p>
-    <form className="auth-form" onSubmit={(event)=>{event.preventDefault();window.alert("Email sign-in will be available after the secure authentication service is connected.");}}>
-      <label>Email address<input name="email" type="email" required autoComplete="email" placeholder="you@example.com"/></label>
-      <label>Password<input name="password" type="password" required autoComplete="current-password" placeholder="Your password"/></label>
-      <button className="auth-submit" type="submit">Sign in</button>
-      <small className="auth-note">Secure email accounts are being connected. No information entered here is stored yet.</small>
-    </form>
-    <p className="auth-switch">New to Rewear? <Link href="/signup">Create an account</Link></p>
+    <h1>Sign-in is not live yet.</h1>
+    <p>We have disabled credential entry until secure authentication and private customer storage are connected.</p>
+    <div className="auth-form">
+      <Link className="auth-submit" href="/demo-account">Preview the customer dashboard</Link>
+      <small className="auth-note">Do not enter or send passwords to Rewear while account access is unavailable.</small>
+    </div>
+    <p className="auth-switch">New to Rewear? <Link href="/signup">Account status</Link></p>
     <Link className="auth-back" href="/">← Back to marketplace</Link>
   </section></main>
 }

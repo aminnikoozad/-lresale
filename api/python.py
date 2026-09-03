@@ -1,11 +1,14 @@
 from http.server import BaseHTTPRequestHandler
 import json
+import math
 from urllib.parse import urlparse, parse_qs
+
+MAX_SALE_VALUE = 10_000_000
 
 
 def calculate_commission(value: float) -> dict:
-    if value < 0:
-        raise ValueError("value must be non-negative")
+    if not math.isfinite(value) or value < 0 or value > MAX_SALE_VALUE:
+        raise ValueError("value is outside the accepted range")
 
     if value <= 100:
         company_rate = 0.55
@@ -29,11 +32,18 @@ def calculate_commission(value: float) -> dict:
 
 
 class handler(BaseHTTPRequestHandler):
+    server_version = "Rewear"
+    sys_version = ""
+
     def send_json(self, status: int, payload: dict) -> None:
-        body = json.dumps(payload).encode("utf-8")
+        body = json.dumps(payload, allow_nan=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -52,10 +62,15 @@ class handler(BaseHTTPRequestHandler):
             return
 
         try:
+            if len(value) > 32:
+                raise ValueError("value is too long")
             result = calculate_commission(float(value))
             self.send_json(200, {"ok": True, "result": result})
         except (TypeError, ValueError):
             self.send_json(400, {
                 "ok": False,
-                "error": "value must be a valid non-negative number",
+                "error": f"value must be a finite number from 0 to {MAX_SALE_VALUE}",
             })
+
+    def do_POST(self) -> None:
+        self.send_json(405, {"ok": False, "error": "method not allowed"})
