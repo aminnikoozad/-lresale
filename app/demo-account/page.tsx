@@ -14,7 +14,18 @@ export default function DemoAccountPage(){
         <Eye/> This is a demonstration account. All balances, products and requests are sample data.
       </div>
     </div>
-    <Dashboard name="Demo Customer"/>
+    <Dashboard
+      name="Demo Customer"
+      message={null}
+      messageType="success"
+      balance="$62.00"
+      totalEarned="$124.50"
+      items={[
+        {id:"demo-1",name:"Levi’s 501 jeans",status:"Listed",price:"$48.00"},
+        {id:"demo-2",name:"Aritzia wool coat",status:"Inspection",price:"—"},
+      ]}
+      requests={[]}
+    />
     <Link className="back-home" href="/"><ArrowLeft/> Back to marketplace</Link>
   </main>
 }
