@@ -36,7 +36,14 @@ export default async function AccountPage({ searchParams }: Props) {
   ]);
 
   const queryError = profileResult.error || itemsResult.error || requestsResult.error || walletResult.error;
-  if (queryError) throw new Error("Customer account data could not be loaded.");
+  if (queryError) {
+    console.error("[account] customer data query failed", {
+      code: queryError.code,
+      message: queryError.message,
+      details: queryError.details,
+    });
+    throw new Error("Customer account data could not be loaded.");
+  }
 
   const wallet = walletResult.data ?? [];
   const balanceCents = wallet.filter((entry) => entry.status === "completed").reduce((sum, entry) => sum + entry.amount_cents, 0);
