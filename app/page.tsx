@@ -102,7 +102,7 @@ export default async function Home() {
         </Link>
         <nav aria-label="Main navigation">
           <a href="#shop">Shop</a>
-          <a href="#shoes">Shoes</a>
+          <a href="#shop">Shoes</a>
           <a href="#sell">Sell with us</a>
           <a href="#brands">Brands</a>
         </nav>
@@ -193,7 +193,7 @@ export default async function Home() {
             <b>03</b>
             <div>
               <h3>We sell. You earn.</h3>
-              <p>We handle buyers and the sale. Your earnings appear in your account to spend or withdraw.</p>
+              <p>We handle buyers and the sale. Your earnings are tracked in your account according to the current payout process.</p>
             </div>
           </li>
         </ol>
