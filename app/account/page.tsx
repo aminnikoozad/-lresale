@@ -5,47 +5,113 @@ import { logout } from "../auth/actions";
 import { Dashboard } from "./dashboard";
 import { createClient } from "@/lib/supabase/server";
 import { isPhoneVerificationRequired } from "@/lib/canadian-phone";
+import {
+  commissionPercent,
+  commissionTierForInitialPrice,
+  earningsFromSalePrice,
+} from "@/lib/commission";
 import "./account.css";
 
 export const dynamic = "force-dynamic";
 
-type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
+type Props = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
 function money(cents: number) {
-  return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency: "CAD",
+  }).format(cents / 100);
 }
 
 function dateLabel(value: string) {
-  return new Intl.DateTimeFormat("en-CA", { dateStyle: "medium", timeZone: "America/Toronto" }).format(new Date(value));
+  return new Intl.DateTimeFormat("en-CA", {
+    dateStyle: "medium",
+    timeZone: "America/Toronto",
+  }).format(new Date(value));
 }
 
 function pickupWindowLabel(start: string, end: string) {
-  const date = new Intl.DateTimeFormat("en-CA", { weekday: "short", month: "short", day: "numeric", timeZone: "America/Toronto" }).format(new Date(start));
-  const time = new Intl.DateTimeFormat("en-CA", { hour: "numeric", minute: "2-digit", timeZone: "America/Toronto" });
+  const date = new Intl.DateTimeFormat("en-CA", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    timeZone: "America/Toronto",
+  }).format(new Date(start));
+  const time = new Intl.DateTimeFormat("en-CA", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "America/Toronto",
+  });
   return `${date} · ${time.format(new Date(start))}–${time.format(new Date(end))}`;
 }
 
 function titleCase(value: string) {
-  return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+  return value
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 export default async function AccountPage({ searchParams }: Props) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  if (isPhoneVerificationRequired() && !user.phone_confirmed_at) redirect("/verify-phone");
+  if (isPhoneVerificationRequired() && !user.phone_confirmed_at)
+    redirect("/verify-phone");
 
-  const [profileResult, itemsResult, requestsResult, walletResult, serviceAreasResult, pickupSlotsResult, params] = await Promise.all([
-    supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
-    supabase.from("items").select("id,name,status,sold_price_cents,listed_price_cents").order("created_at", { ascending: false }),
-    supabase.from("collection_requests").select("id,request_type,category,status,confirmation_status,created_at").order("created_at", { ascending: false }),
-    supabase.from("wallet_transactions").select("amount_cents,transaction_type,status"),
-    supabase.from("service_areas").select("id,city,pickup_mode").eq("active", true).order("sort_order"),
-    supabase.from("pickup_slots").select("id,service_area_id,window_start,window_end,capacity,booked_count").eq("active", true).gt("window_start", new Date().toISOString()).order("window_start"),
+  const [
+    profileResult,
+    itemsResult,
+    requestsResult,
+    walletResult,
+    serviceAreasResult,
+    pickupSlotsResult,
+    params,
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("items")
+      .select(
+        "id,name,status,initial_approved_price_cents,listed_price_cents,sold_price_cents,locked_seller_commission_bps,locked_platform_commission_bps,seller_pricing_approved_at,estimated_seller_earnings_cents,final_seller_earnings_cents",
+      )
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("collection_requests")
+      .select("id,request_type,category,status,confirmation_status,created_at")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("wallet_transactions")
+      .select("amount_cents,transaction_type,status"),
+    supabase
+      .from("service_areas")
+      .select("id,city,pickup_mode")
+      .eq("active", true)
+      .order("sort_order"),
+    supabase
+      .from("pickup_slots")
+      .select(
+        "id,service_area_id,window_start,window_end,capacity,booked_count",
+      )
+      .eq("active", true)
+      .gt("window_start", new Date().toISOString())
+      .order("window_start"),
     searchParams,
   ]);
 
-  const queryError = profileResult.error || itemsResult.error || requestsResult.error || walletResult.error || serviceAreasResult.error || pickupSlotsResult.error;
+  const queryError =
+    profileResult.error ||
+    itemsResult.error ||
+    requestsResult.error ||
+    walletResult.error ||
+    serviceAreasResult.error ||
+    pickupSlotsResult.error;
   if (queryError) {
     console.error("[account] customer data query failed", {
       code: queryError.code,
@@ -56,42 +122,127 @@ export default async function AccountPage({ searchParams }: Props) {
   }
 
   const wallet = walletResult.data ?? [];
-  const balanceCents = wallet.filter((entry) => entry.status === "completed").reduce((sum, entry) => sum + entry.amount_cents, 0);
-  const earnedCents = wallet.filter((entry) => entry.status === "completed" && entry.transaction_type === "sale_credit").reduce((sum, entry) => sum + entry.amount_cents, 0);
-  const displayName = profileResult.data?.full_name || user.user_metadata.full_name || user.email || "Customer";
+  const balanceCents = wallet
+    .filter((entry) => entry.status === "completed")
+    .reduce((sum, entry) => sum + entry.amount_cents, 0);
+  const earnedCents = wallet
+    .filter(
+      (entry) =>
+        entry.status === "completed" &&
+        entry.transaction_type === "sale_credit",
+    )
+    .reduce((sum, entry) => sum + entry.amount_cents, 0);
+  const displayName =
+    profileResult.data?.full_name ||
+    user.user_metadata.full_name ||
+    user.email ||
+    "Customer";
   const message = typeof params.message === "string" ? params.message : null;
 
-  return <main className="account-shell">
-    <header className="account-top">
-      <Link href="/" className="brand">REWEAR<span>.</span></Link>
-      <div className="account-user">
-        <span><UserRound/> {user.email}</span>
-        <form action={logout}><button className="logout-button" type="submit"><LogOut/> Sign out</button></form>
-      </div>
-    </header>
-    <Dashboard
-      name={displayName}
-      message={message}
-      messageType={params.type === "error" ? "error" : "success"}
-      balance={money(balanceCents)}
-      totalEarned={money(earnedCents)}
-      items={(itemsResult.data ?? []).map((item) => ({
-        id: item.id,
-        name: item.name,
-        status: titleCase(item.status),
-        price: item.sold_price_cents != null ? money(item.sold_price_cents) : item.listed_price_cents != null ? money(item.listed_price_cents) : "—",
-      }))}
-      requests={(requestsResult.data ?? []).map((request) => ({
-        id: request.id,
-        type: request.request_type === "bag" ? "Bag request" : "Pickup request",
-        category: titleCase(request.category),
-        status: titleCase(request.status),
-        confirmationStatus: titleCase(request.confirmation_status),
-        createdAt: dateLabel(request.created_at),
-      }))}
-      serviceAreas={(serviceAreasResult.data ?? []).map((area) => ({ id: area.id, city: area.city, pickupMode: area.pickup_mode }))}
-      pickupSlots={(pickupSlotsResult.data ?? []).filter((slot) => slot.booked_count < slot.capacity).map((slot) => ({ id: slot.id, serviceAreaId: slot.service_area_id, label: pickupWindowLabel(slot.window_start, slot.window_end), remaining: slot.capacity - slot.booked_count }))}
-    />
-    <Link className="back-home" href="/"><ArrowLeft/> Back to marketplace</Link>
-  </main>;
+  return (
+    <main className="account-shell">
+      <header className="account-top">
+        <Link href="/" className="brand">
+          REWEAR<span>.</span>
+        </Link>
+        <div className="account-user">
+          <span>
+            <UserRound /> {user.email}
+          </span>
+          <form action={logout}>
+            <button className="logout-button" type="submit">
+              <LogOut /> Sign out
+            </button>
+          </form>
+        </div>
+      </header>
+      <Dashboard
+        name={displayName}
+        message={message}
+        messageType={params.type === "error" ? "error" : "success"}
+        balance={money(balanceCents)}
+        totalEarned={money(earnedCents)}
+        items={(itemsResult.data ?? []).map((item) => {
+          const previewTier =
+            item.initial_approved_price_cents != null
+              ? commissionTierForInitialPrice(item.initial_approved_price_cents)
+              : null;
+          const sellerBps =
+            item.locked_seller_commission_bps ?? previewTier?.sellerBps ?? null;
+          const platformBps =
+            item.locked_platform_commission_bps ??
+            previewTier?.platformBps ??
+            null;
+          const currentPriceCents =
+            item.listed_price_cents ?? item.initial_approved_price_cents;
+          const estimatedEarningsCents =
+            item.estimated_seller_earnings_cents ??
+            (currentPriceCents != null && sellerBps != null
+              ? earningsFromSalePrice(currentPriceCents, sellerBps)
+                  .sellerEarningsCents
+              : null);
+
+          return {
+            id: item.id,
+            name: item.name,
+            status:
+              item.initial_approved_price_cents != null &&
+              !item.seller_pricing_approved_at
+                ? "Pricing approval required"
+                : titleCase(item.status),
+            initialPrice:
+              item.initial_approved_price_cents != null
+                ? money(item.initial_approved_price_cents)
+                : "Pending review",
+            initialPriceCents: item.initial_approved_price_cents ?? undefined,
+            currentPrice:
+              currentPriceCents != null
+                ? money(currentPriceCents)
+                : "Not priced",
+            sellerRate:
+              sellerBps != null ? commissionPercent(sellerBps) : "Pending",
+            platformRate:
+              platformBps != null ? commissionPercent(platformBps) : "Pending",
+            estimatedEarnings:
+              estimatedEarningsCents != null
+                ? money(estimatedEarningsCents)
+                : "Pending",
+            finalEarnings:
+              item.sold_price_cents != null &&
+              item.final_seller_earnings_cents != null
+                ? money(item.final_seller_earnings_cents)
+                : "—",
+            requiresApproval:
+              item.initial_approved_price_cents != null &&
+              !item.seller_pricing_approved_at,
+          };
+        })}
+        requests={(requestsResult.data ?? []).map((request) => ({
+          id: request.id,
+          type:
+            request.request_type === "bag" ? "Bag request" : "Pickup request",
+          category: titleCase(request.category),
+          status: titleCase(request.status),
+          confirmationStatus: titleCase(request.confirmation_status),
+          createdAt: dateLabel(request.created_at),
+        }))}
+        serviceAreas={(serviceAreasResult.data ?? []).map((area) => ({
+          id: area.id,
+          city: area.city,
+          pickupMode: area.pickup_mode,
+        }))}
+        pickupSlots={(pickupSlotsResult.data ?? [])
+          .filter((slot) => slot.booked_count < slot.capacity)
+          .map((slot) => ({
+            id: slot.id,
+            serviceAreaId: slot.service_area_id,
+            label: pickupWindowLabel(slot.window_start, slot.window_end),
+            remaining: slot.capacity - slot.booked_count,
+          }))}
+      />
+      <Link className="back-home" href="/">
+        <ArrowLeft /> Back to marketplace
+      </Link>
+    </main>
+  );
 }

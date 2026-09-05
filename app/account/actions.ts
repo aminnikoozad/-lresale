@@ -70,3 +70,25 @@ export async function createCollectionRequest(formData: FormData) {
   }
   redirect(accountMessage("Your request was submitted for eligibility review. We’ll contact you to confirm, cancel or reschedule the pickup.", "success"));
 }
+
+export async function approveItemPricing(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  if (isPhoneVerificationRequired() && !user.phone_confirmed_at) redirect("/verify-phone");
+
+  const itemId = value(formData, "item_id");
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(itemId)) {
+    redirect(accountMessage("The item could not be identified.", "error"));
+  }
+
+  const expectedPrice = Number(value(formData, "expected_price"));
+  if (!Number.isInteger(expectedPrice) || expectedPrice < 2500 || expectedPrice > 100000000) {
+    redirect(accountMessage("Refresh and review the proposed price.", "error"));
+  }
+  const { error } = await supabase.rpc("approve_item_pricing", { target_item_id: itemId, expected_price: expectedPrice });
+  if (error) {
+    redirect(accountMessage("This price could not be approved. It may already be locked or no longer available.", "error"));
+  }
+  redirect(accountMessage("Price approved. Your commission rate is now permanently locked for this item.", "success"));
+}

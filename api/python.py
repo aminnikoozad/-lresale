@@ -1,32 +1,39 @@
 from http.server import BaseHTTPRequestHandler
 import json
-import math
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from urllib.parse import urlparse, parse_qs
 
 MAX_SALE_VALUE = 10_000_000
 
 
-def calculate_commission(value: float) -> dict:
-    if not math.isfinite(value) or value < 0 or value > MAX_SALE_VALUE:
-        raise ValueError("value is outside the accepted range")
+def calculate_commission(initial_price: Decimal, sale_price: Decimal | None = None) -> dict:
+    if not initial_price.is_finite() or initial_price < 25 or initial_price > MAX_SALE_VALUE:
+        raise ValueError("initial price is outside the accepted range")
 
-    if value <= 100:
-        company_rate = 0.55
-    elif value < 200:
-        company_rate = 0.50
-    elif value < 500:
-        company_rate = 0.40
+    final_price = initial_price if sale_price is None else sale_price
+    if not final_price.is_finite() or final_price < 0 or final_price > MAX_SALE_VALUE:
+        raise ValueError("sale price is outside the accepted range")
+
+    if initial_price < 100:
+        seller_rate = Decimal("0.45")
+    elif initial_price < 250:
+        seller_rate = Decimal("0.50")
+    elif initial_price < 500:
+        seller_rate = Decimal("0.55")
     else:
-        company_rate = 0.30
+        seller_rate = Decimal("0.65")
 
-    company_amount = round(value * company_rate, 2)
-    customer_amount = round(value - company_amount, 2)
+    platform_rate = Decimal("1") - seller_rate
+    seller_amount = (final_price * seller_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    platform_amount = final_price - seller_amount
 
     return {
-        "sale_value": round(value, 2),
-        "company_rate": company_rate,
-        "company_amount": company_amount,
-        "customer_amount": customer_amount,
+        "initial_approved_price": float(initial_price),
+        "final_sale_price": float(final_price),
+        "seller_rate": float(seller_rate),
+        "platform_rate": float(platform_rate),
+        "seller_amount": float(seller_amount),
+        "platform_amount": float(platform_amount),
         "currency": "CAD",
     }
 
@@ -50,26 +57,30 @@ class handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         query = parse_qs(urlparse(self.path).query)
-        value = query.get("value", [None])[0]
+        initial_price = query.get("initial_price", query.get("value", [None]))[0]
+        sale_price = query.get("sale_price", [None])[0]
 
-        if value is None:
+        if initial_price is None:
             self.send_json(200, {
                 "ok": True,
                 "service": "Rewear Python API",
                 "message": "Python backend is running",
-                "example": "/api/python?value=250",
+                "example": "/api/python?initial_price=275&sale_price=220",
             })
             return
 
         try:
-            if len(value) > 32:
-                raise ValueError("value is too long")
-            result = calculate_commission(float(value))
+            if len(initial_price) > 32 or (sale_price is not None and len(sale_price) > 32):
+                raise ValueError("price is too long")
+            result = calculate_commission(
+                Decimal(initial_price),
+                Decimal(sale_price) if sale_price is not None else None,
+            )
             self.send_json(200, {"ok": True, "result": result})
-        except (TypeError, ValueError):
+        except (InvalidOperation, TypeError, ValueError):
             self.send_json(400, {
                 "ok": False,
-                "error": f"value must be a finite number from 0 to {MAX_SALE_VALUE}",
+                "error": f"initial_price must be from 25 to {MAX_SALE_VALUE}; sale_price must be from 0 to {MAX_SALE_VALUE}",
             })
 
     def do_POST(self) -> None:

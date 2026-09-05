@@ -21,8 +21,8 @@ export default function DemoAccountPage(){
       balance="$62.00"
       totalEarned="$124.50"
       items={[
-        {id:"demo-1",name:"Levi’s 501 jeans",status:"Listed",price:"$48.00"},
-        {id:"demo-2",name:"Aritzia wool coat",status:"Inspection",price:"—"},
+        {id:"demo-1",name:"Levi’s 501 jeans",status:"Listed",initialPrice:"$60.00",currentPrice:"$48.00",sellerRate:"45%",platformRate:"55%",estimatedEarnings:"$21.60",finalEarnings:"—",requiresApproval:false},
+        {id:"demo-2",name:"Aritzia wool coat",status:"Pricing approval required",initialPrice:"$150.00",currentPrice:"$150.00",sellerRate:"50%",platformRate:"50%",estimatedEarnings:"$75.00",finalEarnings:"—",requiresApproval:false},
       ]}
       requests={[]}
       serviceAreas={[
