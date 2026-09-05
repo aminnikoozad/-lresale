@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { Heart, ShoppingBag, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -122,6 +122,9 @@ export function ShopCatalog({ products }: { products: CatalogProduct[] }) {
 
   return (
     <section id="shop" className="shop-catalog section-wrap">
+      <div className="catalog-hash-anchors" aria-hidden="true">
+        {labels.filter((entry) => entry.value !== "all").map((entry) => <span id={entry.value} key={entry.value} />)}
+      </div>
       <div className="section-heading">
         <div><p className="eyebrow dark">Available now</p><h2>Curated secondhand, ready to wear.</h2></div>
         <p>Only inspected items published by Rewear staff appear here. Filter by brand and size to find the right fit.</p>
@@ -192,8 +195,8 @@ function FilterPanel({
   selectedBrands: string[];
   selectedSizes: string[];
   clearFilters: () => void;
-  setSelectedBrands: React.Dispatch<React.SetStateAction<string[]>>;
-  setSelectedSizes: React.Dispatch<React.SetStateAction<string[]>>;
+  setSelectedBrands: Dispatch<SetStateAction<string[]>>;
+  setSelectedSizes: Dispatch<SetStateAction<string[]>>;
 }) {
   return (
     <>
