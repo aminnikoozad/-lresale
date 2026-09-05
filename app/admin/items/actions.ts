@@ -31,19 +31,33 @@ async function authorizedClient() {
 
 function itemPhotos(formData: FormData) {
   const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
-  return formData.getAll("photos").filter((entry): entry is File => entry instanceof File && entry.size > 0).slice(0, 8).map((file) => {
-    if (!allowedTypes.has(file.type) || file.size > 8 * 1024 * 1024) {
-      throw new Error("Photos must be JPG, PNG, WEBP or AVIF and no larger than 8 MB each.");
-    }
-    return file;
-  });
+  return formData
+    .getAll("photos")
+    .filter((entry): entry is File => entry instanceof File && entry.size > 0)
+    .slice(0, 8)
+    .map((file) => {
+      if (!allowedTypes.has(file.type) || file.size > 8 * 1024 * 1024) {
+        throw new Error("Photos must be JPG, PNG, WEBP or AVIF and no larger than 8 MB each.");
+      }
+      return file;
+    });
 }
 
-function extensionFor(file: File) {
-  if (file.type === "image/png") return "png";
-  if (file.type === "image/webp") return "webp";
-  if (file.type === "image/avif") return "avif";
-  return "jpg";
+async function uploadAdminPhoto(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  itemId: string,
+  file: File,
+) {
+  const body = new FormData();
+  body.set("item_id", itemId);
+  body.set("file", file);
+
+  const { data, error } = await supabase.functions.invoke("admin-item-photo-upload", { body });
+  if (error) throw new Error(error.message || "Photo upload failed.");
+  if (!data || typeof data.url !== "string" || !data.url) {
+    throw new Error(typeof data?.error === "string" ? data.error : "Photo upload did not return a valid URL.");
+  }
+  return data.url as string;
 }
 
 export async function createAdminItem(formData: FormData) {
@@ -79,7 +93,7 @@ export async function createAdminItem(formData: FormData) {
     ));
   }
 
-  const advanced = await supabase.rpc("admin_create_item_v2", {
+  const { data: itemId, error: createError } = await supabase.rpc("admin_create_item_v2", {
     target_owner_id: ownerId,
     target_collection_request_id: collectionRequestId || null,
     item_name: name,
@@ -92,57 +106,24 @@ export async function createAdminItem(formData: FormData) {
     action_reason: reason || null,
   });
 
-  let itemId = typeof advanced.data === "string" ? advanced.data : null;
-  let advancedIntakeEnabled = !advanced.error;
-
-  if (advanced.error) {
-    const missingAdvancedRpc = advanced.error.code === "PGRST202" || /admin_create_item_v2/i.test(advanced.error.message || "");
-    if (!missingAdvancedRpc) {
-      console.error("[admin/items] advanced create failed", { code: advanced.error.code, message: advanced.error.message });
-      redirect(itemsMessage(advanced.error.message || "The item could not be created.", "error"));
-    }
-
-    const legacy = await supabase.rpc("admin_create_item", {
-      target_owner_id: ownerId,
-      item_name: name,
-      item_brand: brand || null,
-      item_category: category,
-      proposed_price_cents: priceCents,
-      below_minimum_action: belowMinimumAction,
-      action_reason: reason || null,
-    });
-    if (legacy.error) {
-      console.error("[admin/items] create failed", { code: legacy.error.code, message: legacy.error.message });
-      redirect(itemsMessage(legacy.error.message || "The item could not be created.", "error"));
-    }
-    itemId = typeof legacy.data === "string" ? legacy.data : null;
-    advancedIntakeEnabled = false;
+  if (createError || typeof itemId !== "string") {
+    console.error("[admin/items] create failed", { code: createError?.code, message: createError?.message });
+    redirect(itemsMessage(createError?.message || "The item could not be created.", "error"));
   }
 
-  if (advancedIntakeEnabled && itemId && photos.length) {
-    const urls: string[] = [];
-    for (const file of photos) {
-      const path = `${itemId}/${crypto.randomUUID()}.${extensionFor(file)}`;
-      const { error: uploadError } = await supabase.storage.from("item-photos").upload(path, file, {
-        cacheControl: "31536000",
-        contentType: file.type,
-        upsert: false,
-      });
-      if (uploadError) {
-        console.error("[admin/items] photo upload failed", { message: uploadError.message });
-        redirect(itemsMessage("The item was saved, but one or more photos could not be uploaded.", "error"));
-      }
-      const { data } = supabase.storage.from("item-photos").getPublicUrl(path);
-      urls.push(data.publicUrl);
-    }
+  if (photos.length) {
+    try {
+      const urls: string[] = [];
+      for (const file of photos) urls.push(await uploadAdminPhoto(supabase, itemId, file));
 
-    const { error: photoError } = await supabase.rpc("admin_set_item_photos", {
-      target_item_id: itemId,
-      urls,
-    });
-    if (photoError) {
-      console.error("[admin/items] photo metadata failed", { code: photoError.code, message: photoError.message });
-      redirect(itemsMessage("The item was saved, but its photo list could not be attached.", "error"));
+      const { error: photoError } = await supabase.rpc("admin_set_item_photos", {
+        target_item_id: itemId,
+        urls,
+      });
+      if (photoError) throw new Error(photoError.message);
+    } catch (error) {
+      console.error("[admin/items] photo flow failed", error);
+      redirect(itemsMessage("The item was saved, but its photos could not be attached. You can add the item again after checking the secure upload connection.", "error"));
     }
   }
 
@@ -150,10 +131,6 @@ export async function createAdminItem(formData: FormData) {
   revalidatePath("/admin/operations");
   revalidatePath("/account");
   revalidatePath("/");
-
-  if (!advancedIntakeEnabled && (collectionRequestId || size || condition || photos.length)) {
-    redirect(itemsMessage("Item added. Apply the latest database migration to enable pickup linkage, size, condition and photo storage.", "success"));
-  }
   redirect(itemsMessage("Item added to the customer account successfully.", "success"));
 }
 
@@ -183,6 +160,32 @@ export async function reviewAdminItem(formData: FormData) {
   revalidatePath("/admin/items");
   revalidatePath("/account");
   redirect(itemsMessage("Item review saved.", "success"));
+}
+
+export async function publishAdminItem(formData: FormData) {
+  const supabase = await authorizedClient();
+  const itemId = text(formData, "item_id");
+  const rawPrice = text(formData, "listed_price");
+  const listedPriceCents = rawPrice ? centsFromDollars(rawPrice) : null;
+
+  if (!itemId || (listedPriceCents !== null && (!Number.isInteger(listedPriceCents) || listedPriceCents < 1))) {
+    redirect(itemsMessage("Check the listing price.", "error"));
+  }
+
+  const { error } = await supabase.rpc("admin_publish_item", {
+    target_item_id: itemId,
+    target_listed_price_cents: listedPriceCents,
+  });
+
+  if (error) {
+    console.error("[admin/items] publish failed", { code: error.code, message: error.message });
+    redirect(itemsMessage(error.message || "The item could not be published.", "error"));
+  }
+
+  revalidatePath("/admin/items");
+  revalidatePath("/account");
+  revalidatePath("/");
+  redirect(itemsMessage("Item published to the live shop.", "success"));
 }
 
 export async function createAdminBundle(formData: FormData) {
