@@ -1,0 +1,53 @@
+/* Secondary flows and policy surfaces */
+.slot-note{background:var(--warning-soft)!important;color:#805D2C!important;border:1px solid color-mix(in srgb,var(--warning) 28%,var(--line))!important;border-radius:10px!important}
+.request-form .check a{color:var(--brand)!important}
+.hold-card{background:var(--brand-soft)!important;border-color:color-mix(in srgb,var(--brand) 22%,var(--line))!important;border-radius:12px!important}
+.hold-card>svg{color:var(--brand)!important}
+.hold-card p{color:#526762!important}
+
+.pickup-confirmation-panel{background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:14px!important;box-shadow:var(--shadow-md)!important;padding:12px!important}
+.pickup-confirmation-panel article span{color:var(--text-secondary)!important}
+.pickup-confirmation-actions button{min-height:44px!important;border-radius:10px!important;background:var(--brand)!important;color:#fff!important;font-weight:650!important}
+.pickup-confirmation-actions button.secondary{background:var(--surface)!important;color:var(--brand)!important;border:1px solid var(--brand)!important}
+.pickup-confirmation-message{background:var(--success-soft)!important;color:#456E50!important;border:1px solid color-mix(in srgb,var(--success) 30%,var(--line))!important;border-radius:10px!important}
+
+.pickup-policy-page,.shipping-policy-page{background:var(--page)!important}
+.policy-header{height:72px!important;max-width:var(--container);margin:0 auto;padding:0 32px!important;background:rgba(255,255,255,.96)!important;border-bottom:1px solid var(--line)!important;position:sticky!important;top:0;z-index:25;backdrop-filter:blur(12px)}
+.policy-header a:last-child{color:var(--brand)!important;font-weight:620!important}
+.legal-policy{max-width:980px!important;padding:64px 28px 88px!important}
+.policy-hero{margin-bottom:38px!important}
+.policy-hero h1{font-size:clamp(2.8rem,5vw,4.8rem)!important;letter-spacing:-.055em!important;line-height:.98!important;font-weight:650!important;color:var(--ink)!important}
+.policy-hero>p:not(.eyebrow){font-size:1.06rem!important;color:var(--text-secondary)!important;line-height:1.65}
+.policy-hero small{color:var(--text-muted)!important}
+.legal-policy>section{background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:14px!important;padding:clamp(22px,4vw,34px)!important;margin:14px 0!important;box-shadow:none!important}
+.legal-policy h2{color:var(--ink)!important;font-size:1.4rem!important;font-weight:630!important}
+.legal-policy p,.legal-policy li{color:var(--text-secondary)!important}
+.policy-highlight{background:var(--brand-soft)!important;border-color:color-mix(in srgb,var(--brand) 22%,var(--line))!important}
+.policy-highlight>svg{color:var(--brand)!important}
+.time-window{background:var(--brand)!important;color:#fff!important;border-radius:12px!important}
+.missed-grid>div,.earnings-example{background:#F3F0E9!important;border:1px solid var(--line-soft)!important;border-radius:12px!important}
+.missed-grid span{color:var(--text-secondary)!important}
+.policy-back{color:var(--brand)!important;text-decoration:none}
+.shipping-note-grid{gap:14px!important}
+.shipping-note-grid>div{background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:12px!important;padding:18px!important}
+.shipping-note-grid b{color:var(--ink)!important}
+.shipping-note-grid span{color:var(--text-secondary)!important}
+
+.product-ribbon{background:var(--surface)!important;border-color:var(--line)!important}
+.ribbon-heading span{color:var(--coral)!important}
+.mini-product{background:#FBFAF7!important;border-color:var(--line)!important;border-radius:10px!important}
+.mini-product span{color:var(--text-secondary)!important}
+.mini-product strong,.product-ribbon>a{color:var(--brand)!important}
+.electronics-title h2,.deposit-copy h2{color:var(--ink)!important;font-weight:650!important;letter-spacing:-.05em!important}
+.electronics-title>p:last-child,.deposit-copy>p:last-child{color:var(--text-secondary)!important}
+.electronics-rule-grid article,.deposit-flow article{background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:14px!important;box-shadow:none!important}
+.electronics-rule-grid article>svg,.deposit-flow article>svg,.deposit-flow>svg{color:var(--brand)!important}
+.electronics-rule-grid p,.deposit-flow article span{color:var(--text-secondary)!important}
+.electronics-note{background:var(--coral-soft)!important;border-color:color-mix(in srgb,var(--coral) 25%,var(--line))!important;color:#8A4A40!important;border-radius:10px!important}
+
+@media(max-width:700px){
+  .policy-header{height:64px!important;padding:0 16px!important}
+  .legal-policy{padding:42px 16px 64px!important}
+  .pickup-confirmation-panel{bottom:8px!important;width:calc(100vw - 16px)!important}
+  .pickup-confirmation-actions button{min-height:46px!important}
+}
