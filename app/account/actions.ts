@@ -83,7 +83,7 @@ export async function approveItemPricing(formData: FormData) {
   }
 
   const expectedPrice = Number(value(formData, "expected_price"));
-  if (!Number.isInteger(expectedPrice) || expectedPrice < 2500 || expectedPrice > 100000000) {
+  if (!Number.isInteger(expectedPrice) || expectedPrice < 2000 || expectedPrice > 100000000) {
     redirect(accountMessage("Refresh and review the proposed price.", "error"));
   }
   const { error } = await supabase.rpc("approve_item_pricing", { target_item_id: itemId, expected_price: expectedPrice });
