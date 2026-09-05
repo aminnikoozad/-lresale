@@ -6,28 +6,19 @@ import { Heart, ShoppingBag, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-type Category = "women" | "men" | "kids" | "shoes" | "electronics";
-type TabValue = "all" | Category;
-type Product = {
+export type CatalogCategory = "women" | "men" | "kids" | "shoes" | "accessories" | "electronics";
+type TabValue = "all" | CatalogCategory;
+
+export type CatalogProduct = {
+  id: string;
   name: string;
   brand: string;
-  price: string;
-  category: Category;
-  cell: number;
-  condition: string;
-  size: string;
+  priceCents: number;
+  category: CatalogCategory;
+  condition: string | null;
+  size: string | null;
+  photoUrl: string;
 };
-
-const products: Product[] = [
-  { name: "Wrap midi dress", brand: "Zara", price: "$42", category: "women", cell: 0, condition: "Excellent", size: "M" },
-  { name: "Tailored blazer", brand: "Ralph Lauren", price: "$78", category: "men", cell: 1, condition: "Very good", size: "L" },
-  { name: "Cotton sweater", brand: "H&M Kids", price: "$18", category: "kids", cell: 2, condition: "Excellent", size: "8Y" },
-  { name: "Unlocked smartphone", brand: "Apple", price: "$425", category: "electronics", cell: 4, condition: "Tested", size: "N/A" },
-  { name: "Leather tote", brand: "Coach", price: "$95", category: "women", cell: 5, condition: "Very good", size: "One Size" },
-  { name: "Leather sneakers", brand: "COS", price: "$62", category: "shoes", cell: 6, condition: "Excellent", size: "9" },
-  { name: "Denim overalls", brand: "Gap Kids", price: "$24", category: "kids", cell: 7, condition: "Excellent", size: "6Y" },
-  { name: "13-inch laptop", brand: "Apple", price: "$690", category: "electronics", cell: 9, condition: "Tested & guaranteed", size: "N/A" },
-];
 
 const labels: { value: TabValue; label: string }[] = [
   { value: "all", label: "All items" },
@@ -35,6 +26,7 @@ const labels: { value: TabValue; label: string }[] = [
   { value: "men", label: "Men" },
   { value: "kids", label: "Kids" },
   { value: "shoes", label: "Shoes" },
+  { value: "accessories", label: "Accessories" },
   { value: "electronics", label: "Electronics" },
 ];
 
@@ -43,7 +35,15 @@ function hashCategory(hash: string): TabValue | null {
   return labels.some((entry) => entry.value === value) ? (value as TabValue) : null;
 }
 
-export function ShopCatalog() {
+function cad(cents: number) {
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency: "CAD",
+    minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
+  }).format(cents / 100);
+}
+
+export function ShopCatalog({ products }: { products: CatalogProduct[] }) {
   const [activeCategory, setActiveCategory] = useState<TabValue>("all");
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
@@ -60,22 +60,23 @@ export function ShopCatalog() {
 
   const categoryProducts = useMemo(
     () => activeCategory === "all" ? products : products.filter((product) => product.category === activeCategory),
-    [activeCategory],
+    [activeCategory, products],
   );
 
   const brands = useMemo(
     () => [...new Set(categoryProducts.map((product) => product.brand))].sort((a, b) => a.localeCompare(b)),
     [categoryProducts],
   );
+
   const sizes = useMemo(
-    () => [...new Set(categoryProducts.map((product) => product.size).filter((size) => size !== "N/A"))],
+    () => [...new Set(categoryProducts.map((product) => product.size).filter((size): size is string => Boolean(size)))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
     [categoryProducts],
   );
 
   const filteredProducts = useMemo(
     () => categoryProducts.filter((product) =>
       (!selectedBrands.length || selectedBrands.includes(product.brand)) &&
-      (!selectedSizes.length || selectedSizes.includes(product.size)),
+      (!selectedSizes.length || (product.size && selectedSizes.includes(product.size))),
     ),
     [categoryProducts, selectedBrands, selectedSizes],
   );
@@ -99,7 +100,7 @@ export function ShopCatalog() {
     <section id="shop" className="shop-catalog section-wrap">
       <div className="section-heading">
         <div><p className="eyebrow dark">Available now</p><h2>Shop what’s in.</h2></div>
-        <p>Every item is inspected before it goes live. New pieces are added regularly.</p>
+        <p>Only inspected items published by Rewear staff appear here. Filter by brand and size to find the right fit.</p>
       </div>
 
       <Tabs value={activeCategory} onValueChange={changeCategory}>
@@ -143,7 +144,7 @@ export function ShopCatalog() {
                 <div className="catalog-result-count">
                   <strong>{filteredProducts.length}</strong> {filteredProducts.length === 1 ? "item" : "items"}
                 </div>
-                <ProductGrid products={filteredProducts} />
+                <ProductGrid products={filteredProducts} filtersActive={selectedBrands.length > 0 || selectedSizes.length > 0} />
               </div>
             </div>
           </TabsContent>
@@ -173,23 +174,29 @@ function FilterGroup({ title, values, selected, onToggle }: {
   );
 }
 
-function ProductGrid({ products }: { products: Product[] }) {
+function ProductGrid({ products, filtersActive }: { products: CatalogProduct[]; filtersActive: boolean }) {
   if (!products.length) {
-    return <div className="catalog-empty"><h3>No matching items</h3><p>Try removing one of the filters.</p></div>;
+    return (
+      <div className="catalog-empty">
+        <h3>{filtersActive ? "No matching items" : "Nothing live here yet"}</h3>
+        <p>{filtersActive ? "Try removing one of the filters." : "Published inventory will appear here automatically."}</p>
+      </div>
+    );
   }
+
   return (
     <div className="catalog-grid">
       {products.map((product) => (
-        <article className="shop-card" key={product.name}>
-          <div className={`catalog-photo cell${product.cell}`}>
-            <Image src="/shop-products.webp" alt={`${product.brand} ${product.name}`} fill sizes="(max-width: 700px) 50vw, 240px" />
+        <article className="shop-card" key={product.id}>
+          <div className="catalog-photo live-photo">
+            <Image src={product.photoUrl} alt={`${product.brand} ${product.name}`} fill sizes="(max-width: 700px) 50vw, 240px" />
             <button aria-label={`Save ${product.name}`}><Heart /></button>
           </div>
           <div className="shop-card-copy">
             <small>{product.brand}</small>
             <h3>{product.name}</h3>
-            <span>{product.condition}{product.size !== "N/A" ? ` · Size ${product.size}` : ""}</span>
-            <div><b>{product.price}</b><Button size="icon-sm" aria-label={`Add ${product.name} to bag`}><ShoppingBag /></Button></div>
+            <span>{product.condition || "Inspected"}{product.size ? ` · Size ${product.size}` : ""}</span>
+            <div><b>{cad(product.priceCents)}</b><Button size="icon-sm" aria-label={`Add ${product.name} to bag`}><ShoppingBag /></Button></div>
           </div>
         </article>
       ))}
