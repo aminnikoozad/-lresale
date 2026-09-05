@@ -17,6 +17,26 @@ export function PickupTierUi() {
     let cancelled = false;
     let rules = DEFAULT_SELLING_RULES;
 
+    const updateStaticCopy = () => {
+      const threshold = money(rules.pickupRules.freePickupThresholdCents);
+      const perItemFee = money(rules.pickupRules.lowValuePickupItemFeeCents);
+      const bagMinimum = money(rules.pickupRules.bagMinimumEstimatedValueCents);
+
+      document.querySelectorAll<HTMLElement>(".mini-rules span").forEach((element) => {
+        if (element.textContent?.includes("Estimated collection total is")) {
+          const next = `✓ ${threshold}+ = free priority pickup; below ${threshold} = ${perItemFee} per item`;
+          if (element.textContent !== next) element.textContent = next;
+        }
+      });
+
+      document.querySelectorAll<HTMLElement>(".empty-box p").forEach((element) => {
+        if (element.textContent?.includes("Order a Bag or arrange a pickup")) {
+          const next = `Bag / Box requests require ${bagMinimum}+ estimated resale value. Standard pickups below ${threshold} are available for ${perItemFee} per item.`;
+          if (element.textContent !== next) element.textContent = next;
+        }
+      });
+    };
+
     const refreshForm = (form: HTMLFormElement) => {
       const requestType = form.querySelector<HTMLInputElement>('input[name="request_type"]')?.value;
       const estimatedInput = form.querySelector<HTMLInputElement>('input[name="estimated_value"]');
@@ -35,7 +55,7 @@ export function PickupTierUi() {
       estimatedInput.min = String((isBag ? bagMinimum : rules.minimumPickupEstimatedValueCents) / 100);
       estimatedInput.placeholder = isBag
         ? `${money(bagMinimum)} minimum for Bag / Box`
-        : `Enter estimated resale value`;
+        : "Enter estimated resale value";
 
       let notice = form.querySelector<HTMLElement>('[data-pickup-tier-notice]');
       if (!notice) {
@@ -48,14 +68,21 @@ export function PickupTierUi() {
 
       if (notice) {
         if (isBag) {
-          notice.innerHTML = `<div><b>Bag / Box requests start at ${money(bagMinimum)}</b><p>Requests below ${money(bagMinimum)} cannot use the Bag / Box option. At ${money(threshold)} or more, pickup is free and prioritized.</p></div>`;
+          notice.innerHTML = `<div><b>Bag / Box requests start at ${money(bagMinimum)}</b><p>Requests below ${money(bagMinimum)} cannot use the Bag / Box option. At ${money(threshold)} or more, pickup is free and prioritized for the earliest available pickup window.</p></div>`;
         } else if (isFree) {
-          notice.innerHTML = `<div><b>Free priority pickup</b><p>Your estimated resale value is ${money(threshold)} or more, so pickup is free and receives priority handling.</p></div>`;
+          notice.innerHTML = `<div><b>Free priority pickup</b><p>Your estimated resale value is ${money(threshold)} or more, so pickup is free and prioritized for the earliest available pickup window.</p></div>`;
         } else {
           const feeText = itemCount > 0 ? ` Estimated pickup fee: <strong>${money(feeCents)}</strong>.` : "";
           notice.innerHTML = `<div><b>${money(perItemFee)} pickup fee per item below ${money(threshold)}</b><p>Pickups below ${money(threshold)} are allowed, but cost ${money(perItemFee)} for each item.${feeText}</p></div>`;
         }
       }
+
+      form.querySelectorAll<HTMLElement>(".terms-box p").forEach((paragraph) => {
+        if (paragraph.textContent?.includes("Eligible collections must total at least $100")) {
+          const next = `• Pickup is free and prioritized at ${money(threshold)} or more. Below ${money(threshold)}, a ${money(perItemFee)} per-item pickup fee applies. Bag / Box requests require at least ${money(bagMinimum)} estimated resale value. Items must be washed, folded and free of stains, tears, holes or missing parts.`;
+          if (paragraph.textContent !== next) paragraph.textContent = next;
+        }
+      });
 
       let feeAcceptance = form.querySelector<HTMLLabelElement>('[data-low-value-fee-acceptance]');
       if (!isBag && !isFree) {
@@ -89,6 +116,7 @@ export function PickupTierUi() {
     };
 
     const scan = () => {
+      updateStaticCopy();
       document.querySelectorAll<HTMLFormElement>("form.request-form").forEach((form) => {
         refreshForm(form);
         if (form.dataset.pickupTierBound === "true") return;
