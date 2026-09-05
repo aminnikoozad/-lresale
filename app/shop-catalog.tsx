@@ -90,6 +90,7 @@ export function ShopCatalog({ products }: { products: CatalogProduct[] }) {
   );
 
   const activeFilterCount = selectedBrands.length + selectedSizes.length;
+  const hasFilterOptions = brands.length > 0 || sizes.length > 0;
 
   const clearFilters = () => {
     setSelectedBrands([]);
@@ -137,25 +138,29 @@ export function ShopCatalog({ products }: { products: CatalogProduct[] }) {
 
         {labels.map((tab) => (
           <TabsContent key={tab.value} value={tab.value}>
-            <div className="catalog-body">
-              <aside className="catalog-filter desktop-filter" aria-label="Product filters">
-                {filterPanel}
-              </aside>
+            <div className={`catalog-body ${hasFilterOptions ? "" : "no-filter-options"}`}>
+              {hasFilterOptions ? (
+                <aside className="catalog-filter desktop-filter" aria-label="Product filters">
+                  {filterPanel}
+                </aside>
+              ) : null}
 
               <div className="catalog-results">
                 <div className="catalog-toolbar">
                   <div className="catalog-result-count">
                     <strong>{filteredProducts.length}</strong> {filteredProducts.length === 1 ? "item" : "items"}
                   </div>
-                  <button className="mobile-filter-toggle" type="button" onClick={() => setFilterOpen(true)}>
-                    <SlidersHorizontal /> Filters {activeFilterCount > 0 ? <span>{activeFilterCount}</span> : null}
-                  </button>
+                  {hasFilterOptions ? (
+                    <button className="mobile-filter-toggle" type="button" onClick={() => setFilterOpen(true)}>
+                      <SlidersHorizontal /> Filters {activeFilterCount > 0 ? <span>{activeFilterCount}</span> : null}
+                    </button>
+                  ) : null}
                 </div>
                 <ProductGrid products={filteredProducts} filtersActive={activeFilterCount > 0} />
               </div>
             </div>
 
-            {filterOpen ? (
+            {filterOpen && hasFilterOptions ? (
               <>
                 <button className="filter-sheet-backdrop" type="button" aria-label="Close filters" onClick={() => setFilterOpen(false)} />
                 <aside className="catalog-filter filter-sheet" aria-label="Mobile product filters">
