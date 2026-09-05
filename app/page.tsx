@@ -69,7 +69,7 @@ export default async function Home() {
   const localRadius = Number(shipping.localFreeRadiusKm);
   const localCenter = shipping.localCenterName || "Montréal";
   const shippingSummary = Number.isFinite(localRadius) && localRadius > 0
-    ? `Free local delivery in ${localCenter} and within the configured ${localRadius:g} km local radius when the delivery address is eligible. Shipping fees apply outside the local area.`
+    ? `Free local delivery in ${localCenter} and within the configured ${localRadius} km local radius when the delivery address is eligible. Shipping fees apply outside the local area.`
     : "Local delivery eligibility is confirmed from the delivery address. Shipping fees may apply outside the local area.";
 
   const catalogProducts: CatalogProduct[] = ((data ?? []) as CatalogRow[])
