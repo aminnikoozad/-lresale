@@ -102,7 +102,7 @@ export default async function AccountPage({ searchParams }: Props) {
       .order("created_at", { ascending: false }),
     supabase
       .from("collection_requests")
-      .select("id,request_type,category,status,confirmation_status,created_at")
+      .select("id,request_type,category,status,confirmation_status,created_at,pickup_fee_cents,pickup_pricing_mode,priority_pickup")
       .order("created_at", { ascending: false }),
     supabase
       .from("wallet_transactions")
@@ -267,8 +267,12 @@ export default async function AccountPage({ searchParams }: Props) {
           type:
             request.request_type === "bag" ? "Bag request" : "Pickup request",
           category: titleCase(request.category),
-          status: titleCase(request.status),
-          confirmationStatus: titleCase(request.confirmation_status),
+          status: request.priority_pickup
+            ? `${titleCase(request.status)} · Priority`
+            : titleCase(request.status),
+          confirmationStatus: request.pickup_fee_cents > 0
+            ? `${titleCase(request.confirmation_status)} · Pickup fee ${money(request.pickup_fee_cents)}`
+            : `${titleCase(request.confirmation_status)} · Free pickup`,
           createdAt: dateLabel(request.created_at),
         }))}
         serviceAreas={(serviceAreasResult.data ?? []).map((area) => ({
