@@ -8,21 +8,6 @@ import { ShopCatalog, type CatalogCategory, type CatalogProduct } from "./shop-c
 
 export const dynamic = "force-dynamic";
 
-const brands = [
-  "Aritzia",
-  "COS",
-  "Zara",
-  "Nike",
-  "Adidas",
-  "Levi’s",
-  "Lululemon",
-  "Ralph Lauren",
-  "The North Face",
-  "H&M",
-  "Mango",
-  "Coach",
-];
-
 const allowedCategories = new Set<CatalogCategory>([
   "women",
   "men",
@@ -104,7 +89,6 @@ export default async function Home() {
           <a href="#shop">Shop</a>
           <a href="#shop">Shoes</a>
           <a href="#sell">Sell with us</a>
-          <a href="#brands">Brands</a>
         </nav>
         <Button asChild className="account-button">
           <Link href="/account">
@@ -212,15 +196,6 @@ export default async function Home() {
           </p>
           <Button asChild variant="secondary"><a href="#shop">Browse items</a></Button>
         </div>
-      </section>
-
-      <section id="brands" className="brands section-wrap">
-        <p className="eyebrow dark">Brands we love</p>
-        <h2>Recognizable names. Real value.</h2>
-        <div className="brand-cloud">
-          {brands.map((b) => <span key={b}>{b}</span>)}
-        </div>
-        <p className="brands-note">Brand names must be visible on the item’s original label or marking. Authenticity checks may apply.</p>
       </section>
 
       <footer>
