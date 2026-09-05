@@ -37,7 +37,23 @@ export function PickupTierUi() {
       });
     };
 
+    const ensureShoesCategory = (form: HTMLFormElement) => {
+      const select = form.querySelector<HTMLSelectElement>('select[name="category"]');
+      if (!select) return;
+      const clothing = Array.from(select.options).find((option) => option.value === "clothing");
+      if (clothing && clothing.text !== "Clothing & accessories") clothing.text = "Clothing & accessories";
+      if (!Array.from(select.options).some((option) => option.value === "shoes")) {
+        const shoes = document.createElement("option");
+        shoes.value = "shoes";
+        shoes.text = "Shoes";
+        const electronics = Array.from(select.options).find((option) => option.value === "electronics");
+        if (electronics) select.insertBefore(shoes, electronics);
+        else select.appendChild(shoes);
+      }
+    };
+
     const refreshForm = (form: HTMLFormElement) => {
+      ensureShoesCategory(form);
       const requestType = form.querySelector<HTMLInputElement>('input[name="request_type"]')?.value;
       const estimatedInput = form.querySelector<HTMLInputElement>('input[name="estimated_value"]');
       const itemCountInput = form.querySelector<HTMLInputElement>('input[name="item_count"]');
@@ -79,7 +95,7 @@ export function PickupTierUi() {
 
       form.querySelectorAll<HTMLElement>(".terms-box p").forEach((paragraph) => {
         if (paragraph.textContent?.includes("Eligible collections must total at least $100")) {
-          const next = `• Pickup is free and prioritized at ${money(threshold)} or more. Below ${money(threshold)}, a ${money(perItemFee)} per-item pickup fee applies. Bag / Box requests require at least ${money(bagMinimum)} estimated resale value. Items must be washed, folded and free of stains, tears, holes or missing parts.`;
+          const next = `• Pickup is free and prioritized at ${money(threshold)} or more. Below ${money(threshold)}, a ${money(perItemFee)} per-item pickup fee applies. Bag / Box requests require at least ${money(bagMinimum)} estimated resale value. Items must be clean and free of stains, tears, holes or missing parts.`;
           if (paragraph.textContent !== next) paragraph.textContent = next;
         }
       });
