@@ -1,0 +1,1 @@
+.auth-divider{display:flex;align-items:center;gap:12px;color:#7b8394;font-size:.78rem;margin:24px 0}.auth-divider:before,.auth-divider:after{content:"";height:1px;background:#e0e4ed;flex:1}.auth-submit.secondary{background:#174bb9}.auth-link-button{display:block;margin:22px auto 0;border:0;background:none;color:#174bb9;font:inherit;font-weight:700;cursor:pointer}

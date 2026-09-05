@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isPhoneVerificationRequired, normalizeCanadianPhone } from "@/lib/canadian-phone";
 
 function text(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -41,17 +42,18 @@ export async function login(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     redirect(messageUrl("/login", "Email or password is incorrect.", "error"));
   }
 
-  redirect("/account");
+  redirect(isPhoneVerificationRequired() && !data.user.phone_confirmed_at ? "/verify-phone" : "/account");
 }
 
 export async function signup(formData: FormData) {
   const fullName = text(formData, "full_name");
   const email = text(formData, "email").toLowerCase();
+  const phone = normalizeCanadianPhone(text(formData, "phone"));
   const password = rawText(formData, "password");
   const confirmation = rawText(formData, "password_confirmation");
 
@@ -60,6 +62,9 @@ export async function signup(formData: FormData) {
   }
   if (!email || password.length < 8) {
     redirect(messageUrl("/signup", "Use a valid email and at least 8 password characters.", "error"));
+  }
+  if (isPhoneVerificationRequired() && !phone) {
+    redirect(messageUrl("/signup", "Enter a valid Canadian phone number.", "error"));
   }
   if (password !== confirmation) {
     redirect(messageUrl("/signup", "The passwords do not match.", "error"));
@@ -70,21 +75,63 @@ export async function signup(formData: FormData) {
 
   const supabase = await createClient();
   const origin = await requestOrigin();
+  const next = isPhoneVerificationRequired() ? "/verify-phone" : "/account";
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { full_name: fullName },
-      emailRedirectTo: `${origin}/auth/callback?next=/account`,
+      data: { full_name: fullName, phone_e164: phone },
+      emailRedirectTo: `${origin}/auth/callback?next=${next}`,
     },
   });
 
   if (error) {
     redirect(messageUrl("/signup", "We could not create the account. Try again shortly.", "error"));
   }
-  if (data.session) redirect("/account");
+  if (data.session) redirect(next);
 
-  redirect(messageUrl("/login", "Check your email to verify your account, then sign in.", "success"));
+  redirect(messageUrl("/login", isPhoneVerificationRequired() ? "Check your email first. After signing in, we’ll verify your Canadian phone number." : "Check your email to verify your account, then sign in.", "success"));
+}
+
+export async function sendPhoneVerification(formData: FormData) {
+  if (!isPhoneVerificationRequired()) redirect("/account");
+
+  const phone = normalizeCanadianPhone(text(formData, "phone"));
+  if (!phone) redirect(messageUrl("/verify-phone", "Enter a valid Canadian phone number.", "error"));
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  if (user.phone_confirmed_at) redirect("/account");
+
+  const { error } = await supabase.auth.updateUser({ phone });
+  if (error) redirect(messageUrl("/verify-phone", "We could not send the SMS code. Try again shortly.", "error"));
+
+  const { error: profileError } = await supabase.from("profiles").update({ phone }).eq("id", user.id);
+  if (profileError) redirect(messageUrl("/verify-phone", "The phone number could not be saved. Try again.", "error"));
+
+  redirect(messageUrl("/verify-phone", "A 6-digit code was sent to your phone.", "success"));
+}
+
+export async function verifyPhone(formData: FormData) {
+  if (!isPhoneVerificationRequired()) redirect("/account");
+
+  const token = text(formData, "token");
+  if (!/^\d{6}$/.test(token)) redirect(messageUrl("/verify-phone", "Enter the 6-digit verification code.", "error"));
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  if (user.phone_confirmed_at) redirect("/account");
+
+  const { data: profile } = await supabase.from("profiles").select("phone").eq("id", user.id).maybeSingle();
+  const phone = normalizeCanadianPhone(profile?.phone ?? "");
+  if (!phone) redirect(messageUrl("/verify-phone", "Send a verification code first.", "error"));
+
+  const { error } = await supabase.auth.verifyOtp({ phone, token, type: "phone_change" });
+  if (error) redirect(messageUrl("/verify-phone", "The code is incorrect or expired. Request a new code.", "error"));
+
+  redirect(messageUrl("/account", "Your Canadian phone number is verified.", "success"));
 }
 
 export async function requestPasswordReset(formData: FormData) {

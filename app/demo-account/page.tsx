@@ -25,6 +25,17 @@ export default function DemoAccountPage(){
         {id:"demo-2",name:"Aritzia wool coat",status:"Inspection",price:"—"},
       ]}
       requests={[]}
+      serviceAreas={[
+        {id:"11111111-1111-4111-8111-111111111111",city:"Montréal",pickupMode:"free"},
+      ]}
+      pickupSlots={[
+        {
+          id:"22222222-2222-4222-8222-222222222222",
+          serviceAreaId:"11111111-1111-4111-8111-111111111111",
+          label:`Tomorrow, 6:00 PM – 8:00 PM`,
+          remaining:4,
+        },
+      ]}
     />
     <Link className="back-home" href="/"><ArrowLeft/> Back to marketplace</Link>
   </main>

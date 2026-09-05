@@ -27,12 +27,49 @@ create table public.profiles (
   constraint profiles_outstanding_missed_pickup_fee check (outstanding_missed_pickup_fee_cents between 0 and 100000000)
 );
 
+create table public.service_areas (
+  id uuid primary key default gen_random_uuid(),
+  city text not null unique,
+  province text not null default 'QC',
+  pickup_mode text not null default 'review',
+  active boolean not null default false,
+  sort_order integer not null default 100,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint service_area_city_length check (char_length(city) between 2 and 100),
+  constraint service_area_province check (province = 'QC'),
+  constraint service_area_pickup_mode check (pickup_mode in ('free', 'paid', 'review')),
+  constraint service_area_sort_order check (sort_order between 0 and 10000)
+);
+
+create table public.pickup_slots (
+  id uuid primary key default gen_random_uuid(),
+  service_area_id uuid not null references public.service_areas(id) on delete cascade,
+  window_start timestamptz not null,
+  window_end timestamptz not null,
+  capacity integer not null default 1,
+  booked_count integer not null default 0,
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint pickup_slot_window check (window_end > window_start),
+  constraint pickup_slot_capacity check (capacity between 1 and 100),
+  constraint pickup_slot_booked_count check (booked_count between 0 and capacity),
+  constraint pickup_slot_unique_window unique (service_area_id, window_start, window_end)
+);
+
+insert into public.service_areas (city, province, pickup_mode, active, sort_order)
+values ('Montréal', 'QC', 'free', true, 10)
+on conflict (city) do update set pickup_mode = excluded.pickup_mode, active = excluded.active, sort_order = excluded.sort_order;
+
 create table public.collection_requests (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   request_type text not null,
   category text not null,
   address text not null,
+  service_area_id uuid not null references public.service_areas(id),
+  pickup_slot_id uuid not null references public.pickup_slots(id),
   item_count integer,
   brand_notes text,
   estimated_resale_value_cents integer not null,
@@ -102,6 +139,9 @@ create table public.wallet_transactions (
 );
 
 create index collection_requests_user_created_idx on public.collection_requests (user_id, created_at desc);
+create index collection_requests_service_area_idx on public.collection_requests (service_area_id);
+create index collection_requests_pickup_slot_idx on public.collection_requests (pickup_slot_id);
+create index pickup_slots_available_idx on public.pickup_slots (service_area_id, window_start) where active;
 create index items_owner_created_idx on public.items (owner_id, created_at desc);
 create index items_collection_request_idx on public.items (collection_request_id);
 create index wallet_transactions_user_created_idx on public.wallet_transactions (user_id, created_at desc);
@@ -123,6 +163,14 @@ create trigger profiles_set_updated_at
 before update on public.profiles
 for each row execute function private.set_updated_at();
 
+create trigger service_areas_set_updated_at
+before update on public.service_areas
+for each row execute function private.set_updated_at();
+
+create trigger pickup_slots_set_updated_at
+before update on public.pickup_slots
+for each row execute function private.set_updated_at();
+
 create trigger collection_requests_set_updated_at
 before update on public.collection_requests
 for each row execute function private.set_updated_at();
@@ -131,6 +179,43 @@ create trigger items_set_updated_at
 before update on public.items
 for each row execute function private.set_updated_at();
 
+create or replace function private.reserve_pickup_slot()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  selected_slot public.pickup_slots%rowtype;
+begin
+  select slot.*
+    into selected_slot
+  from public.pickup_slots as slot
+  join public.service_areas as area on area.id = slot.service_area_id
+  where slot.id = new.pickup_slot_id
+    and slot.service_area_id = new.service_area_id
+    and area.active
+  for update of slot;
+
+  if not found or not selected_slot.active or selected_slot.window_start <= now() or selected_slot.booked_count >= selected_slot.capacity then
+    raise exception 'pickup slot is not available';
+  end if;
+
+  new.scheduled_for := selected_slot.window_start;
+  new.scheduled_window_start := selected_slot.window_start;
+  new.scheduled_window_end := selected_slot.window_end;
+
+  update public.pickup_slots set booked_count = booked_count + 1 where id = selected_slot.id;
+  return new;
+end;
+$$;
+
+revoke all on function private.reserve_pickup_slot() from public, anon, authenticated;
+
+create trigger collection_requests_reserve_slot
+before insert on public.collection_requests
+for each row execute function private.reserve_pickup_slot();
+
 create or replace function private.handle_new_user()
 returns trigger
 language plpgsql
@@ -138,8 +223,12 @@ security definer
 set search_path = ''
 as $$
 begin
-  insert into public.profiles (id, full_name)
-  values (new.id, nullif(left(trim(coalesce(new.raw_user_meta_data ->> 'full_name', '')), 100), ''))
+  insert into public.profiles (id, full_name, phone)
+  values (
+    new.id,
+    nullif(left(trim(coalesce(new.raw_user_meta_data ->> 'full_name', '')), 100), ''),
+    nullif(left(trim(coalesce(new.raw_user_meta_data ->> 'phone_e164', '')), 30), '')
+  )
   on conflict (id) do nothing;
   return new;
 end;
@@ -153,11 +242,15 @@ after insert on auth.users
 for each row execute function private.handle_new_user();
 
 alter table public.profiles enable row level security;
+alter table public.service_areas enable row level security;
+alter table public.pickup_slots enable row level security;
 alter table public.collection_requests enable row level security;
 alter table public.items enable row level security;
 alter table public.wallet_transactions enable row level security;
 
 alter table public.profiles force row level security;
+alter table public.service_areas force row level security;
+alter table public.pickup_slots force row level security;
 alter table public.collection_requests force row level security;
 alter table public.items force row level security;
 alter table public.wallet_transactions force row level security;
@@ -173,6 +266,16 @@ to authenticated
 using ((select auth.uid()) = id)
 with check ((select auth.uid()) = id);
 
+create policy service_areas_select_active
+on public.service_areas for select
+to authenticated
+using (active);
+
+create policy pickup_slots_select_available
+on public.pickup_slots for select
+to authenticated
+using (active and window_start > now() and booked_count < capacity);
+
 create policy collection_requests_select_own
 on public.collection_requests for select
 to authenticated
@@ -186,6 +289,8 @@ with check (
   and status = 'submitted'
   and hold_status = 'not_required'
   and confirmation_status = 'pending'
+  and exists (select 1 from public.service_areas as area where area.id = service_area_id and area.active)
+  and exists (select 1 from public.pickup_slots as slot where slot.id = pickup_slot_id and slot.service_area_id = service_area_id and slot.active and slot.window_start > now() and slot.booked_count < slot.capacity)
   and condition_confirmed
   and policy_accepted
   and pickup_policy_accepted
@@ -202,15 +307,19 @@ to authenticated
 using ((select auth.uid()) = user_id);
 
 revoke all on table public.profiles from anon, authenticated;
+revoke all on table public.service_areas from anon, authenticated;
+revoke all on table public.pickup_slots from anon, authenticated;
 revoke all on table public.collection_requests from anon, authenticated;
 revoke all on table public.items from anon, authenticated;
 revoke all on table public.wallet_transactions from anon, authenticated;
 
 grant usage on schema public to authenticated;
 grant select on table public.profiles to authenticated;
+grant select on table public.service_areas to authenticated;
+grant select on table public.pickup_slots to authenticated;
 grant update (full_name, phone, address_line1, city, province, postal_code) on table public.profiles to authenticated;
 grant select on table public.collection_requests to authenticated;
-grant insert (user_id, request_type, category, address, item_count, brand_notes, estimated_resale_value_cents, condition_confirmed, policy_accepted, pickup_policy_accepted) on table public.collection_requests to authenticated;
+grant insert (user_id, request_type, category, address, service_area_id, pickup_slot_id, item_count, brand_notes, estimated_resale_value_cents, condition_confirmed, policy_accepted, pickup_policy_accepted) on table public.collection_requests to authenticated;
 grant select on table public.items to authenticated;
 grant select on table public.wallet_transactions to authenticated;
 

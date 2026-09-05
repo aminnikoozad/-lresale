@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isPhoneVerificationRequired } from "@/lib/canadian-phone";
 
 function value(formData: FormData, key: string) {
   const entry = formData.get(key);
@@ -17,10 +18,13 @@ export async function createCollectionRequest(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  if (isPhoneVerificationRequired() && !user.phone_confirmed_at) redirect("/verify-phone");
 
   const requestType = value(formData, "request_type");
   const category = value(formData, "category");
   const address = value(formData, "address");
+  const serviceAreaId = value(formData, "service_area_id");
+  const pickupSlotId = value(formData, "pickup_slot_id");
   const itemCount = Number(value(formData, "item_count"));
   const brandNotes = value(formData, "brands");
   const estimatedValue = Number(value(formData, "estimated_value"));
@@ -30,6 +34,8 @@ export async function createCollectionRequest(formData: FormData) {
   if (
     !["bag", "pickup"].includes(requestType) ||
     !["clothing", "electronics"].includes(category) ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(serviceAreaId) ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(pickupSlotId) ||
     address.length < 10 ||
     address.length > 500 ||
     !Number.isInteger(itemCount) ||
@@ -49,6 +55,8 @@ export async function createCollectionRequest(formData: FormData) {
     request_type: requestType,
     category,
     address,
+    service_area_id: serviceAreaId,
+    pickup_slot_id: pickupSlotId,
     item_count: itemCount,
     brand_notes: brandNotes || null,
     estimated_resale_value_cents: Math.round(estimatedValue * 100),
