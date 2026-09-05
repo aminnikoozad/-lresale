@@ -1,6 +1,6 @@
 -- Apply after schema.sql. Prices are item-only cents, excluding buyer charges.
 alter table public.items
-  add column initial_approved_price_cents integer check (initial_approved_price_cents between 2500 and 100000000),
+  add column initial_approved_price_cents integer check (initial_approved_price_cents between 2000 and 100000000),
   add column locked_seller_commission_bps integer,
   add column locked_platform_commission_bps integer,
   add column seller_pricing_approved_at timestamptz,
