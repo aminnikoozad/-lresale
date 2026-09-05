@@ -22,14 +22,19 @@ type Customer = {
 type AdminItem = {
   item_id: string;
   owner_id: string;
+  collection_request_id?: string | null;
   owner_name: string | null;
   owner_username: string | null;
   customer_code: string | null;
   name: string;
   brand: string | null;
   category: string;
+  size?: string | null;
+  item_condition?: string | null;
+  photo_urls?: string[] | null;
   status: string;
   initial_price_cents: number | null;
+  listed_price_cents?: number | null;
   seller_bps: number | null;
   platform_bps: number | null;
   seller_approved_at: string | null;
@@ -49,10 +54,9 @@ export default async function AdminItemsPage({ searchParams }: Props) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [permissionResult, customerResult, itemResult, rules, params] = await Promise.all([
+  const [permissionResult, customerResult, rules, params] = await Promise.all([
     supabase.rpc("can_manage_items"),
     supabase.rpc("admin_customer_options"),
-    supabase.rpc("admin_item_list"),
     loadSellingRules(supabase),
     searchParams,
   ]);
@@ -61,6 +65,10 @@ export default async function AdminItemsPage({ searchParams }: Props) {
     redirect("/account");
   }
 
+  const advancedItems = await supabase.rpc("admin_item_list_v2");
+  const advancedIntakeEnabled = !advancedItems.error;
+  const itemResult = advancedIntakeEnabled ? advancedItems : await supabase.rpc("admin_item_list");
+
   const customers = (customerResult.data ?? []) as Customer[];
   const items = (itemResult.data ?? []) as AdminItem[];
   const candidates = items.filter(
@@ -68,6 +76,10 @@ export default async function AdminItemsPage({ searchParams }: Props) {
   );
   const message = typeof params.message === "string" ? params.message : null;
   const messageType = params.type === "error" ? "error" : "success";
+  const requestedOwner = typeof params.owner_id === "string" ? params.owner_id : "";
+  const ownerDefault = customers.some((customer) => customer.user_id === requestedOwner) ? requestedOwner : "";
+  const collectionRequestId = typeof params.collection_request_id === "string" ? params.collection_request_id : "";
+  const intakeCustomer = customers.find((customer) => customer.user_id === ownerDefault);
 
   return (
     <main className="admin-items-shell">
@@ -77,6 +89,8 @@ export default async function AdminItemsPage({ searchParams }: Props) {
           <span className="admin-pill">Admin</span>
         </div>
         <nav>
+          <Link href="/admin">Dashboard</Link>
+          <Link href="/admin/operations#pickup-requests">Pickup requests</Link>
           <Link href="/admin/items">Items</Link>
           <Link href="/admin/settings">Selling Rules</Link>
           <Link href="/account">Customer account</Link>
@@ -89,8 +103,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
             <p className="eyebrow dark">Admin → Items</p>
             <h1>Item & Bundle Management</h1>
             <p>
-              Add items for customers, apply the {formatCadFromCents(rules.minimumIndividualItemValueCents)} minimum,
-              route lower-value items to bundles/review, and preserve commission approval history.
+              Identify the seller by their account code, inspect and photograph each item, set size, brand, category and price, then send pricing for seller approval.
             </p>
           </div>
           <div className="rule-snapshot">
@@ -103,18 +116,44 @@ export default async function AdminItemsPage({ searchParams }: Props) {
 
         {message ? <div className={`admin-items-message ${messageType}`}>{message}</div> : null}
 
+        {collectionRequestId && intakeCustomer ? (
+          <div className="intake-context">
+            <div>
+              <span>Intake from pickup request</span>
+              <strong>{intakeCustomer.full_name || intakeCustomer.email || "Customer"}</strong>
+            </div>
+            <div>
+              <span>Customer code</span>
+              <strong>{intakeCustomer.customer_code || "—"}</strong>
+            </div>
+            <div>
+              <span>Username</span>
+              <strong>@{intakeCustomer.username || "user"}</strong>
+            </div>
+            <div>
+              <span>Pickup request</span>
+              <strong>{collectionRequestId.slice(0, 8)}…</strong>
+            </div>
+          </div>
+        ) : null}
+
+        {!advancedIntakeEnabled ? (
+          <div className="admin-items-message error">The latest database migration is still pending. Basic item creation works, but size, condition, pickup linkage and photo storage will activate after that migration is applied.</div>
+        ) : null}
+
         <section className="admin-items-card">
           <div className="card-heading">
             <div>
               <h2>Add item for customer</h2>
               <p>
-                If the proposed price is below {formatCadFromCents(rules.minimumIndividualItemValueCents)}, choose what staff should do with it.
+                Add each accepted item under the seller’s permanent account code. Upload up to 8 listing photos and record the fields shoppers will later use to filter the catalog.
               </p>
             </div>
           </div>
-          <form className="admin-item-form" action={createAdminItem}>
+          <form className="admin-item-form" action={createAdminItem} encType="multipart/form-data">
+            {collectionRequestId ? <input type="hidden" name="collection_request_id" value={collectionRequestId} /> : null}
             <label>Customer
-              <select name="owner_id" required defaultValue="">
+              <select name="owner_id" required defaultValue={ownerDefault}>
                 <option value="" disabled>Select customer</option>
                 {customers.map((customer) => (
                   <option value={customer.user_id} key={customer.user_id}>
@@ -139,6 +178,19 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                 <option value="electronics">Electronics</option>
               </select>
             </label>
+            <label>Size
+              <input name="size" maxLength={40} placeholder="XS, M, 8Y, shoe 9, One Size" />
+            </label>
+            <label>Condition
+              <select name="item_condition" defaultValue="Excellent">
+                <option value="New with tags">New with tags</option>
+                <option value="Like new">Like new</option>
+                <option value="Excellent">Excellent</option>
+                <option value="Very good">Very good</option>
+                <option value="Good">Good</option>
+                <option value="Tested">Tested (electronics)</option>
+              </select>
+            </label>
             <label>Initial proposed price (CAD)
               <input name="initial_price" type="number" min="0.01" step="0.01" required placeholder="20.00" />
             </label>
@@ -150,6 +202,10 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                 <option value="manual_review">Manual Review</option>
                 <option value="override">Continue with Owner/Admin Override</option>
               </select>
+            </label>
+            <label className="full photo-field">Listing photos
+              <input name="photos" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple />
+              <span>Up to 8 photos · maximum 8 MB each · JPG, PNG, WEBP or AVIF.</span>
             </label>
             <label className="full">Reason / internal note
               <textarea name="reason" maxLength={500} rows={3} placeholder="Required for reject, manual review or below-minimum override." />
@@ -213,7 +269,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
           <div className="card-heading">
             <div>
               <h2>Items</h2>
-              <p>Review current price, status, owner identity and seller approval state.</p>
+              <p>Review current price, status, owner identity, size, condition, photos and seller approval state.</p>
             </div>
             <strong>{items.length} records</strong>
           </div>
@@ -223,7 +279,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                 <div className="item-summary">
                   <div>
                     <h3>{item.name}</h3>
-                    <p>{item.brand || "No brand"} · {statusLabel(item.category)}</p>
+                    <p>{item.brand || "No brand"} · {statusLabel(item.category)}{item.size ? ` · Size ${item.size}` : ""}</p>
                   </div>
                   <span className={`status-badge status-${item.status}`}>{statusLabel(item.status)}</span>
                 </div>
@@ -232,9 +288,18 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                   <div><dt>Username</dt><dd>@{item.owner_username || "—"}</dd></div>
                   <div><dt>Customer ID</dt><dd>{item.customer_code || "—"}</dd></div>
                   <div><dt>Initial price</dt><dd>{item.initial_price_cents == null ? "Pending" : formatCadFromCents(item.initial_price_cents)}</dd></div>
+                  <div><dt>Size</dt><dd>{item.size || "—"}</dd></div>
+                  <div><dt>Condition</dt><dd>{item.item_condition || "—"}</dd></div>
+                  <div><dt>Photos</dt><dd>{item.photo_urls?.length ?? 0}</dd></div>
+                  <div><dt>Pickup request</dt><dd>{item.collection_request_id ? `${item.collection_request_id.slice(0, 8)}…` : "—"}</dd></div>
                   <div><dt>Seller share</dt><dd>{item.seller_bps == null ? "Not locked" : `${item.seller_bps / 100}%`}</dd></div>
                   <div><dt>Seller approval</dt><dd>{item.seller_approved_at ? "Approved / locked" : "Pending"}</dd></div>
                 </dl>
+                {item.photo_urls?.length ? (
+                  <div className="item-photo-links">
+                    {item.photo_urls.map((url, index) => <a href={url} target="_blank" rel="noreferrer" key={url}>Photo {index + 1}</a>)}
+                  </div>
+                ) : null}
                 {!item.seller_approved_at ? (
                   <form className="review-form" action={reviewAdminItem}>
                     <input type="hidden" name="item_id" value={item.item_id} />
