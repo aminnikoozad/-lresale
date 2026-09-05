@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Gavel, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CommissionSection } from "@/components/commission-section";
 import { ShopCatalog } from "./shop-catalog";
 
 const brands = [
@@ -128,61 +129,9 @@ export default function Home() {
           </li>
         </ol>
       </section>
-      <section
-        className="commission-section section-wrap"
-        aria-labelledby="commission-title"
-      >
-        <div className="commission-heading">
-          <p className="eyebrow dark">Simple, transparent commission</p>
-          <h2 id="commission-title">
-            The more your item is worth, the more you keep.
-          </h2>
-        </div>
-        <div className="commission-table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Item price</th>
-                <th scope="col">You receive</th>
-                <th scope="col">Platform commission</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row">$20–$99.99</th>
-                <td>45%</td>
-                <td>55%</td>
-              </tr>
-              <tr>
-                <th scope="row">$100–$249.99</th>
-                <td>50%</td>
-                <td>50%</td>
-              </tr>
-              <tr>
-                <th scope="row">$250–$499.99</th>
-                <td>55%</td>
-                <td>45%</td>
-              </tr>
-              <tr>
-                <th scope="row">$500+</th>
-                <td>65%</td>
-                <td>35%</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p className="commission-explanation">
-          Your commission rate is based on the item’s initial approved listing
-          price and remains the same even if the item is later discounted.
-          Seller earnings are calculated from the final item sale price only;
-          taxes, shipping, delivery and other buyer-facing charges are excluded.
-        </p>
-        <p className="commission-minimum">
-          <strong>Items under $20:</strong> Lower-value items are not normally
-          accepted as individual listings, but suitable items may be combined
-          and sold as a bundle.
-        </p>
-      </section>
+
+      <CommissionSection />
+
       <section id="auction" className="auction-section section-wrap">
         <div className="section-heading">
           <div>
