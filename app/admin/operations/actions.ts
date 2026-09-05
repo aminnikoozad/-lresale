@@ -9,8 +9,8 @@ function text(formData: FormData, key: string) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function message(message: string, type: "success" | "error") {
-  return `/admin/operations?message=${encodeURIComponent(message)}&type=${type}`;
+function message(message: string, type: "success" | "error", anchor?: string) {
+  return `/admin/operations?message=${encodeURIComponent(message)}&type=${type}${anchor ? `#${anchor}` : ""}`;
 }
 
 function torontoLocalToIso(local: string) {
@@ -79,6 +79,29 @@ export async function toggleServiceArea(formData: FormData) {
   revalidatePath("/account");
   revalidatePath("/admin/operations");
   redirect(message(`Service area ${active ? "activated" : "paused"}.`, "success"));
+}
+
+export async function updatePickupRequestStatus(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const requestId = text(formData, "request_id");
+  const status = text(formData, "status");
+  if (!requestId || !status) {
+    redirect(message("Pickup request could not be identified.", "error", "pickup-requests"));
+  }
+
+  const { error } = await supabase.rpc("admin_update_collection_request_status", {
+    p_request_id: requestId,
+    p_status: status,
+  });
+  if (error) {
+    console.error("[admin/operations] pickup status update failed", { code: error.code, message: error.message });
+    redirect(message("Pickup request status could not be updated.", "error", "pickup-requests"));
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/operations");
+  revalidatePath("/account");
+  redirect(message("Pickup request status updated.", "success", "pickup-requests"));
 }
 
 export async function updateReminderSettings(formData: FormData) {
