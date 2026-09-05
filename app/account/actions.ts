@@ -15,6 +15,14 @@ function accountMessage(message: string, type: "success" | "error") {
   return `/account?${params.toString()}`;
 }
 
+function cad(cents: number) {
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency: "CAD",
+    minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
+  }).format(cents / 100);
+}
+
 export async function createCollectionRequest(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -33,6 +41,12 @@ export async function createCollectionRequest(formData: FormData) {
   const estimatedValueCents = Math.round(estimatedValue * 100);
   const allTermsAccepted = ["condition_confirmed", "policy_accepted", "pickup_policy_accepted"]
     .every((name) => formData.get(name) === "accepted");
+
+  const isBagRequest = requestType === "bag";
+  const isFreePickup = estimatedValueCents >= rules.pickupRules.freePickupThresholdCents;
+  const pickupFeeCents = isFreePickup ? 0 : itemCount * rules.pickupRules.lowValuePickupItemFeeCents;
+  const pickupPricingMode = isFreePickup ? "free_priority" : "paid_per_item";
+  const priorityPickup = isFreePickup && rules.pickupRules.priorityPickupAtOrAboveThreshold;
 
   if (
     !["bag", "pickup"].includes(requestType) ||
@@ -53,6 +67,20 @@ export async function createCollectionRequest(formData: FormData) {
     redirect(accountMessage("Check the request details and accept all required terms.", "error"));
   }
 
+  if (isBagRequest && estimatedValueCents < rules.pickupRules.bagMinimumEstimatedValueCents) {
+    redirect(accountMessage(
+      `Bag or Box requests require an estimated resale value of at least ${cad(rules.pickupRules.bagMinimumEstimatedValueCents)}. You can still request a paid pickup instead.`,
+      "error",
+    ));
+  }
+
+  if (!isBagRequest && !isFreePickup && formData.get("pickup_fee_accepted") !== "accepted") {
+    redirect(accountMessage(
+      `For pickups below ${cad(rules.pickupRules.freePickupThresholdCents)}, the pickup fee is ${cad(rules.pickupRules.lowValuePickupItemFeeCents)} per item. Please accept the fee before submitting.`,
+      "error",
+    ));
+  }
+
   const { error } = await supabase.from("collection_requests").insert({
     user_id: user.id,
     request_type: requestType,
@@ -63,15 +91,30 @@ export async function createCollectionRequest(formData: FormData) {
     item_count: itemCount,
     brand_notes: brandNotes || null,
     estimated_resale_value_cents: estimatedValueCents,
+    pickup_fee_cents: pickupFeeCents,
+    pickup_pricing_mode: pickupPricingMode,
+    priority_pickup: priorityPickup,
     condition_confirmed: true,
     policy_accepted: true,
     pickup_policy_accepted: true,
   });
 
   if (error) {
+    console.error("[account] collection request failed", { code: error.code, message: error.message });
     redirect(accountMessage("The request could not be saved. Please try again.", "error"));
   }
-  redirect(accountMessage("Your request was submitted for eligibility review. We’ll contact you to confirm, cancel or reschedule the pickup.", "success"));
+
+  if (isFreePickup) {
+    redirect(accountMessage(
+      "Your free priority pickup request was submitted. We’ll contact you to confirm the pickup window.",
+      "success",
+    ));
+  }
+
+  redirect(accountMessage(
+    `Your pickup request was submitted with a ${cad(pickupFeeCents)} pickup fee (${cad(rules.pickupRules.lowValuePickupItemFeeCents)} × ${itemCount} item${itemCount === 1 ? "" : "s"}).`,
+    "success",
+  ));
 }
 
 export async function approveItemPricing(formData: FormData) {
