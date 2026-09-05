@@ -5,6 +5,7 @@ import { Bell, BellRing, Clock3, Mail, MessageSquareMore, Smartphone, Wifi } fro
 import { createClient } from "@/lib/supabase/client";
 
 type Preferences={admin_id?:string;dashboard_enabled:boolean;push_enabled:boolean;email_enabled:boolean;sms_enabled:boolean;whatsapp_enabled:boolean;telegram_enabled:boolean;event_preferences:Record<string,boolean>};
+type ChannelKey="dashboard_enabled"|"push_enabled"|"email_enabled"|"sms_enabled"|"whatsapp_enabled"|"telegram_enabled";
 type Hour={day_of_week:number;enabled:boolean;opens_at:string|null;closes_at:string|null;timezone:string};
 const days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const eventOptions=[
@@ -21,10 +22,10 @@ export function SupportSettingsClient({userId,displayName,initialAvailability,in
   const [busy,setBusy]=useState(false);const [message,setMessage]=useState<string|null>(null);const [error,setError]=useState<string|null>(null);
 
   async function updateAvailability(value:string){setBusy(true);setError(null);const {error:e}=await supabase.rpc("support_set_availability",{p_status:value});if(e)setError(e.message);else{setAvailability(value);setMessage(`Availability updated to ${value}.`)}setBusy(false)}
-  async function savePrefs(next=prefs){setBusy(true);setError(null);const payload={admin_id:userId,dashboard_enabled:next.dashboard_enabled,push_enabled:next.push_enabled,email_enabled:next.email_enabled,sms_enabled:next.sms_enabled,whatsapp_enabled:next.whatsapp_enabled,telegram_enabled:next.telegram_enabled,event_preferences:next.event_preferences,updated_at:new Date().toISOString()};const {error:e}=await supabase.from("admin_notification_preferences").upsert(payload,{onConflict:"admin_id"});if(e)setError(e.message);else{setPrefs(next);setMessage("Notification preferences saved.")}setBusy(false)}
-  async function enableBrowserNotifications(){if(!("Notification" in window)||!("serviceWorker" in navigator)){setPermission("unsupported");return}try{await navigator.serviceWorker.register("/admin-sw.js",{scope:"/"});const result=await Notification.requestPermission();setPermission(result);if(result==="granted"){const next={...prefs,push_enabled:true};await savePrefs(next)}}catch{setPermission("unsupported")}}
-  function toggleChannel(key:keyof Preferences){const next={...prefs,[key]:!prefs[key]};setPrefs(next);void savePrefs(next)}
-  function toggleEvent(key:string){const next={...prefs,event_preferences:{...prefs.event_preferences,[key]:!(prefs.event_preferences?.[key]??true)}};setPrefs(next);void savePrefs(next)}
+  async function savePrefs(next:Preferences=prefs){setBusy(true);setError(null);const payload={admin_id:userId,dashboard_enabled:next.dashboard_enabled,push_enabled:next.push_enabled,email_enabled:next.email_enabled,sms_enabled:next.sms_enabled,whatsapp_enabled:next.whatsapp_enabled,telegram_enabled:next.telegram_enabled,event_preferences:next.event_preferences,updated_at:new Date().toISOString()};const {error:e}=await supabase.from("admin_notification_preferences").upsert(payload,{onConflict:"admin_id"});if(e)setError(e.message);else{setPrefs(next);setMessage("Notification preferences saved.")}setBusy(false)}
+  async function enableBrowserNotifications(){if(!("Notification" in window)||!("serviceWorker" in navigator)){setPermission("unsupported");return}try{await navigator.serviceWorker.register("/admin-sw.js",{scope:"/"});const result=await Notification.requestPermission();setPermission(result);if(result==="granted"){const next:Preferences={...prefs,push_enabled:true};await savePrefs(next)}}catch{setPermission("unsupported")}}
+  function toggleChannel(key:ChannelKey){const next:Preferences={...prefs,[key]:!prefs[key]};setPrefs(next);void savePrefs(next)}
+  function toggleEvent(key:string){const next:Preferences={...prefs,event_preferences:{...prefs.event_preferences,[key]:!(prefs.event_preferences?.[key]??true)}};setPrefs(next);void savePrefs(next)}
   function updateHour(day:number,patch:Partial<Hour>){setHours(v=>v.map(h=>h.day_of_week===day?{...h,...patch}:h))}
   async function saveHours(){setBusy(true);setError(null);for(const h of hours){const {error:e}=await supabase.rpc("support_update_business_hour",{p_day:h.day_of_week,p_enabled:h.enabled,p_opens:h.enabled?h.opens_at:null,p_closes:h.enabled?h.closes_at:null,p_timezone:h.timezone||"America/Toronto"});if(e){setError(`${days[h.day_of_week]}: ${e.message}`);setBusy(false);return}}setMessage("Support business hours saved.");setBusy(false)}
 
