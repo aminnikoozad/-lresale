@@ -20,5 +20,7 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm install --ignore-scripts
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
       - name: Typecheck and build
         run: npm run build
