@@ -3,11 +3,15 @@ import { ArrowLeft, LogOut, UserRound } from "lucide-react";
 import { redirect } from "next/navigation";
 import { logout } from "../auth/actions";
 import { Dashboard } from "./dashboard";
+import { CustomerBundles } from "@/components/customer-bundles";
 import { createClient } from "@/lib/supabase/server";
 import { isPhoneVerificationRequired } from "@/lib/canadian-phone";
 import {
-  commissionPercent,
   commissionTierForInitialPrice,
+  loadSellingRules,
+} from "@/lib/business-rules";
+import {
+  commissionPercent,
   earningsFromSalePrice,
 } from "@/lib/commission";
 import "./account.css";
@@ -82,6 +86,7 @@ export default async function AccountPage({ searchParams }: Props) {
     walletResult,
     serviceAreasResult,
     pickupSlotsResult,
+    sellingRules,
     params,
   ] = await Promise.all([
     supabase
@@ -115,6 +120,7 @@ export default async function AccountPage({ searchParams }: Props) {
       .eq("active", true)
       .gt("window_start", new Date().toISOString())
       .order("window_start"),
+    loadSellingRules(supabase),
     searchParams,
   ]);
 
@@ -193,10 +199,17 @@ export default async function AccountPage({ searchParams }: Props) {
         balance={money(balanceCents)}
         totalEarned={money(earnedCents)}
         items={(itemsResult.data ?? []).map((item) => {
-          const previewTier =
-            item.initial_approved_price_cents != null
-              ? commissionTierForInitialPrice(item.initial_approved_price_cents)
-              : null;
+          let previewTier: { sellerBps: number; platformBps: number } | null = null;
+          if (item.initial_approved_price_cents != null) {
+            try {
+              previewTier = commissionTierForInitialPrice(
+                item.initial_approved_price_cents,
+                sellingRules,
+              );
+            } catch {
+              previewTier = null;
+            }
+          }
           const sellerBps =
             item.locked_seller_commission_bps ?? previewTier?.sellerBps ?? null;
           const platformBps =
@@ -217,7 +230,8 @@ export default async function AccountPage({ searchParams }: Props) {
             name: item.name,
             status:
               item.initial_approved_price_cents != null &&
-              !item.seller_pricing_approved_at
+              !item.seller_pricing_approved_at &&
+              ["accepted", "waiting_for_seller_approval"].includes(item.status)
                 ? "Pricing approval required"
                 : titleCase(item.status),
             initialPrice:
@@ -244,7 +258,8 @@ export default async function AccountPage({ searchParams }: Props) {
                 : "—",
             requiresApproval:
               item.initial_approved_price_cents != null &&
-              !item.seller_pricing_approved_at,
+              !item.seller_pricing_approved_at &&
+              ["accepted", "waiting_for_seller_approval"].includes(item.status),
           };
         })}
         requests={(requestsResult.data ?? []).map((request) => ({
@@ -270,6 +285,9 @@ export default async function AccountPage({ searchParams }: Props) {
             remaining: slot.capacity - slot.booked_count,
           }))}
       />
+      <div className="dashboard" style={{ paddingTop: 0, paddingBottom: 24 }}>
+        <CustomerBundles />
+      </div>
       <Link className="back-home" href="/">
         <ArrowLeft /> Back to marketplace
       </Link>
