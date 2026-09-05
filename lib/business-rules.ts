@@ -20,6 +20,10 @@ export type SellingRules = {
     firstMissedPickupFeeCents: number;
     secondMissedPickupFeeCents: number;
     suspendFreePickupAfterMisses: number;
+    freePickupThresholdCents: number;
+    lowValuePickupItemFeeCents: number;
+    bagMinimumEstimatedValueCents: number;
+    priorityPickupAtOrAboveThreshold: boolean;
   };
   storeCreditBonusBps: number;
   returnPeriodDays: number | null;
@@ -28,7 +32,7 @@ export type SellingRules = {
 
 export const DEFAULT_SELLING_RULES: SellingRules = {
   minimumIndividualItemValueCents: 2_000,
-  minimumPickupEstimatedValueCents: 10_000,
+  minimumPickupEstimatedValueCents: 1,
   commissionTiers: [
     { minCents: 2_000, maxCents: 9_999, sellerBps: 4_500, platformBps: 5_500 },
     { minCents: 10_000, maxCents: 24_999, sellerBps: 5_000, platformBps: 5_000 },
@@ -44,6 +48,10 @@ export const DEFAULT_SELLING_RULES: SellingRules = {
     firstMissedPickupFeeCents: 0,
     secondMissedPickupFeeCents: 1_000,
     suspendFreePickupAfterMisses: 3,
+    freePickupThresholdCents: 10_000,
+    lowValuePickupItemFeeCents: 500,
+    bagMinimumEstimatedValueCents: 10_000,
+    priorityPickupAtOrAboveThreshold: true,
   },
   storeCreditBonusBps: 0,
   returnPeriodDays: null,
@@ -128,6 +136,22 @@ export function normalizeSellingRules(value: unknown): SellingRules {
         pickup.suspendFreePickupAfterMisses,
         DEFAULT_SELLING_RULES.pickupRules.suspendFreePickupAfterMisses,
       ),
+      freePickupThresholdCents: integer(
+        pickup.freePickupThresholdCents,
+        DEFAULT_SELLING_RULES.pickupRules.freePickupThresholdCents,
+      ),
+      lowValuePickupItemFeeCents: integer(
+        pickup.lowValuePickupItemFeeCents,
+        DEFAULT_SELLING_RULES.pickupRules.lowValuePickupItemFeeCents,
+      ),
+      bagMinimumEstimatedValueCents: integer(
+        pickup.bagMinimumEstimatedValueCents,
+        DEFAULT_SELLING_RULES.pickupRules.bagMinimumEstimatedValueCents,
+      ),
+      priorityPickupAtOrAboveThreshold:
+        typeof pickup.priorityPickupAtOrAboveThreshold === "boolean"
+          ? pickup.priorityPickupAtOrAboveThreshold
+          : DEFAULT_SELLING_RULES.pickupRules.priorityPickupAtOrAboveThreshold,
     },
     storeCreditBonusBps: integer(value.storeCreditBonusBps, DEFAULT_SELLING_RULES.storeCreditBonusBps),
     returnPeriodDays:
