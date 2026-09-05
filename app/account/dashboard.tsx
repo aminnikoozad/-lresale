@@ -57,6 +57,8 @@ type PickupSlot = {
 };
 type Props = {
   name: string;
+  username: string;
+  customerCode: string;
   message: string | null;
   messageType: "success" | "error";
   balance: string;
@@ -69,6 +71,8 @@ type Props = {
 
 export function Dashboard({
   name,
+  username,
+  customerCode,
   message,
   messageType,
   balance,
@@ -84,6 +88,10 @@ export function Dashboard({
         <div>
           <p className="eyebrow dark">Customer dashboard</p>
           <h1>Welcome, {name}.</h1>
+          <div className="customer-identifiers" aria-label="Customer identifiers">
+            <span>@{username}</span>
+            <span>Customer ID: <strong>{customerCode}</strong></span>
+          </div>
           <p>
             See your balance, follow every item and arrange your next
             collection.
@@ -298,7 +306,7 @@ export function Dashboard({
       </section>
       <section className="mini-rules">
         <b>Quick check before sending</b>
-        <span>✓ Individual listing value is normally $25+</span>
+        <span>✓ Individual listing value is normally $20+</span>
         <span>✓ Estimated collection total is $100+</span>
         <span>✓ Washed and neatly folded</span>
         <span>✓ No stains, tears or damage</span>
@@ -461,7 +469,7 @@ function RequestDialog({
                 <>
                   <p>
                     • Individual listings normally require an approved value of
-                    at least $25. Lower-value items may be combined into a
+                    at least $20. Lower-value items may be combined into a
                     bundle.
                   </p>
                   <p>
@@ -498,7 +506,7 @@ function RequestDialog({
               <p>• Pickup dates are determined and confirmed by Rewear.</p>
               <p>
                 • Your commission is locked from the initial approved item
-                price: you receive 45% at $25–$99.99, 50% at $100–$249.99, 55%
+                price: you receive 45% at $20–$99.99, 50% at $100–$249.99, 55%
                 at $250–$499.99 and 65% at $500+.
               </p>
             </div>
