@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Gavel, ShieldCheck } from "lucide-react";
+import { ArrowRight, Gavel, ShieldCheck, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CommissionSection } from "@/components/commission-section";
 import { ShopCatalog } from "./shop-catalog";
@@ -34,6 +34,7 @@ export default function Home() {
         </Link>
         <nav aria-label="Main navigation">
           <a href="#shop">Shop</a>
+          <a href="#shop">Shoes</a>
           <a href="#sell">Sell with us</a>
           <a href="#auction">Auction</a>
           <a href="#brands">Brands</a>
@@ -48,7 +49,7 @@ export default function Home() {
       <section className="hero">
         <Image
           src="/fashion-hero.webp"
-          alt="Curated secondhand clothing and accessories"
+          alt="Curated secondhand clothing, shoes and accessories"
           fill
           priority
           sizes="100vw"
@@ -77,6 +78,15 @@ export default function Home() {
             </Button>
           </div>
         </div>
+      </section>
+
+      <section className="shipping-strip" aria-label="Canada delivery policy">
+        <Truck />
+        <div>
+          <strong>Shop from anywhere in Canada.</strong>
+          <span>Free local delivery in Montréal and the configured 20 km local radius. Shipping fees apply outside the local area.</span>
+        </div>
+        <Link href="/shipping-policy">Delivery details</Link>
       </section>
 
       <ShopCatalog />
@@ -113,7 +123,7 @@ export default function Home() {
               <h3>We collect and prepare everything</h3>
               <p>
                 Our team receives, inspects, photographs, prices and lists your
-                accepted items.
+                accepted clothing, shoes, accessories and electronics.
               </p>
             </div>
           </li>
@@ -172,7 +182,7 @@ export default function Home() {
           <p className="eyebrow">Company-backed shopping</p>
           <h2>Every product is guaranteed by us.</h2>
           <p>
-            Clothing and electronics—including phones, laptops and desktop
+            Clothing, shoes and electronics—including phones, laptops and desktop
             computers—are inspected and covered by Rewear’s company guarantee.
             If an item does not match its listing, our team handles the
             resolution.
@@ -199,9 +209,10 @@ export default function Home() {
         <div className="brand">
           REWEAR<span>.</span>
         </div>
-        <p>Women · Men · Kids · Electronics</p>
+        <p>Women · Men · Kids · Shoes · Electronics</p>
         <div className="footer-links">
           <Link href="/pickup-policy">Pickup policy</Link>
+          <Link href="/shipping-policy">Shipping policy</Link>
           <Link href="/account">Customer account</Link>
         </div>
       </footer>
