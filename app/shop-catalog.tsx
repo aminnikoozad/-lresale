@@ -47,6 +47,7 @@ export function ShopCatalog({ products }: { products: CatalogProduct[] }) {
   const [activeCategory, setActiveCategory] = useState<TabValue>("all");
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [filterOpen, setFilterOpen] = useState(false);
 
   useEffect(() => {
     const syncHash = () => {
@@ -57,6 +58,13 @@ export function ShopCatalog({ products }: { products: CatalogProduct[] }) {
     window.addEventListener("hashchange", syncHash);
     return () => window.removeEventListener("hashchange", syncHash);
   }, []);
+
+  useEffect(() => {
+    if (!filterOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previous; };
+  }, [filterOpen]);
 
   const categoryProducts = useMemo(
     () => activeCategory === "all" ? products : products.filter((product) => product.category === activeCategory),
@@ -81,6 +89,8 @@ export function ShopCatalog({ products }: { products: CatalogProduct[] }) {
     [categoryProducts, selectedBrands, selectedSizes],
   );
 
+  const activeFilterCount = selectedBrands.length + selectedSizes.length;
+
   const clearFilters = () => {
     setSelectedBrands([]);
     setSelectedSizes([]);
@@ -90,16 +100,30 @@ export function ShopCatalog({ products }: { products: CatalogProduct[] }) {
     const next = value as TabValue;
     setActiveCategory(next);
     clearFilters();
+    setFilterOpen(false);
     if (typeof window !== "undefined") {
       const hash = next === "all" ? "shop" : next;
       window.history.replaceState(null, "", `#${hash}`);
     }
   };
 
+  const filterPanel = (
+    <FilterPanel
+      activeCategory={activeCategory}
+      brands={brands}
+      sizes={sizes}
+      selectedBrands={selectedBrands}
+      selectedSizes={selectedSizes}
+      clearFilters={clearFilters}
+      setSelectedBrands={setSelectedBrands}
+      setSelectedSizes={setSelectedSizes}
+    />
+  );
+
   return (
     <section id="shop" className="shop-catalog section-wrap">
       <div className="section-heading">
-        <div><p className="eyebrow dark">Available now</p><h2>Shop what’s in.</h2></div>
+        <div><p className="eyebrow dark">Available now</p><h2>Curated secondhand, ready to wear.</h2></div>
         <p>Only inspected items published by Rewear staff appear here. Filter by brand and size to find the right fit.</p>
       </div>
 
@@ -111,46 +135,95 @@ export function ShopCatalog({ products }: { products: CatalogProduct[] }) {
         {labels.map((tab) => (
           <TabsContent key={tab.value} value={tab.value}>
             <div className="catalog-body">
-              <aside className="catalog-filter" aria-label="Product filters">
-                <div className="filter-title">
-                  <span><SlidersHorizontal /> Filters</span>
-                  {(selectedBrands.length > 0 || selectedSizes.length > 0) && (
-                    <button type="button" onClick={clearFilters}><X /> Clear</button>
-                  )}
-                </div>
-
-                <FilterGroup
-                  title="Brand"
-                  values={brands}
-                  selected={selectedBrands}
-                  onToggle={(brand) => setSelectedBrands((current) =>
-                    current.includes(brand) ? current.filter((value) => value !== brand) : [...current, brand],
-                  )}
-                />
-
-                {sizes.length > 0 && (
-                  <FilterGroup
-                    title={activeCategory === "shoes" ? "Shoe size" : "Size"}
-                    values={sizes}
-                    selected={selectedSizes}
-                    onToggle={(size) => setSelectedSizes((current) =>
-                      current.includes(size) ? current.filter((value) => value !== size) : [...current, size],
-                    )}
-                  />
-                )}
+              <aside className="catalog-filter desktop-filter" aria-label="Product filters">
+                {filterPanel}
               </aside>
 
               <div className="catalog-results">
-                <div className="catalog-result-count">
-                  <strong>{filteredProducts.length}</strong> {filteredProducts.length === 1 ? "item" : "items"}
+                <div className="catalog-toolbar">
+                  <div className="catalog-result-count">
+                    <strong>{filteredProducts.length}</strong> {filteredProducts.length === 1 ? "item" : "items"}
+                  </div>
+                  <button className="mobile-filter-toggle" type="button" onClick={() => setFilterOpen(true)}>
+                    <SlidersHorizontal /> Filters {activeFilterCount > 0 ? <span>{activeFilterCount}</span> : null}
+                  </button>
                 </div>
-                <ProductGrid products={filteredProducts} filtersActive={selectedBrands.length > 0 || selectedSizes.length > 0} />
+                <ProductGrid products={filteredProducts} filtersActive={activeFilterCount > 0} />
               </div>
             </div>
+
+            {filterOpen ? (
+              <>
+                <button className="filter-sheet-backdrop" type="button" aria-label="Close filters" onClick={() => setFilterOpen(false)} />
+                <aside className="catalog-filter filter-sheet" aria-label="Mobile product filters">
+                  <div className="filter-sheet-head">
+                    <strong>Filters</strong>
+                    <button type="button" aria-label="Close filters" onClick={() => setFilterOpen(false)}><X /></button>
+                  </div>
+                  {filterPanel}
+                  <div className="filter-sheet-footer">
+                    <Button type="button" onClick={() => setFilterOpen(false)}>
+                      Show {filteredProducts.length} {filteredProducts.length === 1 ? "item" : "items"}
+                    </Button>
+                  </div>
+                </aside>
+              </>
+            ) : null}
           </TabsContent>
         ))}
       </Tabs>
     </section>
+  );
+}
+
+function FilterPanel({
+  activeCategory,
+  brands,
+  sizes,
+  selectedBrands,
+  selectedSizes,
+  clearFilters,
+  setSelectedBrands,
+  setSelectedSizes,
+}: {
+  activeCategory: TabValue;
+  brands: string[];
+  sizes: string[];
+  selectedBrands: string[];
+  selectedSizes: string[];
+  clearFilters: () => void;
+  setSelectedBrands: React.Dispatch<React.SetStateAction<string[]>>;
+  setSelectedSizes: React.Dispatch<React.SetStateAction<string[]>>;
+}) {
+  return (
+    <>
+      <div className="filter-title">
+        <span><SlidersHorizontal /> Filters</span>
+        {(selectedBrands.length > 0 || selectedSizes.length > 0) && (
+          <button type="button" onClick={clearFilters}><X /> Clear</button>
+        )}
+      </div>
+
+      <FilterGroup
+        title="Brand"
+        values={brands}
+        selected={selectedBrands}
+        onToggle={(brand) => setSelectedBrands((current) =>
+          current.includes(brand) ? current.filter((value) => value !== brand) : [...current, brand],
+        )}
+      />
+
+      {sizes.length > 0 && (
+        <FilterGroup
+          title={activeCategory === "shoes" ? "Shoe size" : "Size"}
+          values={sizes}
+          selected={selectedSizes}
+          onToggle={(size) => setSelectedSizes((current) =>
+            current.includes(size) ? current.filter((value) => value !== size) : [...current, size],
+          )}
+        />
+      )}
+    </>
   );
 }
 
@@ -189,13 +262,14 @@ function ProductGrid({ products, filtersActive }: { products: CatalogProduct[]; 
       {products.map((product) => (
         <article className="shop-card" key={product.id}>
           <div className="catalog-photo live-photo">
-            <Image src={product.photoUrl} alt={`${product.brand} ${product.name}`} fill sizes="(max-width: 700px) 50vw, 240px" />
+            <Image src={product.photoUrl} alt={`${product.brand} ${product.name}`} fill sizes="(max-width: 700px) 50vw, 260px" />
             <button aria-label={`Save ${product.name}`}><Heart /></button>
+            {product.condition ? <span className="condition-badge">{product.condition}</span> : null}
           </div>
           <div className="shop-card-copy">
             <small>{product.brand}</small>
             <h3>{product.name}</h3>
-            <span>{product.condition || "Inspected"}{product.size ? ` · Size ${product.size}` : ""}</span>
+            <span>{product.size ? `Size ${product.size}` : product.category}</span>
             <div><b>{cad(product.priceCents)}</b><Button size="icon-sm" aria-label={`Add ${product.name} to bag`}><ShoppingBag /></Button></div>
           </div>
         </article>
