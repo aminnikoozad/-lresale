@@ -61,7 +61,7 @@ export default async function AdminPage() {
               <h2>Chat with Bot / Teach the Bot</h2>
               <p>Talk directly to the Rewear support AI, ask what it currently knows, test customer questions, teach a new answer or behavior, and review unanswered questions. Your chat does not become official customer-facing knowledge until an authorized admin explicitly approves the proposed change.</p>
             </div>
-            <Link href="/admin/ai-trainer">Open AI Chat</Link>
+            <Link href="/admin/ai-trainer">Open Bot Chat</Link>
           </div>
           <div className="area-grid">
             <article><div><b>Chat</b><span>Ask the bot what it knows and why it would answer or escalate.</span></div><Link href="/admin/ai-trainer">Start chat</Link></article>
