@@ -1,4 +1,4 @@
-export const MIN_INDIVIDUAL_LISTING_PRICE_CENTS = 2_500;
+export const MIN_INDIVIDUAL_LISTING_PRICE_CENTS = 2_000;
 export const MAX_ITEM_PRICE_CENTS = 100_000_000;
 
 export type CommissionTier = {
@@ -8,7 +8,7 @@ export type CommissionTier = {
 
 export function commissionTierForInitialPrice(initialPriceCents: number): CommissionTier {
   if (!Number.isInteger(initialPriceCents) || initialPriceCents < MIN_INDIVIDUAL_LISTING_PRICE_CENTS || initialPriceCents > MAX_ITEM_PRICE_CENTS) {
-    throw new RangeError("Initial listing price must be between $25 and $1,000,000.");
+    throw new RangeError("Initial listing price must be between $20 and $1,000,000.");
   }
   if (initialPriceCents < 10_000) return { sellerBps: 4500, platformBps: 5500 };
   if (initialPriceCents < 25_000) return { sellerBps: 5000, platformBps: 5000 };
