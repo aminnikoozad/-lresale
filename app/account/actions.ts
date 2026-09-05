@@ -43,10 +43,7 @@ export async function createCollectionRequest(formData: FormData) {
     .every((name) => formData.get(name) === "accepted");
 
   const isBagRequest = requestType === "bag";
-  const isFreePickup = estimatedValueCents >= rules.pickupRules.freePickupThresholdCents;
-  const pickupFeeCents = isFreePickup ? 0 : itemCount * rules.pickupRules.lowValuePickupItemFeeCents;
-  const pickupPricingMode = isFreePickup ? "free_priority" : "paid_per_item";
-  const priorityPickup = isFreePickup && rules.pickupRules.priorityPickupAtOrAboveThreshold;
+  const isFreePickupPreview = estimatedValueCents >= rules.pickupRules.freePickupThresholdCents;
 
   if (
     !["bag", "pickup"].includes(requestType) ||
@@ -74,35 +71,41 @@ export async function createCollectionRequest(formData: FormData) {
     ));
   }
 
-  if (!isBagRequest && !isFreePickup && formData.get("pickup_fee_accepted") !== "accepted") {
+  if (!isBagRequest && !isFreePickupPreview && formData.get("pickup_fee_accepted") !== "accepted") {
     redirect(accountMessage(
       `For pickups below ${cad(rules.pickupRules.freePickupThresholdCents)}, the pickup fee is ${cad(rules.pickupRules.lowValuePickupItemFeeCents)} per item. Please accept the fee before submitting.`,
       "error",
     ));
   }
 
-  const { error } = await supabase.from("collection_requests").insert({
-    user_id: user.id,
-    request_type: requestType,
-    category,
-    address,
-    service_area_id: serviceAreaId,
-    pickup_slot_id: pickupSlotId,
-    item_count: itemCount,
-    brand_notes: brandNotes || null,
-    estimated_resale_value_cents: estimatedValueCents,
-    pickup_fee_cents: pickupFeeCents,
-    pickup_pricing_mode: pickupPricingMode,
-    priority_pickup: priorityPickup,
-    condition_confirmed: true,
-    policy_accepted: true,
-    pickup_policy_accepted: true,
-  });
+  // Pricing, priority and fee fields are deliberately not accepted from the browser.
+  // Production database triggers calculate those values from the approved selling rules.
+  const { data: savedRequest, error } = await supabase
+    .from("collection_requests")
+    .insert({
+      user_id: user.id,
+      request_type: requestType,
+      category,
+      address,
+      service_area_id: serviceAreaId,
+      pickup_slot_id: pickupSlotId,
+      item_count: itemCount,
+      brand_notes: brandNotes || null,
+      estimated_resale_value_cents: estimatedValueCents,
+      condition_confirmed: true,
+      policy_accepted: true,
+      pickup_policy_accepted: true,
+    })
+    .select("pickup_fee_cents,pickup_pricing_mode,priority_pickup")
+    .single();
 
-  if (error) {
-    console.error("[account] collection request failed", { code: error.code, message: error.message });
+  if (error || !savedRequest) {
+    console.error("[account] collection request failed", { code: error?.code, message: error?.message });
     redirect(accountMessage("The request could not be saved. Please try again.", "error"));
   }
+
+  const pickupFeeCents = Number(savedRequest.pickup_fee_cents ?? 0);
+  const isFreePickup = pickupFeeCents === 0 && savedRequest.pickup_pricing_mode === "free_priority";
 
   if (isFreePickup) {
     redirect(accountMessage(
@@ -112,7 +115,7 @@ export async function createCollectionRequest(formData: FormData) {
   }
 
   redirect(accountMessage(
-    `Your pickup request was submitted with a ${cad(pickupFeeCents)} pickup fee (${cad(rules.pickupRules.lowValuePickupItemFeeCents)} × ${itemCount} item${itemCount === 1 ? "" : "s"}).`,
+    `Your pickup request was submitted with a ${cad(pickupFeeCents)} pickup fee.`,
     "success",
   ));
 }
