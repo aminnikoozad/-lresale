@@ -50,7 +50,7 @@ export default async function SellingRulesPage({ searchParams }: Props) {
           <div>
             <p className="eyebrow dark">Admin → Settings → Selling Rules</p>
             <h1>Selling Rules</h1>
-            <p>Manage minimum values, commission tiers, bundles, pickup thresholds and related resale rules without editing code.</p>
+            <p>Manage item minimums, commission tiers, bundles, pickup pricing and operational resale rules without editing code.</p>
           </div>
           <div className={`admin-access ${editable ? "ok" : "blocked"}`}>
             <strong>{editable ? "Authorized" : "Read-only / not configured"}</strong>
@@ -75,13 +75,13 @@ export default async function SellingRulesPage({ searchParams }: Props) {
             <section className="settings-card">
               <div className="settings-card-title">
                 <h2>Core selling values</h2>
-                <p>These values control item acceptance and pickup eligibility.</p>
+                <p>These values control individual item acceptance and the lowest value allowed for a standard pickup request.</p>
               </div>
               <div className="settings-grid three">
                 <label>Minimum individual item value (CAD)
                   <input name="minimum_item_value" type="number" min="0.01" step="0.01" defaultValue={dollars(rules.minimumIndividualItemValueCents)} required />
                 </label>
-                <label>Minimum pickup estimated value (CAD)
+                <label>Minimum standard pickup request value (CAD)
                   <input name="minimum_pickup_value" type="number" min="0.01" step="0.01" defaultValue={dollars(rules.minimumPickupEstimatedValueCents)} required />
                 </label>
                 <label>Minimum selling price (CAD)
@@ -92,6 +92,29 @@ export default async function SellingRulesPage({ searchParams }: Props) {
                 <input type="checkbox" name="bundle_eligibility" value="enabled" defaultChecked={rules.bundleEligibility} />
                 Allow suitable lower-value items to be combined into bundles.
               </label>
+            </section>
+
+            <section className="settings-card">
+              <div className="settings-card-title">
+                <h2>Pickup pricing</h2>
+                <p>Current policy: collections at or above the threshold are free and can receive priority handling. Lower-value standard pickups are charged per item. Bag / Box requests have their own minimum.</p>
+              </div>
+              <div className="settings-grid three">
+                <label>Free priority pickup threshold (CAD)
+                  <input name="free_pickup_threshold" type="number" min="0.01" step="0.01" defaultValue={dollars(rules.pickupRules.freePickupThresholdCents)} required />
+                </label>
+                <label>Pickup fee per item below threshold (CAD)
+                  <input name="low_value_pickup_item_fee" type="number" min="0" step="0.01" defaultValue={dollars(rules.pickupRules.lowValuePickupItemFeeCents)} required />
+                </label>
+                <label>Bag / Box minimum estimated value (CAD)
+                  <input name="bag_minimum_value" type="number" min="0.01" step="0.01" defaultValue={dollars(rules.pickupRules.bagMinimumEstimatedValueCents)} required />
+                </label>
+              </div>
+              <label className="settings-check">
+                <input type="checkbox" name="priority_pickup_enabled" value="enabled" defaultChecked={rules.pickupRules.priorityPickupAtOrAboveThreshold} />
+                Mark pickup requests at or above the free-pickup threshold as priority.
+              </label>
+              <p><strong>Current customer rule:</strong> {dollars(rules.pickupRules.freePickupThresholdCents)} CAD or more = free priority pickup. Below that = {dollars(rules.pickupRules.lowValuePickupItemFeeCents)} CAD per item. Bag / Box requests require {dollars(rules.pickupRules.bagMinimumEstimatedValueCents)} CAD or more.</p>
             </section>
 
             <section className="settings-card">
@@ -169,12 +192,12 @@ export default async function SellingRulesPage({ searchParams }: Props) {
                   <input name="effective_at" type="datetime-local" />
                 </label>
                 <label>Reason for change
-                  <input name="reason" type="text" minLength={3} maxLength={500} placeholder="Example: Update minimum item value for pilot economics" required />
+                  <input name="reason" type="text" minLength={3} maxLength={500} placeholder="Example: Update pickup pricing for pilot economics" required />
                 </label>
               </div>
               <label className="settings-check confirm">
                 <input type="checkbox" name="confirm_change" value="accepted" required />
-                I confirm this creates a new business-rules version and may affect future item approvals and future commission locks.
+                I confirm this creates a new business-rules version and may affect future pickup requests, future item approvals and future commission locks.
               </label>
               <button type="submit" className="save-rules">Save new rules version</button>
             </section>
