@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { createPickupSlot, togglePickupSlot, toggleServiceArea, updateReminderSettings, updateShippingSettings } from "./actions";
+import { PickupInbox, type PickupRequest } from "./pickup-inbox";
 import "./operations.css";
 
 export const dynamic = "force-dynamic";
@@ -62,11 +63,14 @@ export default async function AdminOperationsPage({ searchParams }: Props) {
 
   const areas = (data.serviceAreas ?? []) as Area[];
   const slots = (data.pickupSlots ?? []) as Slot[];
+  const pickupInboxEnabled = Object.prototype.hasOwnProperty.call(data, "collectionRequests");
+  const pickupRequests = (data.collectionRequests ?? []) as PickupRequest[];
   const reminders = data.reminderSettings as ReminderSettings;
   const shipping = data.shippingSettings as ShippingSettings;
   const message = typeof params.message === "string" ? params.message : null;
   const type = params.type === "error" ? "error" : "success";
   const areaById = new Map(areas.map((area) => [area.id, area.city]));
+  const newRequestCount = pickupRequests.filter((request) => request.status === "submitted").length;
 
   return (
     <main className="ops-shell">
@@ -74,6 +78,7 @@ export default async function AdminOperationsPage({ searchParams }: Props) {
         <div><span className="brand">REWEAR<span>.</span></span><b>Admin</b></div>
         <nav>
           <Link href="/admin">Dashboard</Link>
+          <a href="#pickup-requests">Pickup requests{newRequestCount ? ` (${newRequestCount})` : ""}</a>
           <Link href="/admin/items">Items</Link>
           <Link href="/admin/operations">Operations</Link>
           <Link href="/admin/settings">Selling Rules</Link>
@@ -86,11 +91,13 @@ export default async function AdminOperationsPage({ searchParams }: Props) {
           <div>
             <p className="eyebrow dark">Admin → Operations</p>
             <h1>Pickup, delivery & reminders</h1>
-            <p>Manage Montréal-area pickup availability, time slots, reminders, and Canada-wide delivery rules.</p>
+            <p>Review customer pickup requests, manage Montréal-area pickup availability, time slots, reminders, and Canada-wide delivery rules.</p>
           </div>
           <div className="security-chip">MFA verified · {access.role}</div>
         </div>
         {message ? <div className={`ops-message ${type}`}>{message}</div> : null}
+
+        <PickupInbox requests={pickupRequests} enabled={pickupInboxEnabled} />
 
         <section className="ops-card">
           <div className="ops-card-title"><div><h2>Pickup service areas</h2><p>Active locations cover Montréal and nearby municipalities in the 20 km pilot radius.</p></div><strong>{areas.filter((area) => area.active).length} active</strong></div>
