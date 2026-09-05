@@ -46,19 +46,20 @@ export function AdminMfaClient() {
         return;
       }
 
-      // A previous setup may have created an unverified factor before the browser
-      // was refreshed or closed. Remove it and issue a fresh QR/secret so the
-      // owner can complete enrollment cleanly.
-      for (const pending of totpFactors.filter((factor) => factor.status !== "verified")) {
-        const { error: unenrollError } = await supabase.auth.mfa.unenroll({
-          factorId: pending.id,
-        });
-        if (unenrollError) throw unenrollError;
+      // If setup was abandoned after a QR was created, Supabase can retain an
+      // unverified factor that is not always returned to the browser listFactors
+      // call. Ask a tightly-scoped server function to remove only this signed-in
+      // admin's unverified factors before creating a fresh enrollment.
+      const { error: cleanupError } = await supabase.functions.invoke("admin-mfa-cleanup", {
+        body: {},
+      });
+      if (cleanupError) {
+        throw new Error("Could not clear the previous unfinished authenticator setup. Please sign in again and retry.");
       }
 
       const { data: enrollment, error: enrollError } = await supabase.auth.mfa.enroll({
         factorType: "totp",
-        friendlyName: "Rewear Admin",
+        friendlyName: `Rewear Admin ${Date.now()}`,
       });
       if (enrollError) throw enrollError;
 
@@ -115,7 +116,7 @@ export function AdminMfaClient() {
   }
 
   if (mode === "error") {
-    const sessionExpired = error.toLowerCase().includes("session");
+    const sessionExpired = error.toLowerCase().includes("session") || error.toLowerCase().includes("sign in again");
     return (
       <div className="mfa-box" role="alert">
         <h2>Verification setup needs another try</h2>
