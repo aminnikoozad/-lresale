@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatCadFromCents, loadSellingRules } from "@/lib/business-rules";
-import { createAdminBundle, createAdminItem, reviewAdminItem } from "./actions";
+import { createAdminBundle, createAdminItem, publishAdminItem, reviewAdminItem } from "./actions";
 import "./items.css";
 
 export const dynamic = "force-dynamic";
@@ -41,7 +41,7 @@ type AdminItem = {
   created_at: string;
 };
 
-function dollars(cents: number | null) {
+function dollars(cents: number | null | undefined) {
   return cents == null ? "" : (cents / 100).toFixed(2);
 }
 
@@ -61,14 +61,9 @@ export default async function AdminItemsPage({ searchParams }: Props) {
     searchParams,
   ]);
 
-  if (permissionResult.error || !permissionResult.data) {
-    redirect("/account");
-  }
+  if (permissionResult.error || !permissionResult.data) redirect("/account");
 
-  const advancedItems = await supabase.rpc("admin_item_list_v2");
-  const advancedIntakeEnabled = !advancedItems.error;
-  const itemResult = advancedIntakeEnabled ? advancedItems : await supabase.rpc("admin_item_list");
-
+  const itemResult = await supabase.rpc("admin_item_list_v2");
   const customers = (customerResult.data ?? []) as Customer[];
   const items = (itemResult.data ?? []) as AdminItem[];
   const candidates = items.filter(
@@ -103,50 +98,36 @@ export default async function AdminItemsPage({ searchParams }: Props) {
             <p className="eyebrow dark">Admin → Items</p>
             <h1>Item & Bundle Management</h1>
             <p>
-              Identify the seller by their account code, inspect and photograph each item, set size, brand, category and price, then send pricing for seller approval.
+              Identify the seller by Customer ID, inspect and photograph every item, set brand, size,
+              category and price, then publish approved inventory to the live shop.
             </p>
           </div>
           <div className="rule-snapshot">
             <span>Individual minimum</span>
             <strong>{formatCadFromCents(rules.minimumIndividualItemValueCents)}</strong>
-            <span>Pickup minimum</span>
-            <strong>{formatCadFromCents(rules.minimumPickupEstimatedValueCents)}</strong>
+            <span>Free pickup threshold</span>
+            <strong>{formatCadFromCents(rules.pickupRules.freePickupThresholdCents)}</strong>
           </div>
         </div>
 
         {message ? <div className={`admin-items-message ${messageType}`}>{message}</div> : null}
+        {itemResult.error ? <div className="admin-items-message error">Item data could not be loaded: {itemResult.error.message}</div> : null}
 
         {collectionRequestId && intakeCustomer ? (
           <div className="intake-context">
-            <div>
-              <span>Intake from pickup request</span>
-              <strong>{intakeCustomer.full_name || intakeCustomer.email || "Customer"}</strong>
-            </div>
-            <div>
-              <span>Customer code</span>
-              <strong>{intakeCustomer.customer_code || "—"}</strong>
-            </div>
-            <div>
-              <span>Username</span>
-              <strong>@{intakeCustomer.username || "user"}</strong>
-            </div>
-            <div>
-              <span>Pickup request</span>
-              <strong>{collectionRequestId.slice(0, 8)}…</strong>
-            </div>
+            <div><span>Intake from pickup request</span><strong>{intakeCustomer.full_name || intakeCustomer.email || "Customer"}</strong></div>
+            <div><span>Customer ID</span><strong>{intakeCustomer.customer_code || "—"}</strong></div>
+            <div><span>Username</span><strong>@{intakeCustomer.username || "user"}</strong></div>
+            <div><span>Pickup request</span><strong>{collectionRequestId.slice(0, 8)}…</strong></div>
           </div>
-        ) : null}
-
-        {!advancedIntakeEnabled ? (
-          <div className="admin-items-message error">The latest database migration is still pending. Basic item creation works, but size, condition, pickup linkage and photo storage will activate after that migration is applied.</div>
         ) : null}
 
         <section className="admin-items-card">
           <div className="card-heading">
             <div>
-              <h2>Add item for customer</h2>
+              <h2>Customer item intake</h2>
               <p>
-                Add each accepted item under the seller’s permanent account code. Upload up to 8 listing photos and record the fields shoppers will later use to filter the catalog.
+                Use this after collection. The selected customer, permanent Customer ID and pickup request remain linked to every item for traceability.
               </p>
             </div>
           </div>
@@ -196,7 +177,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
             </label>
             <label>Decision if below minimum
               <select name="below_minimum_action" defaultValue="normal">
-                <option value="normal">Normal individual listing (only if at/above minimum)</option>
+                <option value="normal">Normal individual listing</option>
                 <option value="bundle_candidate">Add to Bundle candidates</option>
                 <option value="reject">Reject Item</option>
                 <option value="manual_review">Manual Review</option>
@@ -210,20 +191,16 @@ export default async function AdminItemsPage({ searchParams }: Props) {
             <label className="full">Reason / internal note
               <textarea name="reason" maxLength={500} rows={3} placeholder="Required for reject, manual review or below-minimum override." />
             </label>
-            <button className="primary-action" type="submit">Add item to customer</button>
+            <button className="primary-action" type="submit">Save customer item</button>
           </form>
-          <p className="form-note">
-            Below-minimum overrides require Owner/Admin permission and are written to the Audit Log with administrator identity and timestamp.
-          </p>
+          <p className="form-note">Brand and Size feed the customer-facing filters. Shoes use the same Size field as shoe size.</p>
         </section>
 
         <section className="admin-items-card">
           <div className="card-heading">
             <div>
               <h2>Create bundle</h2>
-              <p>
-                Select at least two eligible lower-value items belonging to the same seller. The bundle becomes its own sellable record and keeps links to every original item.
-              </p>
+              <p>Select compatible lower-value items belonging to the same seller. The bundle remains linked to each original item.</p>
             </div>
           </div>
           <form className="bundle-form" action={createAdminBundle}>
@@ -238,15 +215,9 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                   ))}
                 </select>
               </label>
-              <label>Bundle title
-                <input name="title" minLength={2} maxLength={160} required placeholder="3 casual shirts bundle" />
-              </label>
-              <label>Initial bundle price (CAD)
-                <input name="initial_price" type="number" min={rules.minimumIndividualItemValueCents / 100} step="0.01" required placeholder={(rules.minimumIndividualItemValueCents / 100).toFixed(2)} />
-              </label>
-              <label>Internal reason / note
-                <input name="reason" maxLength={500} placeholder="Why these items were bundled" />
-              </label>
+              <label>Bundle title<input name="title" minLength={2} maxLength={160} required placeholder="3 casual shirts bundle" /></label>
+              <label>Initial bundle price (CAD)<input name="initial_price" type="number" min={rules.minimumIndividualItemValueCents / 100} step="0.01" required placeholder={(rules.minimumIndividualItemValueCents / 100).toFixed(2)} /></label>
+              <label>Internal reason / note<input name="reason" maxLength={500} placeholder="Why these items were bundled" /></label>
             </div>
             <div className="candidate-list">
               {candidates.length ? candidates.map((item) => (
@@ -254,9 +225,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                   <input type="checkbox" name="item_ids" value={item.item_id} />
                   <span>
                     <strong>{item.name}</strong>
-                    <small>
-                      {item.owner_name || item.owner_username || "Customer"} · {item.customer_code || "No code"} · {item.initial_price_cents != null ? formatCadFromCents(item.initial_price_cents) : "No price"} · {statusLabel(item.status)}
-                    </small>
+                    <small>{item.owner_name || item.owner_username || "Customer"} · {item.customer_code || "No code"} · {item.initial_price_cents != null ? formatCadFromCents(item.initial_price_cents) : "No price"} · {statusLabel(item.status)}</small>
                   </span>
                 </label>
               )) : <p className="empty-note">No eligible bundle candidates yet.</p>}
@@ -267,10 +236,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
 
         <section className="admin-items-card">
           <div className="card-heading">
-            <div>
-              <h2>Items</h2>
-              <p>Review current price, status, owner identity, size, condition, photos and seller approval state.</p>
-            </div>
+            <div><h2>Inventory</h2><p>Every record shows who owns it, its pickup source, catalog attributes and live listing state.</p></div>
             <strong>{items.length} records</strong>
           </div>
           <div className="admin-item-list">
@@ -288,24 +254,26 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                   <div><dt>Username</dt><dd>@{item.owner_username || "—"}</dd></div>
                   <div><dt>Customer ID</dt><dd>{item.customer_code || "—"}</dd></div>
                   <div><dt>Initial price</dt><dd>{item.initial_price_cents == null ? "Pending" : formatCadFromCents(item.initial_price_cents)}</dd></div>
+                  <div><dt>Live price</dt><dd>{item.listed_price_cents == null ? "—" : formatCadFromCents(item.listed_price_cents)}</dd></div>
                   <div><dt>Size</dt><dd>{item.size || "—"}</dd></div>
                   <div><dt>Condition</dt><dd>{item.item_condition || "—"}</dd></div>
                   <div><dt>Photos</dt><dd>{item.photo_urls?.length ?? 0}</dd></div>
                   <div><dt>Pickup request</dt><dd>{item.collection_request_id ? `${item.collection_request_id.slice(0, 8)}…` : "—"}</dd></div>
                   <div><dt>Seller share</dt><dd>{item.seller_bps == null ? "Not locked" : `${item.seller_bps / 100}%`}</dd></div>
                   <div><dt>Seller approval</dt><dd>{item.seller_approved_at ? "Approved / locked" : "Pending"}</dd></div>
+                  <div><dt>Shop</dt><dd>{item.status === "listed" ? "LIVE" : "Not live"}</dd></div>
                 </dl>
+
                 {item.photo_urls?.length ? (
                   <div className="item-photo-links">
                     {item.photo_urls.map((url, index) => <a href={url} target="_blank" rel="noreferrer" key={url}>Photo {index + 1}</a>)}
                   </div>
-                ) : null}
+                ) : <p className="form-note">Add at least one photo before publishing this item.</p>}
+
                 {!item.seller_approved_at ? (
                   <form className="review-form" action={reviewAdminItem}>
                     <input type="hidden" name="item_id" value={item.item_id} />
-                    <label>Proposed price
-                      <input name="initial_price" type="number" min="0.01" step="0.01" defaultValue={dollars(item.initial_price_cents)} required />
-                    </label>
+                    <label>Proposed price<input name="initial_price" type="number" min="0.01" step="0.01" defaultValue={dollars(item.initial_price_cents)} required /></label>
                     <label>Review action
                       <select name="review_action" defaultValue={item.initial_price_cents != null && item.initial_price_cents >= rules.minimumIndividualItemValueCents ? "accept" : "bundle_candidate"}>
                         <option value="accept">Accept individual item</option>
@@ -315,12 +283,23 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                         <option value="override">Owner/Admin Override</option>
                       </select>
                     </label>
-                    <label>Reason
-                      <input name="reason" maxLength={500} placeholder="Required for reject/review/override" />
-                    </label>
+                    <label>Reason<input name="reason" maxLength={500} placeholder="Required for reject/review/override" /></label>
                     <button type="submit">Save review</button>
                   </form>
-                ) : <p className="locked-note">Commission and initial approved price are permanently locked for this item.</p>}
+                ) : item.status === "listed" ? (
+                  <p className="locked-note">Live in the shop. Commission and initial approved price remain locked.</p>
+                ) : item.photo_urls?.length ? (
+                  <form className="review-form publish-form" action={publishAdminItem}>
+                    <input type="hidden" name="item_id" value={item.item_id} />
+                    <label>Shop price (CAD)
+                      <input name="listed_price" type="number" min="0.01" step="0.01" defaultValue={dollars(item.listed_price_cents ?? item.initial_price_cents)} required />
+                    </label>
+                    <div className="publish-note">This price can be lower than the initial approved price; the locked commission tier does not change.</div>
+                    <button type="submit">Publish to Shop</button>
+                  </form>
+                ) : (
+                  <p className="locked-note">Seller approved the price. Add a listing photo before publishing.</p>
+                )}
               </article>
             )) : <p className="empty-note">No items have been added yet.</p>}
           </div>
