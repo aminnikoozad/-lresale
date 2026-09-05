@@ -174,7 +174,7 @@ export function SupportChat() {
         const { error: sendError } = await supabase.rpc("support_send_customer_message", { p_conversation_id: activeId, p_body: text });
         if (sendError) throw new Error(sendError.message);
         await loadMessages(activeId);
-        if (active.status === "ai" || active.status === "resolved") await triggerAi(activeId);
+        if (active?.status === "ai" || active?.status === "resolved") await triggerAi(activeId);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not send message");
