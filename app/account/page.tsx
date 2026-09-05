@@ -30,7 +30,7 @@ export default async function AccountPage({ searchParams }: Props) {
   const [profileResult, itemsResult, requestsResult, walletResult, params] = await Promise.all([
     supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
     supabase.from("items").select("id,name,status,sold_price_cents,listed_price_cents").order("created_at", { ascending: false }),
-    supabase.from("collection_requests").select("id,request_type,category,status,hold_status,created_at").order("created_at", { ascending: false }),
+    supabase.from("collection_requests").select("id,request_type,category,status,confirmation_status,created_at").order("created_at", { ascending: false }),
     supabase.from("wallet_transactions").select("amount_cents,transaction_type,status"),
     searchParams,
   ]);
@@ -76,7 +76,7 @@ export default async function AccountPage({ searchParams }: Props) {
         type: request.request_type === "bag" ? "Bag request" : "Pickup request",
         category: titleCase(request.category),
         status: titleCase(request.status),
-        holdStatus: titleCase(request.hold_status),
+        confirmationStatus: titleCase(request.confirmation_status),
         createdAt: dateLabel(request.created_at),
       }))}
     />

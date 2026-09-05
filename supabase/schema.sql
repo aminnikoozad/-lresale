@@ -11,6 +11,9 @@ create table public.profiles (
   city text,
   province text default 'QC',
   postal_code text,
+  missed_pickup_count integer not null default 0,
+  free_pickup_status text not null default 'active',
+  outstanding_missed_pickup_fee_cents integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint profiles_full_name_length check (full_name is null or char_length(full_name) between 2 and 100),
@@ -18,7 +21,10 @@ create table public.profiles (
   constraint profiles_address_length check (address_line1 is null or char_length(address_line1) between 5 and 200),
   constraint profiles_city_length check (city is null or char_length(city) between 2 and 100),
   constraint profiles_province_length check (province is null or char_length(province) between 2 and 50),
-  constraint profiles_postal_code_length check (postal_code is null or char_length(postal_code) between 3 and 12)
+  constraint profiles_postal_code_length check (postal_code is null or char_length(postal_code) between 3 and 12),
+  constraint profiles_missed_pickup_count check (missed_pickup_count between 0 and 999),
+  constraint profiles_free_pickup_status check (free_pickup_status in ('active', 'suspended')),
+  constraint profiles_outstanding_missed_pickup_fee check (outstanding_missed_pickup_fee_cents between 0 and 100000000)
 );
 
 create table public.collection_requests (
@@ -27,13 +33,22 @@ create table public.collection_requests (
   request_type text not null,
   category text not null,
   address text not null,
+  item_count integer,
+  brand_notes text,
   estimated_resale_value_cents integer not null,
   status text not null default 'submitted',
-  hold_status text not null default 'authorization_required',
+  confirmation_status text not null default 'pending',
+  confirmation_deadline timestamptz,
+  pickup_confirmed_at timestamptz,
+  scheduled_window_start timestamptz,
+  scheduled_window_end timestamptz,
+  hold_status text not null default 'not_required',
   condition_confirmed boolean not null,
   policy_accepted boolean not null,
-  hold_terms_accepted boolean not null,
-  terms_version text not null default '2026-09-04',
+  pickup_policy_accepted boolean not null,
+  pickup_policy_version text not null default '2026-09-05',
+  hold_terms_accepted boolean not null default true,
+  terms_version text not null default '2026-09-05',
   terms_accepted_at timestamptz not null default now(),
   scheduled_for timestamptz,
   created_at timestamptz not null default now(),
@@ -41,10 +56,14 @@ create table public.collection_requests (
   constraint collection_request_type check (request_type in ('bag', 'pickup')),
   constraint collection_category check (category in ('clothing', 'electronics')),
   constraint collection_address_length check (char_length(address) between 10 and 500),
+  constraint collection_item_count check (item_count is null or item_count between 1 and 500),
+  constraint collection_brand_notes_length check (brand_notes is null or char_length(brand_notes) <= 500),
   constraint collection_minimum_value check (estimated_resale_value_cents between 10000 and 100000000),
-  constraint collection_status check (status in ('submitted', 'confirmed', 'scheduled', 'collected', 'inspection', 'completed', 'cancelled')),
-  constraint collection_hold_status check (hold_status in ('authorization_required', 'authorized', 'released', 'captured', 'failed')),
-  constraint collection_all_terms_required check (condition_confirmed and policy_accepted and hold_terms_accepted)
+  constraint collection_status check (status in ('submitted', 'confirmed', 'scheduled', 'collected', 'inspection', 'completed', 'cancelled', 'missed')),
+  constraint collection_confirmation_status check (confirmation_status in ('pending', 'confirmed', 'cancelled', 'reschedule_requested', 'expired')),
+  constraint collection_schedule_window check (scheduled_window_end is null or scheduled_window_start is null or scheduled_window_end > scheduled_window_start),
+  constraint collection_hold_status check (hold_status in ('not_required', 'authorization_required', 'authorized', 'released', 'captured', 'failed')),
+  constraint collection_all_terms_required check (condition_confirmed and policy_accepted and pickup_policy_accepted)
 );
 
 create table public.items (
@@ -77,7 +96,7 @@ create table public.wallet_transactions (
   item_id uuid references public.items(id) on delete set null,
   created_at timestamptz not null default now(),
   constraint wallet_nonzero_amount check (amount_cents <> 0 and amount_cents between -100000000 and 100000000),
-  constraint wallet_transaction_type check (transaction_type in ('sale_credit', 'purchase_debit', 'payout_debit', 'refund_credit', 'adjustment')),
+  constraint wallet_transaction_type check (transaction_type in ('sale_credit', 'purchase_debit', 'payout_debit', 'refund_credit', 'adjustment', 'missed_pickup_fee')),
   constraint wallet_status check (status in ('pending', 'completed', 'reversed')),
   constraint wallet_description_length check (char_length(description) between 2 and 250)
 );
@@ -165,10 +184,11 @@ to authenticated
 with check (
   (select auth.uid()) = user_id
   and status = 'submitted'
-  and hold_status = 'authorization_required'
+  and hold_status = 'not_required'
+  and confirmation_status = 'pending'
   and condition_confirmed
   and policy_accepted
-  and hold_terms_accepted
+  and pickup_policy_accepted
 );
 
 create policy items_select_own
@@ -190,7 +210,7 @@ grant usage on schema public to authenticated;
 grant select on table public.profiles to authenticated;
 grant update (full_name, phone, address_line1, city, province, postal_code) on table public.profiles to authenticated;
 grant select on table public.collection_requests to authenticated;
-grant insert (user_id, request_type, category, address, estimated_resale_value_cents, condition_confirmed, policy_accepted, hold_terms_accepted) on table public.collection_requests to authenticated;
+grant insert (user_id, request_type, category, address, item_count, brand_notes, estimated_resale_value_cents, condition_confirmed, policy_accepted, pickup_policy_accepted) on table public.collection_requests to authenticated;
 grant select on table public.items to authenticated;
 grant select on table public.wallet_transactions to authenticated;
 

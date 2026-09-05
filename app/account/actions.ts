@@ -21,8 +21,10 @@ export async function createCollectionRequest(formData: FormData) {
   const requestType = value(formData, "request_type");
   const category = value(formData, "category");
   const address = value(formData, "address");
+  const itemCount = Number(value(formData, "item_count"));
+  const brandNotes = value(formData, "brands");
   const estimatedValue = Number(value(formData, "estimated_value"));
-  const allTermsAccepted = ["condition_confirmed", "policy_accepted", "hold_terms_accepted"]
+  const allTermsAccepted = ["condition_confirmed", "policy_accepted", "pickup_policy_accepted"]
     .every((name) => formData.get(name) === "accepted");
 
   if (
@@ -30,6 +32,10 @@ export async function createCollectionRequest(formData: FormData) {
     !["clothing", "electronics"].includes(category) ||
     address.length < 10 ||
     address.length > 500 ||
+    !Number.isInteger(itemCount) ||
+    itemCount < 1 ||
+    itemCount > 500 ||
+    brandNotes.length > 500 ||
     !Number.isFinite(estimatedValue) ||
     estimatedValue < 100 ||
     estimatedValue > 1_000_000 ||
@@ -43,14 +49,16 @@ export async function createCollectionRequest(formData: FormData) {
     request_type: requestType,
     category,
     address,
+    item_count: itemCount,
+    brand_notes: brandNotes || null,
     estimated_resale_value_cents: Math.round(estimatedValue * 100),
     condition_confirmed: true,
     policy_accepted: true,
-    hold_terms_accepted: true,
+    pickup_policy_accepted: true,
   });
 
   if (error) {
     redirect(accountMessage("The request could not be saved. Please try again.", "error"));
   }
-  redirect(accountMessage("Your collection request was submitted. We’ll contact you to confirm the date and $20 authorization.", "success"));
+  redirect(accountMessage("Your request was submitted for eligibility review. We’ll contact you to confirm, cancel or reschedule the pickup.", "success"));
 }
