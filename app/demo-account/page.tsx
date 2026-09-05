@@ -16,6 +16,8 @@ export default function DemoAccountPage(){
     </div>
     <Dashboard
       name="Demo Customer"
+      username="demo_customer"
+      customerCode="RW-DEMO000000000001"
       message={null}
       messageType="success"
       balance="$62.00"
