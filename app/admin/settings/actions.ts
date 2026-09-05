@@ -101,6 +101,7 @@ export async function updateSellingRules(formData: FormData) {
     secondMissedPickupFeeCents,
     suspendFreePickupAfterMisses,
     storeCreditBonusBps,
+    ...(returnPeriodDays === null ? [] : [returnPeriodDays]),
     ...tiers.flatMap((tier) => [tier.minCents, tier.maxCents ?? 0, tier.sellerBps]),
   ];
   if (numericValues.some((value) => !Number.isInteger(value) || value < 0)) {
@@ -114,10 +115,14 @@ export async function updateSellingRules(formData: FormData) {
   ) {
     redirect(messageUrl("Minimum item, pickup and Bag / Box values must be greater than zero.", "error"));
   }
-  if (tiers.some((tier) => tier.sellerBps > 10_000 || tier.platformBps < 0)) {
-    redirect(messageUrl("Commission percentages must be between 0% and 100%.", "error"));
+  if (tiers.some((tier) => tier.sellerBps > 10_000 || tier.platformBps < 0 || tier.sellerBps + tier.platformBps !== 10_000)) {
+    redirect(messageUrl("Commission percentages must be between 0% and 100% and total 100%.", "error"));
   }
+
   const sorted = [...tiers].sort((a, b) => a.minCents - b.minCents);
+  if (sorted[0]?.minCents !== minimumIndividualItemValueCents) {
+    redirect(messageUrl("The first commission tier must start at the minimum individual item value.", "error"));
+  }
   for (let index = 0; index < sorted.length; index += 1) {
     const tier = sorted[index];
     if (tier.maxCents !== null && tier.maxCents < tier.minCents) {
@@ -125,8 +130,8 @@ export async function updateSellingRules(formData: FormData) {
     }
     if (index > 0) {
       const previous = sorted[index - 1];
-      if (previous.maxCents === null || tier.minCents <= previous.maxCents) {
-        redirect(messageUrl("Commission tiers must not overlap.", "error"));
+      if (previous.maxCents === null || tier.minCents !== previous.maxCents + 1) {
+        redirect(messageUrl("Commission tiers must be continuous with no gaps or overlaps.", "error"));
       }
     }
   }
@@ -158,7 +163,12 @@ export async function updateSellingRules(formData: FormData) {
   });
 
   const effectiveAtText = text(formData, "effective_at");
-  const effectiveAt = effectiveAtText ? new Date(effectiveAtText).toISOString() : new Date().toISOString();
+  const effectiveDate = effectiveAtText ? new Date(effectiveAtText) : new Date();
+  if (!Number.isFinite(effectiveDate.getTime())) {
+    redirect(messageUrl("Enter a valid effective date and time.", "error"));
+  }
+  const effectiveAt = effectiveDate.toISOString();
+
   const { error } = await supabase.rpc("update_selling_rules", {
     new_rules: proposed,
     change_reason: reason,
