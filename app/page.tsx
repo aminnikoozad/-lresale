@@ -3,7 +3,10 @@ import Link from "next/link";
 import { ArrowRight, Gavel, ShieldCheck, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CommissionSection } from "@/components/commission-section";
-import { ShopCatalog } from "./shop-catalog";
+import { createClient } from "@/lib/supabase/server";
+import { ShopCatalog, type CatalogCategory, type CatalogProduct } from "./shop-catalog";
+
+export const dynamic = "force-dynamic";
 
 const brands = [
   "Aritzia",
@@ -25,7 +28,56 @@ const featured = [
   { type: "Leather bag", brand: "Coach", price: "$125", crop: 2 },
 ];
 
-export default function Home() {
+const allowedCategories = new Set<CatalogCategory>([
+  "women",
+  "men",
+  "kids",
+  "shoes",
+  "accessories",
+  "electronics",
+]);
+
+type CatalogRow = {
+  item_id: string;
+  name: string;
+  brand: string;
+  category: string;
+  size: string | null;
+  item_condition: string | null;
+  photo_url: string | null;
+  price_cents: number;
+};
+
+export default async function Home() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("catalog_items");
+
+  if (error) {
+    console.error("[home] catalog load failed", { code: error.code, message: error.message });
+  }
+
+  const catalogProducts: CatalogProduct[] = ((data ?? []) as CatalogRow[])
+    .filter((row) =>
+      typeof row.item_id === "string" &&
+      typeof row.name === "string" &&
+      typeof row.brand === "string" &&
+      allowedCategories.has(row.category as CatalogCategory) &&
+      typeof row.photo_url === "string" &&
+      row.photo_url.length > 0 &&
+      Number.isInteger(row.price_cents) &&
+      row.price_cents > 0,
+    )
+    .map((row) => ({
+      id: row.item_id,
+      name: row.name,
+      brand: row.brand,
+      priceCents: row.price_cents,
+      category: row.category as CatalogCategory,
+      condition: row.item_condition,
+      size: row.size,
+      photoUrl: row.photo_url!,
+    }));
+
   return (
     <main>
       <header className="site-header">
@@ -89,7 +141,8 @@ export default function Home() {
         <Link href="/shipping-policy">Delivery details</Link>
       </section>
 
-      <ShopCatalog />
+      <ShopCatalog products={catalogProducts} />
+
       <section id="sell" className="process-section">
         <div className="process-intro">
           <p className="eyebrow">The effortless way to resell</p>
@@ -111,30 +164,21 @@ export default function Home() {
             <b>01</b>
             <div>
               <h3>Tell us you’re ready</h3>
-              <p>
-                Open your account and request a Bag or collection in just a few
-                steps.
-              </p>
+              <p>Open your account and request a Bag or collection in just a few steps.</p>
             </div>
           </li>
           <li>
             <b>02</b>
             <div>
               <h3>We collect and prepare everything</h3>
-              <p>
-                Our team receives, inspects, photographs, prices and lists your
-                accepted clothing, shoes, accessories and electronics.
-              </p>
+              <p>Our team receives, inspects, photographs, prices and lists your accepted clothing, shoes, accessories and electronics.</p>
             </div>
           </li>
           <li>
             <b>03</b>
             <div>
               <h3>We sell. You earn.</h3>
-              <p>
-                We handle buyers and the sale. Your earnings appear in your
-                account to spend or withdraw.
-              </p>
+              <p>We handle buyers and the sale. Your earnings appear in your account to spend or withdraw.</p>
             </div>
           </li>
         </ol>
@@ -154,20 +198,11 @@ export default function Home() {
           {featured.map((item, i) => (
             <article key={item.type}>
               <div className={`auction-photo product-photo crop${item.crop}`}>
-                <Image
-                  src="/featured-products.webp"
-                  alt={`${item.brand} ${item.type}`}
-                  fill
-                  sizes="320px"
-                />
+                <Image src="/featured-products.webp" alt={`${item.brand} ${item.type}`} fill sizes="320px" />
               </div>
               <div className="auction-info">
-                <span>
-                  <Gavel /> {i === 0 ? "2h 14m" : "1d 08h"} left
-                </span>
-                <h3>
-                  {item.brand} {item.type}
-                </h3>
+                <span><Gavel /> {i === 0 ? "2h 14m" : "1d 08h"} left</span>
+                <h3>{item.brand} {item.type}</h3>
                 <p>Current bid</p>
                 <b>{i === 0 ? "$34" : "$28"}</b>
                 <Button variant="outline">View auction</Button>
@@ -176,6 +211,7 @@ export default function Home() {
           ))}
         </div>
       </section>
+
       <section className="guarantee-section">
         <div>
           <ShieldCheck />
@@ -184,31 +220,23 @@ export default function Home() {
           <p>
             Clothing, shoes and electronics—including phones, laptops and desktop
             computers—are inspected and covered by Rewear’s company guarantee.
-            If an item does not match its listing, our team handles the
-            resolution.
+            If an item does not match its listing, our team handles the resolution.
           </p>
-          <Button asChild variant="secondary">
-            <a href="#shop">Shop with confidence</a>
-          </Button>
+          <Button asChild variant="secondary"><a href="#shop">Shop with confidence</a></Button>
         </div>
       </section>
+
       <section id="brands" className="brands section-wrap">
         <p className="eyebrow dark">Brands we love</p>
         <h2>Recognizable names. Real value.</h2>
         <div className="brand-cloud">
-          {brands.map((b) => (
-            <span key={b}>{b}</span>
-          ))}
+          {brands.map((b) => <span key={b}>{b}</span>)}
         </div>
-        <p className="brands-note">
-          Brand names must be visible on the item’s original label or marking.
-          Authenticity checks may apply.
-        </p>
+        <p className="brands-note">Brand names must be visible on the item’s original label or marking. Authenticity checks may apply.</p>
       </section>
+
       <footer>
-        <div className="brand">
-          REWEAR<span>.</span>
-        </div>
+        <div className="brand">REWEAR<span>.</span></div>
         <p>Women · Men · Kids · Shoes · Electronics</p>
         <div className="footer-links">
           <Link href="/pickup-policy">Pickup policy</Link>
