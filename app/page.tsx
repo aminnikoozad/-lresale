@@ -82,51 +82,53 @@ export default async function Home() {
   return (
     <main>
       <header className="site-header">
-        <Link href="/" className="brand">
+        <Link href="/" className="brand" aria-label="Rewear home">
           REWEAR<span>.</span>
         </Link>
         <nav aria-label="Main navigation">
           <a href="#shop">Shop</a>
-          <a href="#shop">Shoes</a>
-          <a href="#sell">Sell with us</a>
+          <a href="#women">Women</a>
+          <a href="#men">Men</a>
+          <a href="#shoes">Shoes</a>
         </nav>
-        <Button asChild className="account-button">
-          <Link href="/account">
-            My account <ArrowRight />
-          </Link>
-        </Button>
+        <div className="header-actions">
+          <Link href="/account" className="header-account-link">My account</Link>
+          <Button asChild className="header-sell-button">
+            <a href="#sell">Sell with us</a>
+          </Button>
+        </div>
       </header>
 
-      <section className="hero">
-        <Image
-          src="/fashion-hero.webp"
-          alt="Curated secondhand clothing, shoes and accessories"
-          fill
-          priority
-          sizes="100vw"
-        />
-        <div className="hero-shade" />
-        <div className="hero-copy">
-          <p className="eyebrow">Your items. Our work. Your earnings.</p>
-          <h1>
-            We sell it
-            <br />
-            for you.
-          </h1>
-          <p>
-            No photos, listings, buyer messages or meetups for you to manage.
-            Request a pickup and relax—we collect, inspect, price and sell your
-            items.
-          </p>
-          <div className="hero-actions">
-            <Button asChild size="lg">
-              <Link href="/account">
-                Request easy pickup <ArrowRight />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <a href="#sell">See how easy it is</a>
-            </Button>
+      <section className="hero" aria-labelledby="home-hero-title">
+        <div className="hero-inner">
+          <div className="hero-copy">
+            <p className="eyebrow">Managed secondhand, made effortless</p>
+            <h1 id="home-hero-title">Great pieces deserve another life.</h1>
+            <p>
+              Shop inspected secondhand finds or let Rewear handle the work of reselling your items—from collection and photography to pricing and buyer messages.
+            </p>
+            <div className="hero-actions">
+              <Button asChild size="lg">
+                <a href="#shop">Shop now <ArrowRight /></a>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <a href="#sell">Sell your items</a>
+              </Button>
+            </div>
+            <div className="hero-trust" aria-label="Rewear service highlights">
+              <span>Inspected listings</span>
+              <span>Managed resale</span>
+              <span>Canada-wide shopping</span>
+            </div>
+          </div>
+          <div className="hero-media" aria-hidden="true">
+            <Image
+              src="/fashion-hero.webp"
+              alt=""
+              fill
+              priority
+              sizes="(max-width: 900px) 100vw, 55vw"
+            />
           </div>
         </div>
       </section>
