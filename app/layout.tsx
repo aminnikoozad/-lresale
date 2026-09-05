@@ -14,6 +14,7 @@ import "./shop.css";
 import "./logistics.css";
 import "./support-chat.css";
 import "./premium-theme.css";
+import "./premium-components.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
 
