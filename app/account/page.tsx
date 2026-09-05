@@ -53,6 +53,19 @@ function titleCase(value: string) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+function fallbackUsername(fullName: string | null | undefined, userId: string) {
+  const base = (fullName || "user")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 21);
+  return `${base.length >= 3 ? base : "user"}_${userId.replaceAll("-", "").slice(0, 8)}`;
+}
+
+function fallbackCustomerCode(userId: string) {
+  return `RW-${userId.replaceAll("-", "").slice(0, 16).toUpperCase()}`;
+}
+
 export default async function AccountPage({ searchParams }: Props) {
   const supabase = await createClient();
   const {
@@ -73,7 +86,7 @@ export default async function AccountPage({ searchParams }: Props) {
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("full_name")
+      .select("*")
       .eq("id", user.id)
       .maybeSingle(),
     supabase
@@ -132,11 +145,26 @@ export default async function AccountPage({ searchParams }: Props) {
         entry.transaction_type === "sale_credit",
     )
     .reduce((sum, entry) => sum + entry.amount_cents, 0);
+
+  const profile = profileResult.data as
+    | {
+        full_name?: string | null;
+        username?: string | null;
+        customer_code?: string | null;
+      }
+    | null;
+
   const displayName =
-    profileResult.data?.full_name ||
+    profile?.full_name ||
     user.user_metadata.full_name ||
     user.email ||
     "Customer";
+  const username =
+    profile?.username ||
+    user.user_metadata.username ||
+    fallbackUsername(displayName, user.id);
+  const customerCode =
+    profile?.customer_code || fallbackCustomerCode(user.id);
   const message = typeof params.message === "string" ? params.message : null;
 
   return (
@@ -158,6 +186,8 @@ export default async function AccountPage({ searchParams }: Props) {
       </header>
       <Dashboard
         name={displayName}
+        username={username}
+        customerCode={customerCode}
         message={message}
         messageType={params.type === "error" ? "error" : "success"}
         balance={money(balanceCents)}
