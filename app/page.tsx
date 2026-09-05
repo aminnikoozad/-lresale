@@ -34,7 +34,7 @@ export default function Home() {
         </Link>
         <nav aria-label="Main navigation">
           <a href="#shop">Shop</a>
-          <a href="#shop">Shoes</a>
+          <a href="#shoes">Shoes</a>
           <a href="#sell">Sell with us</a>
           <a href="#auction">Auction</a>
           <a href="#brands">Brands</a>
