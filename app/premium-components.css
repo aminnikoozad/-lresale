@@ -4,6 +4,7 @@
 .header-account-link:hover{color:var(--brand)!important}
 .header-sell-button{min-height:44px!important;padding-inline:17px!important}
 .catalog-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:2px}
+.catalog-body.no-filter-options{grid-template-columns:minmax(0,1fr)!important}
 .shop-catalog{position:relative}
 .catalog-hash-anchors{position:absolute;top:0;left:0;width:1px;height:1px;pointer-events:none;overflow:visible}
 .catalog-hash-anchors span{position:absolute;top:0;left:0;width:1px;height:1px;scroll-margin-top:92px}
