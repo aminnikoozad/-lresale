@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PickupTierUi } from "@/components/pickup-tier-ui";
+import { PickupConfirmationUi } from "@/components/pickup-confirmation-ui";
 import "./globals.css";
 import "./additions.css";
 import "./catalog.css";
@@ -10,4 +11,4 @@ import "./form.css";
 import "./shop.css";
 import "./logistics.css";
 export const metadata: Metadata = {title:"Rewear Market | Secondhand fashion, shoes & electronics",description:"Sell and shop quality secondhand clothing, shoes and electronics with managed pickup and Canada-wide shopping.",icons:{icon:"/favicon.svg",shortcut:"/favicon.svg"}};
-export default function RootLayout({children}:Readonly<{children:React.ReactNode}>){return <html lang="en"><body>{children}<PickupTierUi /></body></html>}
+export default function RootLayout({children}:Readonly<{children:React.ReactNode}>){return <html lang="en"><body>{children}<PickupTierUi /><PickupConfirmationUi /></body></html>}
