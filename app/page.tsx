@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Gavel, ShieldCheck, Truck } from "lucide-react";
+import { ArrowRight, ShieldCheck, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CommissionSection } from "@/components/commission-section";
 import { createClient } from "@/lib/supabase/server";
@@ -21,11 +21,6 @@ const brands = [
   "H&M",
   "Mango",
   "Coach",
-];
-const featured = [
-  { type: "Wool coat", brand: "Aritzia", price: "$89", crop: 0 },
-  { type: "Straight jeans", brand: "Levi’s", price: "$48", crop: 1 },
-  { type: "Leather bag", brand: "Coach", price: "$125", crop: 2 },
 ];
 
 const allowedCategories = new Set<CatalogCategory>([
@@ -48,13 +43,34 @@ type CatalogRow = {
   price_cents: number;
 };
 
+type ShippingPolicy = {
+  canadaWideEnabled?: boolean;
+  localCenterName?: string;
+  localFreeRadiusKm?: number | string;
+  nonlocalFeeMode?: string;
+  nonlocalFlatFeeCents?: number | null;
+};
+
 export default async function Home() {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("catalog_items");
+  const [{ data, error }, { data: shippingData, error: shippingError }] = await Promise.all([
+    supabase.rpc("catalog_items"),
+    supabase.rpc("get_shipping_policy"),
+  ]);
 
   if (error) {
     console.error("[home] catalog load failed", { code: error.code, message: error.message });
   }
+  if (shippingError) {
+    console.error("[home] shipping policy load failed", { code: shippingError.code, message: shippingError.message });
+  }
+
+  const shipping = (shippingData ?? {}) as ShippingPolicy;
+  const localRadius = Number(shipping.localFreeRadiusKm);
+  const localCenter = shipping.localCenterName || "Montréal";
+  const shippingSummary = Number.isFinite(localRadius) && localRadius > 0
+    ? `Free local delivery in ${localCenter} and within the configured ${localRadius:g} km local radius when the delivery address is eligible. Shipping fees apply outside the local area.`
+    : "Local delivery eligibility is confirmed from the delivery address. Shipping fees may apply outside the local area.";
 
   const catalogProducts: CatalogProduct[] = ((data ?? []) as CatalogRow[])
     .filter((row) =>
@@ -88,7 +104,6 @@ export default async function Home() {
           <a href="#shop">Shop</a>
           <a href="#shoes">Shoes</a>
           <a href="#sell">Sell with us</a>
-          <a href="#auction">Auction</a>
           <a href="#brands">Brands</a>
         </nav>
         <Button asChild className="account-button">
@@ -135,8 +150,8 @@ export default async function Home() {
       <section className="shipping-strip" aria-label="Canada delivery policy">
         <Truck />
         <div>
-          <strong>Shop from anywhere in Canada.</strong>
-          <span>Free local delivery in Montréal and the configured 20 km local radius. Shipping fees apply outside the local area.</span>
+          <strong>{shipping.canadaWideEnabled === false ? "Delivery policy" : "Shop from anywhere in Canada."}</strong>
+          <span>{shippingSummary}</span>
         </div>
         <Link href="/shipping-policy">Delivery details</Link>
       </section>
@@ -186,43 +201,16 @@ export default async function Home() {
 
       <CommissionSection />
 
-      <section id="auction" className="auction-section section-wrap">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow dark">Rewear auction</p>
-            <h2>Last chance, great finds.</h2>
-          </div>
-          <p>Selected pieces, new opportunities and great prices.</p>
-        </div>
-        <div className="auction-grid">
-          {featured.map((item, i) => (
-            <article key={item.type}>
-              <div className={`auction-photo product-photo crop${item.crop}`}>
-                <Image src="/featured-products.webp" alt={`${item.brand} ${item.type}`} fill sizes="320px" />
-              </div>
-              <div className="auction-info">
-                <span><Gavel /> {i === 0 ? "2h 14m" : "1d 08h"} left</span>
-                <h3>{item.brand} {item.type}</h3>
-                <p>Current bid</p>
-                <b>{i === 0 ? "$34" : "$28"}</b>
-                <Button variant="outline">View auction</Button>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
       <section className="guarantee-section">
         <div>
           <ShieldCheck />
-          <p className="eyebrow">Company-backed shopping</p>
-          <h2>Every product is guaranteed by us.</h2>
+          <p className="eyebrow">Company-managed shopping</p>
+          <h2>Listings are prepared and reviewed by Rewear.</h2>
           <p>
-            Clothing, shoes and electronics—including phones, laptops and desktop
-            computers—are inspected and covered by Rewear’s company guarantee.
-            If an item does not match its listing, our team handles the resolution.
+            Accepted clothing, shoes and electronics are processed by our team before publication.
+            If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.
           </p>
-          <Button asChild variant="secondary"><a href="#shop">Shop with confidence</a></Button>
+          <Button asChild variant="secondary"><a href="#shop">Browse items</a></Button>
         </div>
       </section>
 
