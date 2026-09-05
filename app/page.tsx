@@ -1,13 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  BadgeCheck,
-  Gavel,
-  PackageCheck,
-  ShieldCheck,
-  WalletCards,
-} from "lucide-react";
+import { ArrowRight, Gavel, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ShopCatalog } from "./shop-catalog";
 
@@ -50,34 +43,7 @@ export default function Home() {
           </Link>
         </Button>
       </header>
-      <section className="product-ribbon">
-        <div className="ribbon-heading">
-          <span>Just in</span>
-          <b>Featured finds</b>
-        </div>
-        <div className="ribbon-items">
-          {featured.map((item) => (
-            <article className="mini-product" key={item.type}>
-              <div className={`product-photo crop${item.crop}`}>
-                <Image
-                  src="/featured-products.webp"
-                  alt={`${item.brand} ${item.type}`}
-                  fill
-                  sizes="160px"
-                />
-              </div>
-              <div>
-                <b>{item.brand}</b>
-                <span>{item.type}</span>
-                <strong>{item.price}</strong>
-              </div>
-            </article>
-          ))}
-        </div>
-        <a href="#shop">
-          Shop all <ArrowRight />
-        </a>
-      </section>
+
       <section className="hero">
         <Image
           src="/fashion-hero.webp"
@@ -110,18 +76,8 @@ export default function Home() {
             </Button>
           </div>
         </div>
-        <div className="trust-strip">
-          <BadgeCheck /> We handle the sale <span /> <PackageCheck /> We collect
-          your items <span /> <WalletCards /> Earn or shop with balance
-        </div>
       </section>
-      <section className="sell-promise">
-        <strong>We do the selling.</strong>
-        <span>We photograph it.</span>
-        <span>We price it.</span>
-        <span>We talk to buyers.</span>
-        <span>You receive the earnings.</span>
-      </section>
+
       <ShopCatalog />
       <section id="sell" className="process-section">
         <div className="process-intro">
@@ -193,7 +149,7 @@ export default function Home() {
             </thead>
             <tbody>
               <tr>
-                <th scope="row">$25–$99.99</th>
+                <th scope="row">$20–$99.99</th>
                 <td>45%</td>
                 <td>55%</td>
               </tr>
@@ -222,7 +178,7 @@ export default function Home() {
           taxes, shipping, delivery and other buyer-facing charges are excluded.
         </p>
         <p className="commission-minimum">
-          <strong>Items under $25:</strong> Lower-value items are not normally
+          <strong>Items under $20:</strong> Lower-value items are not normally
           accepted as individual listings, but suitable items may be combined
           and sold as a bundle.
         </p>
