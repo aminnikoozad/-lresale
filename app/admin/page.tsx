@@ -23,8 +23,8 @@ export default async function AdminPage() {
         <div><span className="brand">REWEAR<span>.</span></span><b>Admin</b></div>
         <nav>
           <Link href="/admin">Dashboard</Link>
+          <Link href="/admin/ai-trainer">Chat with Bot</Link>
           <Link href="/admin/support">Support{supportStats?.waiting ? ` (${supportStats.waiting})` : ""}</Link>
-          <Link href="/admin/ai-trainer">AI Trainer</Link>
           <Link href="/admin/operations#pickup-requests">Pickup Inbox{newRequests.count ? ` (${newRequests.count})` : ""}</Link>
           <Link href="/admin/items">Items</Link>
           <Link href="/admin/operations">Operations</Link>
@@ -55,10 +55,27 @@ export default async function AdminPage() {
         <AdminLiveAlerts />
 
         <section className="ops-card">
+          <div className="ops-card-title">
+            <div>
+              <p className="eyebrow dark">Private Admin ↔ AI workspace</p>
+              <h2>Chat with Bot / Teach the Bot</h2>
+              <p>Talk directly to the Rewear support AI, ask what it currently knows, test customer questions, teach a new answer or behavior, and review unanswered questions. Your chat does not become official customer-facing knowledge until an authorized admin explicitly approves the proposed change.</p>
+            </div>
+            <Link href="/admin/ai-trainer">Open AI Chat</Link>
+          </div>
+          <div className="area-grid">
+            <article><div><b>Chat</b><span>Ask the bot what it knows and why it would answer or escalate.</span></div><Link href="/admin/ai-trainer">Start chat</Link></article>
+            <article><div><b>Teach</b><span>Give a new answer or behavior instruction and review the proposed structured change.</span></div><Link href="/admin/ai-trainer">Teach bot</Link></article>
+            <article><div><b>Review</b><span>See unanswered customer questions and training suggestions waiting for input.</span></div><Link href="/admin/ai-trainer">Review queue</Link></article>
+            <article><div><b>Test</b><span>Simulate a customer question without affecting a real support conversation.</span></div><Link href="/admin/ai-trainer">Test bot</Link></article>
+          </div>
+        </section>
+
+        <section className="ops-card">
           <div className="ops-card-title"><div><h2>Customer Support OS</h2><p>AI handles approved repetitive questions; authenticated human support handles exceptions, disputes and sensitive cases.</p></div><strong>{supportStats?.total ?? 0} conversations</strong></div>
           <div className="area-grid">
             <article><div><b>Support Inbox</b><span>Waiting, assigned, AI-handled, urgent, resolved and closed conversations.</span></div><Link href="/admin/support">Open</Link></article>
-            <article><div><b>AI Trainer</b><span>Chat, Teach, Review and Test Bot with approval-controlled learning.</span></div><Link href="/admin/ai-trainer">Open</Link></article>
+            <article><div><b>AI Trainer</b><span>Private Admin-to-AI chat, controlled teaching, review and Test Bot.</span></div><Link href="/admin/ai-trainer">Open</Link></article>
             <article><div><b>Support Settings</b><span>Availability, notification preferences and configurable business hours.</span></div><Link href="/admin/support/settings">Open</Link></article>
             <article><div><b>Approved AI knowledge</b><span>Only approved policy knowledge is customer-facing.</span></div><Link href="/admin/ai-trainer">{supportStats?.kb_approved ?? 0} approved</Link></article>
           </div>
