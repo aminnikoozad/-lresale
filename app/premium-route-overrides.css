@@ -1,0 +1,49 @@
+/* Remaining route-specific surfaces that are not covered by the primary theme. */
+.admin-settings-shell{min-height:100vh;background:var(--page)!important;color:var(--ink)!important}
+.admin-settings-top{min-height:72px!important;padding:12px clamp(18px,5vw,64px)!important;background:rgba(255,255,255,.97)!important;border-bottom:1px solid var(--line)!important;backdrop-filter:blur(12px)}
+.admin-settings-top>a{color:var(--brand)!important;font-weight:620!important;text-decoration:none}
+.admin-settings-wrap{max-width:1280px!important;margin:0 auto;padding:46px 24px 78px!important}
+.admin-settings-heading h1{font-size:clamp(2.3rem,4.5vw,4rem)!important;letter-spacing:-.045em!important;font-weight:650!important;color:var(--ink)!important}
+.admin-settings-heading p{color:var(--text-secondary)!important;line-height:1.6!important}
+.admin-access{border-radius:12px!important}
+.admin-access.ok{background:var(--success-soft)!important;border-color:color-mix(in srgb,var(--success) 34%,var(--line))!important;color:#456E50!important}
+.admin-access.blocked{background:var(--warning-soft)!important;border-color:color-mix(in srgb,var(--warning) 31%,var(--line))!important;color:#805D2C!important}
+.settings-message{border-radius:10px!important}
+.settings-message.success{background:var(--success-soft)!important;color:#456E50!important}
+.settings-message.error{background:var(--danger-soft)!important;color:#8C3D3D!important}
+.settings-message.warning{background:var(--warning-soft)!important;color:#805D2C!important;border-color:color-mix(in srgb,var(--warning) 31%,var(--line))!important}
+.settings-card{background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:14px!important;padding:22px!important;box-shadow:none!important}
+.settings-card-title p,.publish-card p{color:var(--text-secondary)!important}
+.settings-card label{color:var(--ink)!important;font-weight:600!important}
+.settings-card input,.settings-card textarea{min-height:48px!important;background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:10px!important;color:var(--ink)!important;box-shadow:none!important}
+.settings-card input:focus,.settings-card textarea:focus{border-color:var(--brand)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 12%,transparent)!important;outline:none!important}
+.tier-table{border-color:var(--line)!important;border-radius:12px!important}
+.tier-row{background:var(--line-soft)!important}
+.tier-row>*{background:var(--surface)!important}
+.tier-row output{color:var(--brand)!important}
+.tier-head span{background:#F3F0E9!important;color:var(--text-secondary)!important}
+.publish-card{border-color:color-mix(in srgb,var(--brand) 28%,var(--line))!important;box-shadow:0 0 0 3px var(--brand-soft)!important}
+.confirm{background:#F3F0E9!important;border-radius:10px!important}
+.save-rules{min-height:46px!important;border:0!important;border-radius:10px!important;background:var(--brand)!important;color:#fff!important;font-weight:650!important;padding:0 18px!important}
+.save-rules:hover{background:var(--brand-dark)!important}
+
+.auth-divider{color:var(--text-secondary)!important}
+.auth-divider:before,.auth-divider:after{background:var(--line)!important}
+.auth-submit.secondary{background:var(--brand)!important}
+.auth-submit.secondary:hover{background:var(--brand-dark)!important}
+.auth-link-button{color:var(--brand)!important;font-weight:620!important}
+
+.support-global-toast{background:var(--surface)!important;border:1px solid var(--line)!important;border-left:4px solid var(--brand)!important;border-radius:12px!important;box-shadow:var(--shadow-md)!important;color:var(--ink)!important}
+.support-global-toast.priority-high{border-left-color:var(--warning)!important}
+.support-global-toast.priority-urgent{border-left-color:var(--danger)!important}
+.support-global-toast p{color:var(--text-secondary)!important}
+.support-global-toast a{background:var(--brand)!important;color:#fff!important;border-radius:9px!important;font-weight:650!important}
+.support-global-toast a:hover{background:var(--brand-dark)!important}
+.support-global-toast button{background:#F3F0E9!important;color:var(--text-secondary)!important;border-radius:9px!important}
+
+@media(max-width:800px){
+  .admin-settings-top{align-items:flex-start;flex-direction:column}
+  .admin-settings-wrap{padding:34px 14px 60px!important}
+  .admin-settings-heading{align-items:flex-start!important;flex-direction:column!important}
+  .settings-card{padding:16px!important}
+}
