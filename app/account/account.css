@@ -47,6 +47,28 @@
   letter-spacing: -0.06em;
   margin: 0;
 }
+.customer-identifiers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+.customer-identifiers span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid #d8e1f7;
+  border-radius: 999px;
+  background: #eef3ff;
+  color: #174bb9;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+.customer-identifiers strong {
+  margin-left: 4px;
+  letter-spacing: 0.03em;
+}
 .welcome > div > p:last-child {
   color: #6a7283;
 }
