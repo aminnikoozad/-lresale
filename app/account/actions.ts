@@ -80,18 +80,13 @@ export async function approveItemPricing(formData: FormData) {
   if (!user) redirect("/login");
   if (isPhoneVerificationRequired() && !user.phone_confirmed_at) redirect("/verify-phone");
 
-  const rules = await loadSellingRules(supabase);
   const itemId = value(formData, "item_id");
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(itemId)) {
     redirect(accountMessage("The item could not be identified.", "error"));
   }
 
   const expectedPrice = Number(value(formData, "expected_price"));
-  if (
-    !Number.isInteger(expectedPrice) ||
-    expectedPrice < rules.minimumIndividualItemValueCents ||
-    expectedPrice > 100_000_000
-  ) {
+  if (!Number.isInteger(expectedPrice) || expectedPrice < 1 || expectedPrice > 100_000_000) {
     redirect(accountMessage("Refresh and review the proposed price.", "error"));
   }
   const { error } = await supabase.rpc("approve_item_pricing", { target_item_id: itemId, expected_price: expectedPrice });
@@ -99,4 +94,32 @@ export async function approveItemPricing(formData: FormData) {
     redirect(accountMessage("This price could not be approved. It may already be locked or no longer available.", "error"));
   }
   redirect(accountMessage("Price approved. Your commission rate is now permanently locked for this item.", "success"));
+}
+
+export async function approveBundlePricing(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  if (isPhoneVerificationRequired() && !user.phone_confirmed_at) redirect("/verify-phone");
+
+  const bundleId = value(formData, "bundle_id");
+  const expectedPrice = Number(value(formData, "expected_price"));
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(bundleId) ||
+    !Number.isInteger(expectedPrice) ||
+    expectedPrice < 1 ||
+    expectedPrice > 100_000_000
+  ) {
+    redirect(accountMessage("The bundle pricing could not be identified.", "error"));
+  }
+
+  const { error } = await supabase.rpc("approve_bundle_pricing", {
+    target_bundle_id: bundleId,
+    expected_price: expectedPrice,
+  });
+  if (error) {
+    redirect(accountMessage("This bundle price could not be approved. Refresh and review it again.", "error"));
+  }
+
+  redirect(accountMessage("Bundle price approved. Its commission rate is now permanently locked.", "success"));
 }
