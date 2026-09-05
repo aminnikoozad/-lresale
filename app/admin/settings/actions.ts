@@ -50,6 +50,9 @@ export async function updateSellingRules(formData: FormData) {
   const minimumIndividualItemValueCents = dollarsToCents(number(formData, "minimum_item_value"));
   const minimumPickupEstimatedValueCents = dollarsToCents(number(formData, "minimum_pickup_value"));
   const minimumSellingPriceCents = dollarsToCents(number(formData, "minimum_selling_price"));
+  const freePickupThresholdCents = dollarsToCents(number(formData, "free_pickup_threshold"));
+  const lowValuePickupItemFeeCents = dollarsToCents(number(formData, "low_value_pickup_item_fee"));
+  const bagMinimumEstimatedValueCents = dollarsToCents(number(formData, "bag_minimum_value"));
   const sellingPeriodDays = number(formData, "selling_period_days");
   const highValueThresholdCents = dollarsToCents(number(formData, "high_value_threshold"));
   const secondMissedPickupFeeCents = dollarsToCents(number(formData, "second_missed_pickup_fee"));
@@ -90,6 +93,9 @@ export async function updateSellingRules(formData: FormData) {
     minimumIndividualItemValueCents,
     minimumPickupEstimatedValueCents,
     minimumSellingPriceCents,
+    freePickupThresholdCents,
+    lowValuePickupItemFeeCents,
+    bagMinimumEstimatedValueCents,
     sellingPeriodDays,
     highValueThresholdCents,
     secondMissedPickupFeeCents,
@@ -100,8 +106,13 @@ export async function updateSellingRules(formData: FormData) {
   if (numericValues.some((value) => !Number.isInteger(value) || value < 0)) {
     redirect(messageUrl("Check the numeric selling-rule values.", "error"));
   }
-  if (minimumIndividualItemValueCents < 1 || minimumPickupEstimatedValueCents < 1) {
-    redirect(messageUrl("Minimum item and pickup values must be greater than zero.", "error"));
+  if (
+    minimumIndividualItemValueCents < 1 ||
+    minimumPickupEstimatedValueCents < 1 ||
+    freePickupThresholdCents < 1 ||
+    bagMinimumEstimatedValueCents < 1
+  ) {
+    redirect(messageUrl("Minimum item, pickup and Bag / Box values must be greater than zero.", "error"));
   }
   if (tiers.some((tier) => tier.sellerBps > 10_000 || tier.platformBps < 0)) {
     redirect(messageUrl("Commission percentages must be between 0% and 100%.", "error"));
@@ -136,6 +147,10 @@ export async function updateSellingRules(formData: FormData) {
       firstMissedPickupFeeCents: 0,
       secondMissedPickupFeeCents,
       suspendFreePickupAfterMisses,
+      freePickupThresholdCents,
+      lowValuePickupItemFeeCents,
+      bagMinimumEstimatedValueCents,
+      priorityPickupAtOrAboveThreshold: formData.get("priority_pickup_enabled") === "enabled",
     },
     storeCreditBonusBps,
     returnPeriodDays,
@@ -157,6 +172,7 @@ export async function updateSellingRules(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath("/account");
+  revalidatePath("/pickup-policy");
   revalidatePath("/admin/settings");
   redirect(messageUrl("Selling rules saved and versioned successfully.", "success"));
 }
