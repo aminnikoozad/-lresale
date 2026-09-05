@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isPhoneVerificationRequired } from "@/lib/canadian-phone";
+import { loadSellingRules } from "@/lib/business-rules";
 
 function value(formData: FormData, key: string) {
   const entry = formData.get(key);
@@ -20,6 +21,7 @@ export async function createCollectionRequest(formData: FormData) {
   if (!user) redirect("/login");
   if (isPhoneVerificationRequired() && !user.phone_confirmed_at) redirect("/verify-phone");
 
+  const rules = await loadSellingRules(supabase);
   const requestType = value(formData, "request_type");
   const category = value(formData, "category");
   const address = value(formData, "address");
@@ -28,6 +30,7 @@ export async function createCollectionRequest(formData: FormData) {
   const itemCount = Number(value(formData, "item_count"));
   const brandNotes = value(formData, "brands");
   const estimatedValue = Number(value(formData, "estimated_value"));
+  const estimatedValueCents = Math.round(estimatedValue * 100);
   const allTermsAccepted = ["condition_confirmed", "policy_accepted", "pickup_policy_accepted"]
     .every((name) => formData.get(name) === "accepted");
 
@@ -43,8 +46,8 @@ export async function createCollectionRequest(formData: FormData) {
     itemCount > 500 ||
     brandNotes.length > 500 ||
     !Number.isFinite(estimatedValue) ||
-    estimatedValue < 100 ||
-    estimatedValue > 1_000_000 ||
+    estimatedValueCents < rules.minimumPickupEstimatedValueCents ||
+    estimatedValueCents > 100_000_000 ||
     !allTermsAccepted
   ) {
     redirect(accountMessage("Check the request details and accept all required terms.", "error"));
@@ -59,7 +62,7 @@ export async function createCollectionRequest(formData: FormData) {
     pickup_slot_id: pickupSlotId,
     item_count: itemCount,
     brand_notes: brandNotes || null,
-    estimated_resale_value_cents: Math.round(estimatedValue * 100),
+    estimated_resale_value_cents: estimatedValueCents,
     condition_confirmed: true,
     policy_accepted: true,
     pickup_policy_accepted: true,
@@ -77,13 +80,18 @@ export async function approveItemPricing(formData: FormData) {
   if (!user) redirect("/login");
   if (isPhoneVerificationRequired() && !user.phone_confirmed_at) redirect("/verify-phone");
 
+  const rules = await loadSellingRules(supabase);
   const itemId = value(formData, "item_id");
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(itemId)) {
     redirect(accountMessage("The item could not be identified.", "error"));
   }
 
   const expectedPrice = Number(value(formData, "expected_price"));
-  if (!Number.isInteger(expectedPrice) || expectedPrice < 2000 || expectedPrice > 100000000) {
+  if (
+    !Number.isInteger(expectedPrice) ||
+    expectedPrice < rules.minimumIndividualItemValueCents ||
+    expectedPrice > 100_000_000
+  ) {
     redirect(accountMessage("Refresh and review the proposed price.", "error"));
   }
   const { error } = await supabase.rpc("approve_item_pricing", { target_item_id: itemId, expected_price: expectedPrice });
