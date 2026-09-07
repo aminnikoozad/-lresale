@@ -16,6 +16,7 @@ import {
   earningsFromSalePrice,
 } from "@/lib/commission";
 import "./account.css";
+import "./commission-account.css";
 
 export const dynamic = "force-dynamic";
 
