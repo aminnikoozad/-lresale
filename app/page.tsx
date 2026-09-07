@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ShieldCheck, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CommissionSection } from "@/components/commission-section";
 import { createClient } from "@/lib/supabase/server";
 import { ShopCatalog, type CatalogCategory, type CatalogProduct } from "./shop-catalog";
 
@@ -184,8 +183,6 @@ export default async function Home() {
           </li>
         </ol>
       </section>
-
-      <CommissionSection />
 
       <section className="guarantee-section">
         <div>
