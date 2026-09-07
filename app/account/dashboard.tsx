@@ -127,9 +127,9 @@ export function Dashboard({
             <span>Available balance</span>
           </div>
           <strong>{balance}</strong>
-          <small>Use it to shop now or request payout later</small>
+          <small>Completed wallet balance recorded in your account</small>
           <Button size="sm" disabled>
-            <ShoppingBag /> Shop with balance
+            <ShoppingBag /> Balance checkout coming later
           </Button>
         </article>
         <article>
@@ -301,7 +301,7 @@ export function Dashboard({
           <button disabled>
             <RotateCcw /> Return to me
           </button>
-          <small>This choice becomes available when an item is accepted.</small>
+          <small>These options are not active yet.</small>
         </div>
       </section>
       <section className="mini-rules">
