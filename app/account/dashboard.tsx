@@ -271,8 +271,8 @@ export function Dashboard({
                 <Package />
                 <h2>No requests yet</h2>
                 <p>
-                  Order a Bag or arrange a pickup when your eligible items total
-                  at least $100.
+                  Request a Bag for eligible $100+ collections, or choose pickup
+                  for smaller collections subject to the current per-item fee.
                 </p>
               </div>
             )}
@@ -307,7 +307,8 @@ export function Dashboard({
       <section className="mini-rules">
         <b>Quick check before sending</b>
         <span>✓ Individual listing value is normally $20+</span>
-        <span>✓ Estimated collection total is $100+</span>
+        <span>✓ $100+ estimated collections qualify for free priority pickup</span>
+        <span>✓ Smaller pickup requests may carry a per-item pickup fee</span>
         <span>✓ Washed and neatly folded</span>
         <span>✓ No stains, tears or damage</span>
       </section>
@@ -333,9 +334,11 @@ function RequestDialog({
     "clothing",
   );
   const [serviceAreaId, setServiceAreaId] = useState(serviceAreas[0]?.id ?? "");
+  const [estimatedValue, setEstimatedValue] = useState(100);
   const availableSlots = pickupSlots.filter(
     (slot) => slot.serviceAreaId === serviceAreaId,
   );
+  const paidPickup = type === "pickup" && estimatedValue > 0 && estimatedValue < 100;
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -383,7 +386,7 @@ function RequestDialog({
                   <option key={area.id} value={area.id}>
                     {area.city}
                     {area.pickupMode === "free"
-                      ? " — Free pickup"
+                      ? " — Pickup available"
                       : " — Subject to review"}
                   </option>
                 ))}
@@ -411,10 +414,13 @@ function RequestDialog({
             <div className="hold-card">
               <Truck />
               <div>
-                <b>Free pickup — no deposit or card hold</b>
+                <b>{type === "bag" ? "Bag requests require $100+ estimated resale value" : paidPickup ? "Paid pickup for smaller collections" : "Free priority pickup at $100+"}</b>
                 <p>
-                  Eligible pickups have no upfront fee. We’ll ask you to confirm
-                  before adding the pickup to the driver’s route.
+                  {type === "bag"
+                    ? "Bag or Box requests require at least $100 in estimated resale value and still depend on scheduling availability."
+                    : paidPickup
+                      ? "For estimated resale value below $100, the current pickup fee is $5 per item. The database confirms the final fee when you submit."
+                      : "Estimated resale value of $100 or more qualifies for free priority pickup under the current rules. No deposit or card hold is required."}
                 </p>
               </div>
             </div>
@@ -456,13 +462,26 @@ function RequestDialog({
                 name="estimated_value"
                 required
                 type="number"
-                min="100"
+                min={type === "bag" ? "100" : "0.01"}
                 max="1000000"
-                step="1"
+                step="0.01"
                 inputMode="decimal"
-                placeholder="$100 minimum"
+                value={estimatedValue}
+                onChange={(event) => setEstimatedValue(Number(event.target.value))}
+                placeholder={type === "bag" ? "$100 minimum for Bag or Box" : "Enter your estimated total"}
               />
             </label>
+            {paidPickup ? (
+              <label className="check pickup-fee-check">
+                <input
+                  name="pickup_fee_accepted"
+                  value="accepted"
+                  required
+                  type="checkbox"
+                />{" "}
+                I understand that pickups below $100 currently cost $5 per item.
+              </label>
+            ) : null}
             <div className="terms-box">
               <b>Required terms for {category}</b>
               {category === "clothing" ? (
@@ -473,14 +492,12 @@ function RequestDialog({
                     bundle.
                   </p>
                   <p>
-                    • Eligible collections must total at least $100. Items must
-                    be washed, folded and free of stains, tears, holes or
-                    missing parts.
+                    • Items must be washed, folded and free of stains, tears,
+                    holes or missing parts.
                   </p>
                   <p>
                     • Accepted clothing is listed for up to 90 days. Unsold
-                    items may be donated, auctioned or returned according to
-                    your choice.
+                    item options are shown when the applicable account feature is available.
                   </p>
                 </>
               ) : (
@@ -550,7 +567,7 @@ function RequestDialog({
               Submit collection request
             </Button>
             <small className="payment-note">
-              Submitting a request does not guarantee free pickup approval.
+              Submitting a request does not guarantee pickup approval. The applicable pickup fee is confirmed by the current rules when you submit.
             </small>
           </div>
         </form>
