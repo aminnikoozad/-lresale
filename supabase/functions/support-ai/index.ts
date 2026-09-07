@@ -183,6 +183,22 @@ function classify(question: string): Classification {
     return { category: "Other", subcategory: "Complaint", priority: "high", handoff: true };
   }
 
+  if (/pickup|pick up|collection|driver|ramassage|collecte|bag|box/.test(q)) {
+    if (/driver|chauffeur/.test(q)) return { category: "Pickup", subcategory: "Driver Problem", priority: "high", handoff: true };
+    if (/missed|miss|absent|raté|manqué/.test(q)) {
+      const disputed = /charged|charge|fee.*wrong|wrong.*fee|not my fault|did not miss|didn t miss|driver.*didn|dispute|contestation/.test(q);
+      return { category: "Pickup", subcategory: "Missed Pickup", priority: disputed ? "high" : "normal", handoff: disputed };
+    }
+    if (/resched|change.*time|change.*date|move.*pickup|modifier.*heure|modifier.*date|déplacer/.test(q)) {
+      return { category: "Pickup", subcategory: "Reschedule", priority: "normal", handoff: false };
+    }
+    if (/cancel|annul/.test(q)) return { category: "Pickup", subcategory: "Cancellation", priority: "normal", handoff: false };
+    if (/free|fee|cost|eligib|minimum|gratuit|frais|bag|box|worth|value/.test(q)) {
+      return { category: "Pickup", subcategory: "Pickup Eligibility", priority: "normal", handoff: false };
+    }
+    return { category: "Pickup", subcategory: "New Pickup", priority: "normal", handoff: false };
+  }
+
   if (/payout|seller payout|payment|transaction|wallet|refund|remboursement|paiement|charge|charged/.test(q)) {
     const sub = /payout/.test(q) ? "Seller Payout"
       : /refund|remboursement/.test(q) ? "Refund"
@@ -198,22 +214,6 @@ function classify(question: string): Classification {
   }
   if (/return|retour/.test(q)) {
     return { category: "Return", subcategory: /status|statut/.test(q) ? "Return Status" : "Return Request", priority: "normal", handoff: false };
-  }
-
-  if (/pickup|pick up|collection|driver|ramassage|collecte|bag|box/.test(q)) {
-    if (/driver|chauffeur/.test(q)) return { category: "Pickup", subcategory: "Driver Problem", priority: "high", handoff: true };
-    if (/missed|miss|absent|raté|manqué/.test(q)) {
-      const disputed = /charged|fee.*wrong|wrong.*fee|not my fault|did not miss|didn t miss|driver.*didn|dispute|contestation/.test(q);
-      return { category: "Pickup", subcategory: "Missed Pickup", priority: disputed ? "high" : "normal", handoff: disputed };
-    }
-    if (/resched|change.*time|change.*date|move.*pickup|modifier.*heure|modifier.*date|déplacer/.test(q)) {
-      return { category: "Pickup", subcategory: "Reschedule", priority: "normal", handoff: false };
-    }
-    if (/cancel|annul/.test(q)) return { category: "Pickup", subcategory: "Cancellation", priority: "normal", handoff: false };
-    if (/free|fee|cost|eligib|minimum|gratuit|frais|bag|box|worth|value/.test(q)) {
-      return { category: "Pickup", subcategory: "Pickup Eligibility", priority: "normal", handoff: false };
-    }
-    return { category: "Pickup", subcategory: "New Pickup", priority: "normal", handoff: false };
   }
 
   if (/commission|how much.*receive|how much.*get|seller earn|earnings|seller share|platform share|percentage|combien.*reçois|combien.*gagne/.test(q)) {
@@ -238,9 +238,8 @@ function classify(question: string): Classification {
   }
 
   if (/login|log in|password|locked out|account access|connexion|mot de passe/.test(q)) {
-    const selfServe = /forgot.*password|reset.*password|forgotten password|mot de passe.*oubli|réinitialiser.*mot de passe/.test(q);
-    const caseSpecific = /locked out|can t log in|cannot log in|unable to log in|reset.*not working|account access.*problem|connexion.*impossible/.test(q);
-    return { category: "Account", subcategory: "Login", priority: caseSpecific ? "high" : "normal", handoff: caseSpecific && !selfServe };
+    const caseSpecific = /locked out|can t log in|cannot log in|unable to log in|reset.*not working|after reset|after resetting|account access.*problem|connexion.*impossible/.test(q);
+    return { category: "Account", subcategory: "Login", priority: caseSpecific ? "high" : "normal", handoff: caseSpecific };
   }
   if (/verification|verify|phone verification|vérification/.test(q)) {
     return { category: "Account", subcategory: /phone/.test(q) ? "Phone Verification" : "Verification", priority: "normal", handoff: false };
