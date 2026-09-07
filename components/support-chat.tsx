@@ -34,6 +34,15 @@ const statusLabel: Record<Conversation["status"], string> = {
   closed: "Closed",
 };
 
+const suggestedQuestions = [
+  { label: "How does selling work?", question: "How does selling with Rewear work?" },
+  { label: "What commission will I get?", question: "How much commission will I receive when my item sells?" },
+  { label: "How do I request pickup?", question: "How do I request a pickup for my items?" },
+  { label: "What items do you accept?", question: "What clothing, shoes, accessories and electronics do you accept?" },
+  { label: "Check my item status", question: "What is the status of my item?" },
+  { label: "How does delivery work?", question: "How does Rewear delivery and shipping work?" },
+];
+
 export function SupportChat() {
   const pathname = usePathname();
   const supabase = useMemo(() => createClient(), []);
@@ -151,7 +160,7 @@ export function SupportChat() {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, aiTyping, agentTyping, open]);
 
-  if (!authReady) return null;
+  if (!authReady || pathname?.startsWith("/admin")) return null;
 
   if (!userId) {
     if (pathname !== "/") return null;
@@ -192,10 +201,32 @@ export function SupportChat() {
   async function triggerAi(conversationId: string) {
     setAiTyping(true);
     try {
-      await supabase.functions.invoke("support-ai", { body: { conversation_id: conversationId } });
+      const { error: invokeError } = await supabase.functions.invoke("support-ai", { body: { conversation_id: conversationId } });
+      if (invokeError) setError("AI Assistant is temporarily unavailable. Please try again or start a new AI conversation.");
     } finally {
       setAiTyping(false);
       await Promise.all([loadMessages(conversationId), loadConversations()]);
+    }
+  }
+
+  async function startSuggestedQuestion(question: string) {
+    if (sending) return;
+    setSending(true);
+    setError(null);
+    setInput("");
+    setHistoryOpen(false);
+    try {
+      const { data, error: startError } = await supabase.rpc("support_start_conversation", { p_message: question, p_subject: "AI quick question" });
+      if (startError || !data) throw new Error(startError?.message || "Could not start chat");
+      const id = String(data);
+      setActiveId(id);
+      await loadConversations();
+      await loadMessages(id);
+      await triggerAi(id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not start chat");
+    } finally {
+      setSending(false);
     }
   }
 
@@ -257,6 +288,7 @@ export function SupportChat() {
     setMessages([]);
     setHistoryOpen(false);
     setInput("");
+    setError(null);
   }
 
   return (
@@ -302,7 +334,14 @@ export function SupportChat() {
                   <div className="support-welcome">
                     <Bot />
                     <h3>How can we help?</h3>
-                    <p>Ask about selling, pickup, item status, shipping or your own account. I only use approved Rewear information. If I’m not sure, I’ll send the conversation to our Support Team.</p>
+                    <p>Choose a common question or type your own. The AI uses approved Rewear information and can hand off to Support when needed.</p>
+                    <div className="support-suggestions" aria-label="Suggested support questions">
+                      {suggestedQuestions.map((item) => (
+                        <button key={item.label} type="button" onClick={() => void startSuggestedQuestion(item.question)} disabled={sending}>
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 ) : null}
                 {messages.map((m) => (
@@ -331,7 +370,22 @@ export function SupportChat() {
               <footer className="support-composer">
                 {active && active.status !== "waiting" && active.status !== "human" && active.status !== "closed" ? (
                   <button className="support-human" type="button" onClick={() => void requestHuman()}><Headphones /> Talk to a human</button>
-                ) : active?.status === "waiting" ? <div className="support-wait-note">Your conversation is waiting for Support. You can keep adding details here.</div> : null}
+                ) : active?.status === "waiting" ? (
+                  <div className="support-wait-wrap">
+                    <div className="support-wait-note">Your conversation is waiting for Support. You can keep adding details here.</div>
+                    <div className="support-ai-restart">
+                      <b>Need an instant AI answer instead?</b>
+                      <span>Start a separate AI conversation:</span>
+                      <div className="support-suggestions compact">
+                        {suggestedQuestions.slice(0, 4).map((item) => (
+                          <button key={item.label} type="button" onClick={() => void startSuggestedQuestion(item.question)} disabled={sending}>
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
                 <div className="support-input-row">
                   <textarea value={input} onChange={(e) => onInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }} maxLength={4000} rows={2} placeholder={active?.status === "closed" ? "Start a new conversation from History" : "Type your message…"} disabled={sending || active?.status === "closed"} />
                   <button type="button" onClick={() => void send()} disabled={!input.trim() || sending || active?.status === "closed"} aria-label="Send message"><Send /></button>
