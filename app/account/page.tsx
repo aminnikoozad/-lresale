@@ -3,6 +3,7 @@ import { ArrowLeft, LogOut, UserRound } from "lucide-react";
 import { redirect } from "next/navigation";
 import { logout } from "../auth/actions";
 import { Dashboard } from "./dashboard";
+import { CommissionSection } from "@/components/commission-section";
 import { CustomerBundles } from "@/components/customer-bundles";
 import { createClient } from "@/lib/supabase/server";
 import { isPhoneVerificationRequired } from "@/lib/canadian-phone";
@@ -289,6 +290,9 @@ export default async function AccountPage({ searchParams }: Props) {
             remaining: slot.capacity - slot.booked_count,
           }))}
       />
+      <div className="account-commission-wrap">
+        <CommissionSection />
+      </div>
       <div className="dashboard" style={{ paddingTop: 0, paddingBottom: 24 }}>
         <CustomerBundles />
       </div>
