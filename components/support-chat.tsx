@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Bot, ChevronLeft, Headphones, History, MessageCircle, Send, ThumbsDown, ThumbsUp, UserRound, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -34,7 +35,9 @@ const statusLabel: Record<Conversation["status"], string> = {
 };
 
 export function SupportChat() {
+  const pathname = usePathname();
   const supabase = useMemo(() => createClient(), []);
+  const [authReady, setAuthReady] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -80,12 +83,16 @@ export function SupportChat() {
   useEffect(() => {
     let alive = true;
     void supabase.auth.getUser().then(({ data }) => {
-      if (alive) setUserId(data.user && !data.user.is_anonymous ? data.user.id : null);
+      if (!alive) return;
+      setUserId(data.user && !data.user.is_anonymous ? data.user.id : null);
+      setAuthReady(true);
+    }).catch(() => {
+      if (alive) setAuthReady(true);
     });
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setAuthReady(true);
       setUserId(session?.user && !session.user.is_anonymous ? session.user.id : null);
       if (!session?.user) {
-        setOpen(false);
         setConversations([]);
         setActiveId(null);
         setMessages([]);
@@ -143,7 +150,43 @@ export function SupportChat() {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, aiTyping, agentTyping, open]);
 
-  if (!userId) return null;
+  if (!authReady) return null;
+
+  if (!userId) {
+    if (pathname !== "/") return null;
+    return (
+      <div className="support-chat-root">
+        {!open ? (
+          <button className="support-chat-launch" type="button" onClick={() => setOpen(true)}>
+            <MessageCircle /> <span>Chat with us</span>
+          </button>
+        ) : (
+          <section className="support-chat-panel support-auth-panel" aria-label="Rewear support sign in">
+            <header className="support-chat-head">
+              <div>
+                <strong>REWEAR Support</strong>
+                <span className="support-status">Sign in required</span>
+              </div>
+              <div className="support-head-actions">
+                <button type="button" title="Close chat" onClick={() => setOpen(false)}><X /></button>
+              </div>
+            </header>
+            <div className="support-auth-gate">
+              <Bot />
+              <p className="eyebrow dark">AI + Human Support</p>
+              <h3>Support is now available from the homepage.</h3>
+              <p>Sign in to start a secure conversation. Your chat history, item questions and pickup status stay connected to your own Rewear account.</p>
+              <div className="support-auth-actions">
+                <a className="support-auth-primary" href="/login">Sign in to chat</a>
+                <a className="support-auth-secondary" href="/signup">Create account</a>
+              </div>
+              <small>For privacy, account-specific support is not available to signed-out visitors.</small>
+            </div>
+          </section>
+        )}
+      </div>
+    );
+  }
 
   async function triggerAi(conversationId: string) {
     setAiTyping(true);
