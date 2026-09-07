@@ -1,0 +1,50 @@
+.account-commission-wrap {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 28px 34px;
+}
+
+.account-commission-wrap .commission-section.section-wrap {
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.account-commission-wrap .commission-heading {
+  max-width: 780px;
+  margin-bottom: 24px;
+}
+
+.account-commission-wrap .commission-heading h2 {
+  font-size: clamp(1.9rem, 3vw, 2.75rem) !important;
+}
+
+.account-commission-wrap .commission-table-wrap {
+  overflow-x: auto !important;
+}
+
+.account-commission-wrap .commission-table-wrap table {
+  min-width: 620px;
+}
+
+.account-commission-wrap .commission-explanation,
+.account-commission-wrap .commission-minimum {
+  max-width: 980px;
+  line-height: 1.65;
+}
+
+@media (max-width: 760px) {
+  .account-commission-wrap {
+    padding: 0 18px 28px;
+  }
+
+  .account-commission-wrap .commission-heading {
+    margin-bottom: 18px;
+  }
+
+  .account-commission-wrap .commission-table-wrap th,
+  .account-commission-wrap .commission-table-wrap td {
+    padding: 13px 14px !important;
+    font-size: 0.86rem;
+  }
+}
