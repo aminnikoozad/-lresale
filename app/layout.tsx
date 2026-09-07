@@ -13,6 +13,7 @@ import "./form.css";
 import "./shop.css";
 import "./logistics.css";
 import "./support-chat.css";
+import "./support-chat-suggestions.css";
 import "./premium-theme.css";
 import "./premium-components.css";
 import "./premium-flows.css";
