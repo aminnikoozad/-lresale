@@ -91,8 +91,9 @@ export function SupportChat() {
     });
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setAuthReady(true);
-      setUserId(session?.user && !session.user.is_anonymous ? session.user.id : null);
-      if (!session?.user) {
+      const nextUserId = session?.user && !session.user.is_anonymous ? session.user.id : null;
+      setUserId(nextUserId);
+      if (!nextUserId) {
         setConversations([]);
         setActiveId(null);
         setMessages([]);
@@ -174,7 +175,7 @@ export function SupportChat() {
             <div className="support-auth-gate">
               <Bot />
               <p className="eyebrow dark">AI + Human Support</p>
-              <h3>Support is now available from the homepage.</h3>
+              <h3>Support is available from the homepage.</h3>
               <p>Sign in to start a secure conversation. Your chat history, item questions and pickup status stay connected to your own Rewear account.</p>
               <div className="support-auth-actions">
                 <a className="support-auth-primary" href="/login">Sign in to chat</a>
