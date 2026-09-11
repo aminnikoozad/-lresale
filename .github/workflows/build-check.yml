@@ -18,9 +18,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - name: Install dependencies
-        run: npm install --ignore-scripts
+      - name: Install dependencies from lockfile
+        run: npm ci --ignore-scripts
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
+      - name: Lint
+        run: npm run lint
       - name: Typecheck and build
         run: npm run build
