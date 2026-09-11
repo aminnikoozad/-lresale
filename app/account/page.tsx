@@ -101,14 +101,17 @@ export default async function AccountPage({ searchParams }: Props) {
       .select(
         "id,name,status,initial_approved_price_cents,listed_price_cents,sold_price_cents,locked_seller_commission_bps,locked_platform_commission_bps,seller_pricing_approved_at,estimated_seller_earnings_cents,final_seller_earnings_cents",
       )
+      .eq("owner_id", user.id)
       .order("created_at", { ascending: false }),
     supabase
       .from("collection_requests")
       .select("id,request_type,category,status,confirmation_status,created_at,pickup_fee_cents,pickup_pricing_mode,priority_pickup")
+      .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
     supabase
       .from("wallet_transactions")
-      .select("amount_cents,transaction_type,status"),
+      .select("amount_cents,transaction_type,status")
+      .eq("user_id", user.id),
     supabase
       .from("service_areas")
       .select("id,city,pickup_mode")

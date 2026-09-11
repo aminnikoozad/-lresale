@@ -307,14 +307,16 @@ async function handoff(service: any, conversation: any, question: string, cls: C
   );
 }
 
-async function trySafeAccountRead(userClient: any, question: string) {
+async function trySafeAccountRead(userClient: ReturnType<typeof createClient>, userId: string, question: string) {
   const q = clean(question);
   if (/my pickup|pickup status|status.*pickup|mon ramassage|statut.*collecte/.test(q)) {
-    const { data } = await userClient
+    const { data, error } = await userClient
       .from("collection_requests")
       .select("status,confirmation_status,scheduled_window_start,scheduled_window_end,category,request_type")
+      .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(3);
+    if (error) throw new Error("account_pickup_read_failed");
     if (!data?.length) {
       return { handled: true, answer: "I don’t see a pickup request connected to your signed-in account yet.", category: "Pickup", subcategory: "New Pickup" };
     }
@@ -327,7 +329,8 @@ async function trySafeAccountRead(userClient: any, question: string) {
     return { handled: true, answer: `Here are the latest pickup requests connected to your account:\n${rows.join("\n")}`, category: "Pickup", subcategory: "New Pickup" };
   }
   if (/my item|item status|status.*item|mes articles|statut.*article/.test(q)) {
-    const { data } = await userClient.from("items").select("name,brand,status").order("created_at", { ascending: false }).limit(5);
+    const { data, error } = await userClient.from("items").select("name,brand,status").eq("owner_id", userId).order("created_at", { ascending: false }).limit(5);
+    if (error) throw new Error("account_item_read_failed");
     if (!data?.length) {
       return { handled: true, answer: "I don’t see any seller items connected to your signed-in account yet.", category: "Selling", subcategory: "Item Status" };
     }
@@ -549,7 +552,7 @@ Deno.serve(async (req: Request) => {
       return json(req, { action: "handoff", category: cls.category, subcategory: cls.subcategory });
     }
 
-    const ownRead = await trySafeAccountRead(userClient, contextQuestion);
+    const ownRead = await trySafeAccountRead(userClient, authData.user.id, contextQuestion);
     if (ownRead.handled) {
       await insertAiAnswer(service, conversationId, ownRead.answer, 1, { account_read: true });
       await service.from("support_conversations").update({ category: ownRead.category, subcategory: ownRead.subcategory, priority: "normal", ai_confidence: 1, last_message_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", conversationId);
