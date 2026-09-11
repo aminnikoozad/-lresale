@@ -30,11 +30,14 @@ async function rateKey(email: string) {
 export async function adminLogin(formData: FormData) {
   const email = text(formData, "email").toLowerCase();
   const password = raw(formData, "password");
-  if (!email || !password) redirect(message("Enter your credentials."));
+  if (!email || email.length > 254 || !password || password.length > 1024) redirect(message("Enter your credentials."));
 
   const supabase = await createClient();
   const key = await rateKey(email);
-  const { data: limitData } = await supabase.rpc("check_admin_login_rate_limit", { p_rate_key: key });
+  const { data: limitData, error: limitError } = await supabase.rpc("check_admin_login_rate_limit", { p_rate_key: key });
+  if (limitError || typeof limitData?.allowed !== 'boolean') {
+    redirect(message("Sign-in protection is temporarily unavailable. Please try again shortly."));
+  }
   if (limitData && limitData.allowed === false) {
     const minutes = Math.max(1, Math.ceil(Number(limitData.retryAfterSeconds || 60) / 60));
     redirect(message(`Too many attempts. Try again in about ${minutes} minute${minutes === 1 ? "" : "s"}.`));

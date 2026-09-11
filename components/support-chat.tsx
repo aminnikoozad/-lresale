@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Bot, ChevronLeft, Headphones, History, MessageCircle, Send, ThumbsDown, ThumbsUp, UserRound, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import '@/app/support-chat-safety.css';
 
 type Conversation = {
   id: string;
@@ -44,6 +45,20 @@ const suggestedQuestions = [
 ];
 
 export function SupportChat() {
+  const supabase = useMemo(() => createClient(), []);
+  const [identity, setIdentity] = useState<string | null>(null);
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIdentity(session?.user && !session.user.is_anonymous ? session.user.id : 'signed-out');
+    });
+    return () => data.subscription.unsubscribe();
+  }, [supabase]);
+  // A new identity gets an entirely new component: drafts, in-flight responses,
+  // typing indicators and messages from the previous session cannot carry over.
+  return identity ? <SupportChatSession key={identity} /> : null;
+}
+
+function SupportChatSession() {
   const pathname = usePathname();
   const supabase = useMemo(() => createClient(), []);
   const [authReady, setAuthReady] = useState(false);
@@ -61,6 +76,7 @@ export function SupportChat() {
   const [error, setError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const messageRead = useRef(0);
 
   const active = conversations.find((c) => c.id === activeId) ?? null;
 
@@ -81,12 +97,13 @@ export function SupportChat() {
   }, [supabase, userId]);
 
   const loadMessages = useCallback(async (conversationId: string) => {
+    const request = ++messageRead.current;
     const { data, error: readError } = await supabase
       .from("support_messages")
       .select("id,conversation_id,sender_kind,sender_display_name,body,customer_helpful,created_at")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true });
-    if (!readError) setMessages((data ?? []) as Message[]);
+    if (!readError && request === messageRead.current) setMessages((data ?? []) as Message[]);
   }, [supabase]);
 
   useEffect(() => {
@@ -116,7 +133,7 @@ export function SupportChat() {
 
   useEffect(() => {
     if (!userId) return;
-    void loadConversations();
+    const initialLoad = setTimeout(() => void loadConversations(), 0);
     void supabase.rpc("support_live_availability").then(({ data }) => {
       const row = Array.isArray(data) ? data[0] : data;
       setLiveAvailable(Boolean(row?.live_available));
@@ -126,15 +143,14 @@ export function SupportChat() {
       .channel(`support-customer-conversations-${userId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "support_conversations", filter: `customer_id=eq.${userId}` }, () => void loadConversations())
       .subscribe();
-    return () => { void supabase.removeChannel(convChannel); };
+    return () => { clearTimeout(initialLoad); void supabase.removeChannel(convChannel); };
   }, [loadConversations, supabase, userId]);
 
   useEffect(() => {
     if (!activeId) {
-      setMessages([]);
       return;
     }
-    void loadMessages(activeId);
+    const initialLoad = setTimeout(() => void loadMessages(activeId), 0);
     void supabase.rpc("support_set_presence", { p_conversation_id: activeId, p_viewing: open, p_typing: false });
 
     const channel = supabase
@@ -151,6 +167,9 @@ export function SupportChat() {
       .subscribe();
 
     return () => {
+      messageRead.current += 1;
+      clearTimeout(initialLoad);
+      if (typingTimer.current) clearTimeout(typingTimer.current);
       void supabase.rpc("support_set_presence", { p_conversation_id: activeId, p_viewing: false, p_typing: false });
       void supabase.removeChannel(channel);
     };
@@ -284,6 +303,7 @@ export function SupportChat() {
   }
 
   function newConversation() {
+    messageRead.current += 1;
     setActiveId(null);
     setMessages([]);
     setHistoryOpen(false);
@@ -344,7 +364,7 @@ export function SupportChat() {
                     </div>
                   </div>
                 ) : null}
-                {messages.map((m) => (
+                {messages.filter((m) => m.conversation_id === activeId).map((m) => (
                   <div key={m.id} className={`support-message ${m.sender_kind}`}>
                     <div className="support-message-meta">
                       {m.sender_kind === "customer" ? <UserRound /> : m.sender_kind === "agent" ? <Headphones /> : <Bot />}
@@ -365,7 +385,7 @@ export function SupportChat() {
                 <div ref={endRef} />
               </div>
 
-              {error ? <div className="support-error">{error}</div> : null}
+              {error ? <div className="support-error" role="alert">{error}</div> : null}
 
               <footer className="support-composer">
                 {active && active.status !== "waiting" && active.status !== "human" && active.status !== "closed" ? (

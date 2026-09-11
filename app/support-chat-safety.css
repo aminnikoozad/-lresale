@@ -1,0 +1,9 @@
+.support-chat-panel{max-height:calc(100dvh - 24px);min-height:0}
+.support-chat-head,.support-composer,.support-availability{flex-shrink:0}
+.support-messages,.support-history{min-height:0;overscroll-behavior:contain}
+.support-composer{max-height:48dvh;overflow-y:auto}
+.support-message{min-width:0;overflow-wrap:anywhere}
+.support-input-row textarea{min-width:0;font-size:16px}
+.support-head-actions button,.support-feedback button{min-width:44px;min-height:44px}
+.support-chat-root{bottom:max(12px,env(safe-area-inset-bottom))}
+@media(prefers-reduced-motion:reduce){.support-typing span{animation:none}.support-suggestions button{transition:none}}
