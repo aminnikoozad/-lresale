@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 type Mode = "loading" | "enroll" | "verify" | "error";
@@ -11,6 +12,7 @@ function readableError(error: unknown) {
 }
 
 export function AdminMfaClient() {
+  const router = useRouter();
   const [factorId, setFactorId] = useState("");
   const [qr, setQr] = useState("");
   const [secret, setSecret] = useState("");
@@ -80,7 +82,8 @@ export function AdminMfaClient() {
   }, []);
 
   useEffect(() => {
-    void prepareMfa();
+    const timer = window.setTimeout(() => void prepareMfa(), 0);
+    return () => window.clearTimeout(timer);
   }, [prepareMfa]);
 
   async function submit(event: FormEvent) {
@@ -103,7 +106,8 @@ export function AdminMfaClient() {
       return;
     }
 
-    window.location.assign("/admin");
+    router.replace("/admin");
+    router.refresh();
   }
 
   if (mode === "loading") {
@@ -126,7 +130,7 @@ export function AdminMfaClient() {
             <button
               className="auth-submit"
               type="button"
-              onClick={() => window.location.assign("/secure-admin-login")}
+              onClick={() => router.replace("/secure-admin-login")}
             >
               Sign in again
             </button>
@@ -149,6 +153,8 @@ export function AdminMfaClient() {
             Scan this QR code with Google Authenticator, Microsoft Authenticator,
             1Password, or another TOTP app.
           </p>
+          {/* The authenticator QR is a short-lived Supabase data URI, not a site asset. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={qr} alt="Authenticator QR code" width={220} height={220} />
           <details>
             <summary>Can’t scan the QR code?</summary>
