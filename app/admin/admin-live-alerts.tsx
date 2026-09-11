@@ -25,10 +25,15 @@ export function AdminLiveAlerts() {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-      setPermission("unsupported");
-    } else {
-      setPermission(Notification.permission);
+    const permissionTimer = window.setTimeout(() => {
+      if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+        setPermission("unsupported");
+      } else {
+        setPermission(Notification.permission);
+      }
+    }, 0);
+
+    if ("Notification" in window && "serviceWorker" in navigator) {
       void navigator.serviceWorker.register("/admin-sw.js", { scope: "/" }).catch(() => undefined);
     }
 
@@ -68,6 +73,7 @@ export function AdminLiveAlerts() {
       .subscribe((status) => setConnected(status === "SUBSCRIBED"));
 
     return () => {
+      window.clearTimeout(permissionTimer);
       void supabase.removeChannel(channel);
     };
   }, []);
