@@ -33,7 +33,7 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    files: ["app/admin/support/[id]/support-thread-client.tsx"],
+    files: ["app/admin/support/**/support-thread-client.tsx"],
     rules: {
       // The initial presence refresh is an external realtime synchronization
       // operation. State is only changed after its async database read returns.
