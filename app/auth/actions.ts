@@ -1,5 +1,7 @@
 "use server";
 
+import { createClient as createAuthClient } from "@supabase/supabase-js";
+import { getSupabaseConfig } from "@/lib/supabase/config";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -140,11 +142,15 @@ export async function requestPasswordReset(formData: FormData) {
     redirect(messageUrl("/forgot-password", "Enter your email address.", "error"));
   }
 
-  const supabase = await createClient();
+  const { url, publishableKey } = getSupabaseConfig();
+  // Recovery emails can be opened in a different browser from the request.
+  const supabase = createAuthClient(url, publishableKey, { auth: { flowType: "implicit", persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
   const origin = await requestOrigin();
-  await supabase.auth.resetPasswordForEmail(email, {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${origin}/auth/callback?next=/update-password`,
   });
+
+  if (error) redirect(messageUrl("/forgot-password", "We could not send a reset link. Please wait a moment and try again.", "error"));
 
   redirect(messageUrl("/forgot-password", "If the account exists, a reset link has been sent.", "success"));
 }
