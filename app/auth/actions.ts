@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isPhoneVerificationRequired, normalizeCanadianPhone } from "@/lib/canadian-phone";
+import { checkPasswordCompromise } from "@/lib/password-security";
 
 function text(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -20,6 +21,19 @@ function rawText(formData: FormData, key: string) {
 function messageUrl(path: string, message: string, type: "error" | "success") {
   const params = new URLSearchParams({ message, type });
   return `${path}?${params.toString()}`;
+}
+
+async function enforcePasswordSafety(password: string, path: "/signup" | "/update-password") {
+  let compromised = false;
+  try {
+    ({ compromised } = await checkPasswordCompromise(password));
+  } catch {
+    redirect(messageUrl(path, "Password safety check is temporarily unavailable. Please try again shortly.", "error"));
+  }
+
+  if (compromised) {
+    redirect(messageUrl(path, "This password has appeared in known data breaches. Choose a different password.", "error"));
+  }
 }
 
 async function requestOrigin() {
@@ -74,6 +88,8 @@ export async function signup(formData: FormData) {
   if (formData.get("terms") !== "accepted") {
     redirect(messageUrl("/signup", "You must accept the account terms.", "error"));
   }
+
+  await enforcePasswordSafety(password, "/signup");
 
   const supabase = await createClient();
   const origin = await requestOrigin();
@@ -161,6 +177,8 @@ export async function updatePassword(formData: FormData) {
   if (password.length < 8 || password !== confirmation) {
     redirect(messageUrl("/update-password", "Use matching passwords with at least 8 characters.", "error"));
   }
+
+  await enforcePasswordSafety(password, "/update-password");
 
   const supabase = await createClient();
   const { error } = await supabase.auth.updateUser({ password });
