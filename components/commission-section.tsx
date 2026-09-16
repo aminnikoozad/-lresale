@@ -5,6 +5,7 @@ import {
   tierPriceLabel,
 } from "@/lib/business-rules";
 import { AccountResaleInsights } from "@/components/account-resale-insights";
+import "@/components/account-resale-legacy-overrides.module.css";
 
 export async function CommissionSection() {
   const supabase = await createClient();
