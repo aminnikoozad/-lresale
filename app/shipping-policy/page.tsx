@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, MapPin, PackageCheck, Truck } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -22,8 +22,14 @@ function money(cents: number) {
 }
 
 export default async function ShippingPolicyPage() {
-  const supabase = await createClient();
-  const { data } = await supabase.rpc("get_shipping_policy");
+  // Shipping policy is public content, so do not inherit a visitor's auth
+  // cookies. A stale session must not affect this page.
+  const supabase = createPublicClient();
+  const { data, error } = await supabase.rpc("get_shipping_policy");
+  if (error) {
+    console.error("[shipping-policy] policy load failed", { code: error.code, message: error.message });
+  }
+
   const policy = (data ?? {
     canadaWideEnabled: true,
     localCenterName: "Montréal",
