@@ -1,7 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Eye } from "lucide-react";
 import { Dashboard } from "../account/dashboard";
 import "../account/account.css";
+
+export const metadata: Metadata = {
+  title: "Demo Customer Account | Rewear",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+  },
+};
 
 export default function DemoAccountPage(){
   return <main className="account-shell">
