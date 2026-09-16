@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, ShieldCheck, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
+import { loadSellingRules } from "@/lib/business-rules";
 import { ShopCatalog, type CatalogCategory, type CatalogProduct } from "./shop-catalog";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,8 @@ type CatalogRow = {
   item_condition: string | null;
   photo_url: string | null;
   price_cents: number;
+  published_at: string | null;
+  inspected_at: string | null;
 };
 
 type ShippingPolicy = {
@@ -37,9 +40,10 @@ type ShippingPolicy = {
 
 export default async function Home() {
   const supabase = await createClient();
-  const [{ data, error }, { data: shippingData, error: shippingError }] = await Promise.all([
-    supabase.rpc("catalog_items"),
+  const [{ data, error }, { data: shippingData, error: shippingError }, sellingRules] = await Promise.all([
+    supabase.rpc("catalog_items_v2"),
     supabase.rpc("get_shipping_policy"),
+    loadSellingRules(supabase),
   ]);
 
   if (error) {
@@ -76,6 +80,8 @@ export default async function Home() {
       condition: row.item_condition,
       size: row.size,
       photoUrl: row.photo_url!,
+      publishedAt: row.published_at,
+      inspectedAt: row.inspected_at,
     }));
 
   return (
@@ -141,7 +147,7 @@ export default async function Home() {
         <Link href="/shipping-policy">Delivery details</Link>
       </section>
 
-      <ShopCatalog products={catalogProducts} />
+      <ShopCatalog products={catalogProducts} sellingPeriodDays={sellingRules.sellingPeriodDays} />
 
       <section id="sell" className="process-section">
         <div className="process-intro">
