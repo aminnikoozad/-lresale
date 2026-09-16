@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ShieldCheck, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { ShopCatalog, type CatalogCategory, type CatalogProduct } from "./shop-catalog";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +36,10 @@ type ShippingPolicy = {
 };
 
 export default async function Home() {
-  const supabase = await createClient();
+  // Storefront data is public by design. Keep these reads independent from a
+  // visitor's auth cookies so an expired or clock-skewed session cannot break
+  // the public homepage.
+  const supabase = createPublicClient();
   const [{ data, error }, { data: shippingData, error: shippingError }] = await Promise.all([
     supabase.rpc("catalog_items"),
     supabase.rpc("get_shipping_policy"),
