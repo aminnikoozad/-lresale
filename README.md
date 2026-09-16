@@ -1,93 +1,40 @@
-# vinext-starter
+# REWEAR
 
-A clean full-stack starter running on [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and Drizzle support.
+REWEAR is a managed second-hand resale marketplace. Customers can shop published inventory or use their account to arrange seller collection, follow managed resale items, review pricing and commission, and contact AI + human support.
 
-## Prerequisites
+## Current product scope
 
-- Node.js `>=22.13.0`
-- Linux with `flock`, `curl`, and GNU `timeout`
+- Managed resale, not peer-to-peer self-listing.
+- Customer account with items, pickup / Bag requests, commission guide, wallet records and support history.
+- Current commission is locked from the initial approved item price.
+- Montréal-area seller pickup uses configured service areas and time slots; current business rules support free priority pickup at the configured threshold and per-item paid pickup below it.
+- Buyer delivery policy is separate from seller pickup and is configured independently.
+- Public catalog only shows staff-published items.
 
-## Sites Lifecycle
+## Managed resale quality workflow
 
-The Sites lifecycle CLI runs the locked dependency install before returning this checkout. Edit the source under `app/`, then checkpoint when a coherent milestone is ready to inspect or share. The remote Sites builder runs `npm run build` against the pushed commit. Do not repeat install or build as a normal pre-checkpoint step.
+Published inventory now has a structured trust workflow:
 
-This starter does not use `wrangler.jsonc`.
+1. Rewear receives and reviews the item.
+2. Staff records a standardized condition grade and customer-facing inspection notes/checks.
+3. Seller pricing approval and the existing locked commission rules remain unchanged.
+4. New listings cannot be published until the Rewear inspection is recorded and at least one photo exists.
+5. Product detail pages can show the recorded condition and inspection report.
+6. The customer account shows a resale progress timeline and can record a Return-to-me or Donate end-of-cycle preference for eligible items.
+7. The admin quality workspace can show an internal historical sold-price median when enough comparable Rewear sales exist. This is a pricing signal only, not an automated or guaranteed sale price.
+8. Listed items nearing the configured selling-period end can be labeled Last Chance. The label does not change the locked commission percentage or automatically apply a markdown.
 
-`install:ci` is intentionally a single, non-retrying `npm ci`. It refuses a concurrent install for the same project, consumes a matching image-seeded npm cache with `--prefer-offline` while retaining registry fallback for a missing cache object, otherwise downloads and verifies the complete vinext tarball recorded in `package-lock.json`, limits npm to one socket, and terminates a stalled install. `build` applies a short timeout. These helpers target Linux and use GNU `timeout`; they are not native macOS scripts.
+### Deliberately not presented as live
 
-Scripts that need writable project-scoped home, npm, XDG, and temporary paths use `scripts/sites-env.sh`. The `dev` and `start` scripts honor the caller's runtime environment and keep Wrangler logs inside the checkout. The generated `.sites-runtime/` directory is disposable and ignored by Git.
+- A Rewear inspection is **not** a brand-authentication guarantee unless a separate authenticity check is explicitly implemented and recorded.
+- Saving Return-to-me / Donate is a preference; it does not itself create a return shipment or donation transaction.
+- Store-credit bonus UI appears only when a non-zero bonus is configured in business rules.
+- Buyer checkout/payment, payout execution, refund automation, Canada-wide seller mail-in labels and one-click resale from purchase history must not be presented as live until their underlying integrations exist.
 
-## Included Shape
+## Support AI
 
-- edit site code under `app/`
-- `app/chatgpt-auth.ts` provides optional dispatch-owned ChatGPT sign-in helpers
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/index.ts` reads the D1 binding from the Cloudflare Worker environment
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+The support system uses approved Rewear knowledge, deterministic live business-rule calculations, authenticated own-account reads, and human handoff. A generative provider is optional and must remain grounded in approved knowledge. The assistant must not invent unavailable features, financial actions, exceptions, authentication claims or another customer's private information.
 
-## Workspace Auth Headers
+## Security and CI
 
-OpenAI workspace sites can read the current user's email from `oai-authenticated-user-email`.
-
-SIWC-authenticated workspace sites may also receive `oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty `name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by `oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
-
-Treat the full name as optional and fall back to email when it is absent:
-
-```tsx
-import { headers } from "next/headers";
-
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
-
-  const displayName = fullName ?? email;
-  // ...
-}
-```
-
-## Optional Dispatch-Owned ChatGPT Sign-In
-
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs optional or required ChatGPT sign-in:
-
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send anonymous visitors through Sign in with ChatGPT.
-- In a Server Component, start sign-in with `<a href={chatGPTSignInPath(returnTo)} target="_top">`. The auth helper module is server-only; do not import it into a Client Component.
-- Do not use `fetch`, XHR, a client-side router, or a framework link that can prefetch the sign-in route. SIWC must start as a top-level navigation.
-- Never request the AuthAPI authorization endpoint directly. The dispatch-owned `/signin-with-chatgpt` route must start the SIWC flow.
-- Use `chatGPTSignOutPath(returnTo)` for browser sign-out links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because they depend on per-request identity headers.
-
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the OAuth cookies, and identity header injection. Do not implement app routes for those reserved paths. Routes that do not import and call the helper remain anonymous-compatible.
-
-SIWC establishes identity only; it does not prove workspace membership. Use the Sites hosting platform's access policy controls for workspace-wide restrictions, or enforce explicit server-side membership or allowlist checks.
-
-Use SIWC for account pages, user-specific dashboards, saved records, and write actions tied to the current ChatGPT user. Leave public content anonymous.
-
-## Diagnostic Commands
-
-- `npm run install:ci`: perform the one bounded lockfile install
-- `npm run dev`: start the Vite/Vinext development server
-- `npm run build`: build the deployable Sites artifact
-- `npm run start`: start the built Vinext application
-- `npm test`: build and verify the rendered development-preview metadata
-- `npm run db:generate`: generate Drizzle migrations after schema changes
-
-Use build commands for targeted diagnosis after a remote failure, not as part of the normal checkpoint path.
-
-The timeout defaults can be overridden for a controlled canary with `SITES_INSTALL_TIMEOUT`, `SITES_INSTALL_KILL_AFTER`, `SITES_BUILD_TIMEOUT`, and `SITES_BUILD_KILL_AFTER`. A timeout fails the command; the helpers never retry an unchanged install or build.
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+GitHub Actions run dependency installation from the lockfile, production dependency audit, security regression tests, lint, TypeScript/build, and CodeQL. Admin and customer-sensitive database RPCs enforce their own authorization checks in addition to application routing.
