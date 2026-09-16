@@ -6,6 +6,10 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "generate:admin-salt": "node scripts/generate-admin-rate-limit-salt.mjs",
+    "predev": "npm run generate:admin-salt",
+    "prebuild": "npm run generate:admin-salt",
+    "prelint": "npm run generate:admin-salt",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
