@@ -45,7 +45,15 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  const shouldBlockIndexing =
+    pathname.startsWith("/admin") ||
+    pathname === "/secure-admin-login" ||
+    pathname === "/demo-account";
+
   response.headers.set("Cache-Control", "private, no-store");
-  response.headers.set("X-Robots-Tag", pathname.startsWith("/admin") || pathname === "/secure-admin-login" ? "noindex, nofollow, noarchive" : "all");
+  response.headers.set(
+    "X-Robots-Tag",
+    shouldBlockIndexing ? "noindex, nofollow, noarchive" : "all",
+  );
   return response;
 }
