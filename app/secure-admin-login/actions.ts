@@ -1,8 +1,9 @@
 "use server";
 
-import { createHash } from "node:crypto";
+import { createHmac } from "node:crypto";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { BUILD_ADMIN_RATE_LIMIT_SALT } from "@/lib/generated/admin-rate-limit-salt";
 import { createClient } from "@/lib/supabase/server";
 
 function text(formData: FormData, key: string) {
@@ -19,12 +20,16 @@ function message(message: string) {
   return `/secure-admin-login?message=${encodeURIComponent(message)}`;
 }
 
+function rateLimitSalt() {
+  const configured = process.env.ADMIN_RATE_LIMIT_SALT?.trim();
+  return configured && configured.length >= 32 ? configured : BUILD_ADMIN_RATE_LIMIT_SALT;
+}
+
 async function rateKey(email: string) {
   const requestHeaders = await headers();
   const forwarded = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim();
   const ip = forwarded || requestHeaders.get("x-real-ip") || "unknown";
-  const salt = process.env.ADMIN_RATE_LIMIT_SALT || "rewear-admin-login-v1";
-  return createHash("sha256").update(`${salt}|${email}|${ip}`).digest("hex");
+  return createHmac("sha256", rateLimitSalt()).update(`${email}|${ip}`).digest("hex");
 }
 
 export async function adminLogin(formData: FormData) {
@@ -35,7 +40,7 @@ export async function adminLogin(formData: FormData) {
   const supabase = await createClient();
   const key = await rateKey(email);
   const { data: limitData, error: limitError } = await supabase.rpc("check_admin_login_rate_limit", { p_rate_key: key });
-  if (limitError || typeof limitData?.allowed !== 'boolean') {
+  if (limitError || typeof limitData?.allowed !== "boolean") {
     redirect(message("Sign-in protection is temporarily unavailable. Please try again shortly."));
   }
   if (limitData && limitData.allowed === false) {
