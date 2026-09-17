@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import { PickupTierUi } from "@/components/pickup-tier-ui";
 import { PickupConfirmationUi } from "@/components/pickup-confirmation-ui";
 import { SupportChat } from "@/components/support-chat";
+import { CartProvider } from "@/components/cart-store";
 import "./globals.css";
 import "./additions.css";
 import "./catalog.css";
@@ -18,6 +19,7 @@ import "./premium-theme.css";
 import "./premium-components.css";
 import "./premium-flows.css";
 import "./premium-route-overrides.css";
+import "./storefront.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
 
@@ -30,7 +32,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={geist.variable}>
-      <body>{children}<PickupTierUi /><PickupConfirmationUi /><SupportChat /></body>
+      <body><CartProvider>{children}<PickupTierUi /><PickupConfirmationUi /><SupportChat /></CartProvider></body>
     </html>
   );
 }
