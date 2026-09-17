@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CreditCard, LockKeyhole, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ function cad(cents: number) {
 }
 
 export function CheckoutClient({ itemIds }: { itemIds: string[] }) {
+  const router = useRouter();
   const { items } = useCart();
   const checkoutItems = useMemo(() => items.filter((item) => itemIds.includes(item.id)), [items, itemIds]);
   const subtotal = checkoutItems.reduce((sum, item) => sum + item.priceCents, 0);
@@ -37,7 +39,7 @@ export function CheckoutClient({ itemIds }: { itemIds: string[] }) {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        window.location.href = "/login";
+        router.push("/login");
         return;
       }
       const { data, error: rpcError } = await supabase.rpc("create_checkout_order", {
@@ -67,7 +69,7 @@ export function CheckoutClient({ itemIds }: { itemIds: string[] }) {
       <h1>Order prepared</h1>
       <p>Your order reference is <strong>{orderId.slice(0, 8).toUpperCase()}</strong>.</p>
       <div className="payment-pending"><CreditCard /><div><b>Payment is not enabled yet</b><span>No charge has been made and the order is not marked paid. Stripe must be connected before secure payment can be activated.</span></div></div>
-      <Button asChild><Link href="/account">View My Purchases</Link></Button>
+      <Button asChild><Link href="/account/purchases">View My Purchases</Link></Button>
     </section>
   );
 
