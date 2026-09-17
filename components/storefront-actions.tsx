@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Heart, ShoppingBag, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ export function AddToCartButton({ item, compact = false }: { item: CartItem; com
 }
 
 export function FavoriteButton({ itemId, compact = false }: { itemId: string; compact?: boolean }) {
+  const router = useRouter();
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -47,7 +49,7 @@ export function FavoriteButton({ itemId, compact = false }: { itemId: string; co
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        window.location.href = "/login";
+        router.push("/login");
         return;
       }
       if (saved) {
