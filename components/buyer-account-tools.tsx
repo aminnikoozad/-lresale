@@ -30,8 +30,8 @@ export function BuyerAccountTools() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
@@ -58,7 +58,10 @@ export function BuyerAccountTools() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void load(false); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
   const catalogMap = useMemo(() => new Map(catalog.map((item) => [item.item_id, item])), [catalog]);
   const unread = alerts.filter((alert) => !alert.read_at).length;
 
@@ -66,8 +69,9 @@ export function BuyerAccountTools() {
     const supabase = createClient();
     const ids = alerts.filter((alert) => !alert.read_at).map((alert) => alert.id);
     if (!ids.length) return;
-    const { error } = await supabase.from("price_drop_alerts").update({ read_at: new Date().toISOString() }).in("id", ids);
-    if (!error) setAlerts((current) => current.map((alert) => ids.includes(alert.id) ? { ...alert, read_at: new Date().toISOString() } : alert));
+    const readAt = new Date().toISOString();
+    const { error } = await supabase.from("price_drop_alerts").update({ read_at: readAt }).in("id", ids);
+    if (!error) setAlerts((current) => current.map((alert) => ids.includes(alert.id) ? { ...alert, read_at: readAt } : alert));
   };
 
   const removeFavorite = async (itemId: string) => {
