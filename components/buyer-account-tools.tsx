@@ -13,12 +13,25 @@ type OrderItem = { id: string; order_id: string; item_id: string; item_name: str
 type ReturnRequest = { id: string; order_id: string; order_item_id: string; reason: string; status: string; created_at: string };
 type CatalogItem = { item_id: string; name: string; brand: string; photo_url: string | null; price_cents: number };
 
+const ORDER_STEPS = [
+  { key: "awaiting_payment", label: "Payment" },
+  { key: "paid", label: "Paid" },
+  { key: "processing", label: "Preparing" },
+  { key: "shipped", label: "Shipped" },
+  { key: "delivered", label: "Delivered" },
+];
+
 function cad(cents: number | null) {
   if (cents == null) return "Pending";
   return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 }
 function date(value: string) { return new Intl.DateTimeFormat("en-CA", { dateStyle: "medium" }).format(new Date(value)); }
 function title(value: string) { return value.replaceAll("_", " ").replace(/\b\w/g, (m) => m.toUpperCase()); }
+function orderStepIndex(order: Order) {
+  if (order.status === "cancelled" || order.status === "refunded") return -1;
+  const index = ORDER_STEPS.findIndex((step) => step.key === order.status);
+  return index < 0 ? 0 : index;
+}
 
 export function BuyerAccountTools() {
   const [favorites, setFavorites] = useState<Favorite[]>([]);
@@ -62,6 +75,7 @@ export function BuyerAccountTools() {
     const timer = window.setTimeout(() => { void load(false); }, 0);
     return () => window.clearTimeout(timer);
   }, [load]);
+
   const catalogMap = useMemo(() => new Map(catalog.map((item) => [item.item_id, item])), [catalog]);
   const unread = alerts.filter((alert) => !alert.read_at).length;
 
@@ -106,7 +120,10 @@ export function BuyerAccountTools() {
 
   return (
     <section className="buyer-tools dashboard">
-      <div className="buyer-tools-heading"><div><p className="eyebrow dark">Buyer account</p><h2>Saved items, alerts and purchases</h2></div>{unread > 0 ? <Button type="button" variant="outline" onClick={markAlertsRead}><Bell /> Mark {unread} read</Button> : null}</div>
+      <div className="buyer-tools-heading">
+        <div><p className="eyebrow dark">Buyer account</p><h2>Saved items, alerts and purchases</h2></div>
+        {unread > 0 ? <Button type="button" variant="outline" onClick={markAlertsRead}><Bell /> Mark {unread} read</Button> : null}
+      </div>
       {message ? <div className="success-banner">{message}</div> : null}
       {loading ? <div className="empty-box"><p>Loading buyer account…</p></div> : (
         <div className="buyer-tools-grid">
@@ -117,19 +134,66 @@ export function BuyerAccountTools() {
               return <article className="buyer-row" key={favorite.item_id}><div><Link href={`/item/${favorite.item_id}`}><b>{item?.name || "Saved item"}</b></Link><span>{item ? `${item.brand} · ${cad(item.price_cents)}` : "This item is no longer publicly listed."}</span></div><button type="button" onClick={() => removeFavorite(favorite.item_id)}>Remove</button></article>;
             }) : <p className="buyer-empty">Items you save with the heart button will appear here.</p>}
           </section>
+
           <section className="buyer-panel">
             <h3><Bell /> Price-drop alerts</h3>
             {alerts.length ? alerts.map((alert) => <article className={`buyer-row ${alert.read_at ? "" : "unread"}`} key={alert.id}><div><Link href={`/item/${alert.item_id}`}><b>{catalogMap.get(alert.item_id)?.name || "Saved item"}</b></Link><span>{cad(alert.old_price_cents)} → <strong>{cad(alert.new_price_cents)}</strong> · {date(alert.created_at)}</span></div></article>) : <p className="buyer-empty">Price drops for saved items will appear here automatically.</p>}
           </section>
+
           <section className="buyer-panel purchases-panel">
             <h3><PackageCheck /> My Purchases</h3>
             {orders.length ? orders.map((order) => {
               const items = orderItems.filter((item) => item.order_id === order.id);
-              return <article className="purchase-card" key={order.id}><header><div><b>Order {order.id.slice(0, 8).toUpperCase()}</b><span>{date(order.created_at)}</span></div><div><strong>{title(order.status)}</strong><small>Payment: {title(order.payment_status)}</small></div></header>{items.map((item) => {
-                const existingReturn = returns.find((entry) => entry.order_item_id === item.id);
-                const eligible = order.status === "delivered" && order.payment_status === "paid" && !existingReturn;
-                return <div className="purchase-item" key={item.id}><div><Link href={`/item/${item.item_id}`}><b>{item.brand} · {item.item_name}</b></Link><span>{item.size ? `Size ${item.size} · ` : ""}{cad(item.unit_price_cents)}</span></div>{existingReturn ? <span className="return-status"><RotateCcw /> Return: {title(existingReturn.status)}</span> : eligible ? <form className="return-form" action={(data) => requestReturn(order, item, data)}><select name="reason" required defaultValue=""><option value="" disabled>Return / claim reason</option><option value="not_as_described">Not as described</option><option value="damaged">Damaged</option><option value="wrong_item">Wrong item</option><option value="fit_or_preference">Fit / preference</option><option value="other">Other</option></select><input name="details" maxLength={2000} placeholder="Details (optional)" /><Button type="submit" size="sm" variant="outline">Request review</Button></form> : null}</div>;
-              })}<footer><span>Subtotal {cad(order.subtotal_cents)}</span>{order.tracking_number ? <span><Truck /> Tracking {order.tracking_number}</span> : null}</footer></article>;
+              const activeStep = orderStepIndex(order);
+              return (
+                <article className="purchase-card" key={order.id}>
+                  <header>
+                    <div><b>Order {order.id.slice(0, 8).toUpperCase()}</b><span>{date(order.created_at)}</span></div>
+                    <div><strong>{title(order.status)}</strong><small>Payment: {title(order.payment_status)}</small></div>
+                  </header>
+
+                  {order.status === "cancelled" || order.status === "refunded" ? (
+                    <div className="order-state-banner">This order is {title(order.status).toLowerCase()}.</div>
+                  ) : (
+                    <div className="order-timeline" aria-label="Order progress">
+                      {ORDER_STEPS.map((step, index) => (
+                        <div className={index <= activeStep ? "complete" : ""} key={step.key}>
+                          <span />
+                          <b>{step.label}</b>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {order.payment_status === "not_configured" ? (
+                    <div className="order-payment-note">Payment processing is not active yet. No charge has been made for this prepared order.</div>
+                  ) : null}
+
+                  {items.map((item) => {
+                    const existingReturn = returns.find((entry) => entry.order_item_id === item.id);
+                    const eligible = order.status === "delivered" && order.payment_status === "paid" && !existingReturn;
+                    return (
+                      <div className="purchase-item" key={item.id}>
+                        <div><Link href={`/item/${item.item_id}`}><b>{item.brand} · {item.item_name}</b></Link><span>{item.size ? `Size ${item.size} · ` : ""}{cad(item.unit_price_cents)}</span></div>
+                        {existingReturn ? (
+                          <span className="return-status"><RotateCcw /> Return: {title(existingReturn.status)}</span>
+                        ) : eligible ? (
+                          <form className="return-form" action={(data) => requestReturn(order, item, data)}>
+                            <select name="reason" required defaultValue=""><option value="" disabled>Return / claim reason</option><option value="not_as_described">Not as described</option><option value="damaged">Damaged</option><option value="wrong_item">Wrong item</option><option value="fit_or_preference">Fit / preference</option><option value="other">Other</option></select>
+                            <input name="details" maxLength={2000} placeholder="Details (optional)" />
+                            <Button type="submit" size="sm" variant="outline">Request review</Button>
+                          </form>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+
+                  <footer>
+                    <span>{order.total_cents != null ? `Total ${cad(order.total_cents)}` : `Subtotal ${cad(order.subtotal_cents)}`}</span>
+                    {order.tracking_number ? <span><Truck /> Tracking {order.tracking_number}</span> : null}
+                  </footer>
+                </article>
+              );
             }) : <p className="buyer-empty">Your purchases will appear here after checkout.</p>}
           </section>
         </div>
