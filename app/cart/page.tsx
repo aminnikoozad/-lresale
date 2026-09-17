@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, ShoppingBag, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, LockKeyhole, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart-store";
 
@@ -21,6 +21,14 @@ export default function CartPage() {
         <Link href="/#shop"><ArrowLeft /> Continue shopping</Link>
         <h1><ShoppingBag /> Your bag</h1>
       </header>
+
+      <div className="checkout-progress" aria-label="Checkout progress">
+        <div className="active"><span>1</span><b>Bag</b></div>
+        <div><span>2</span><b>Delivery</b></div>
+        <div><span>3</span><b>Payment</b></div>
+        <div><span>4</span><b>Confirmation</b></div>
+      </div>
+
       {!items.length ? (
         <section className="cart-empty">
           <ShoppingBag />
@@ -31,6 +39,10 @@ export default function CartPage() {
       ) : (
         <div className="cart-layout">
           <section className="cart-items">
+            <div className="cart-one-of-one-note">
+              <Check />
+              <div><b>Unique inventory</b><span>Every item has a quantity of one. Final availability is verified again at checkout.</span></div>
+            </div>
             {items.map((item) => (
               <article className="cart-item" key={item.id}>
                 <Link href={`/item/${item.id}`} className="cart-thumb"><Image src={item.photoUrl} alt={`${item.brand} ${item.name}`} fill sizes="120px" /></Link>
@@ -45,13 +57,19 @@ export default function CartPage() {
             ))}
             <button type="button" className="cart-clear" onClick={clear}>Clear bag</button>
           </section>
+
           <aside className="cart-summary">
             <h2>Order summary</h2>
             <div><span>{items.length} {items.length === 1 ? "item" : "items"}</span><b>{cad(subtotal)}</b></div>
-            <div><span>Shipping</span><span>Calculated at checkout</span></div>
+            <div><span>Shipping</span><span>Confirmed before payment</span></div>
+            <div><span>Taxes</span><span>Calculated when payment is activated</span></div>
             <div className="cart-total"><span>Subtotal</span><strong>{cad(subtotal)}</strong></div>
-            <Button asChild size="lg"><Link href={checkoutHref}>Continue to checkout</Link></Button>
-            <small>Prices and availability are verified again before an order is created.</small>
+            <Button asChild size="lg"><Link href={checkoutHref}>Continue to delivery</Link></Button>
+            <div className="cart-readiness-list">
+              <span><LockKeyhole /> Server-side price & availability check</span>
+              <span><Truck /> Delivery details collected before payment</span>
+            </div>
+            <small>No card is charged on the current checkout flow. Payment will be activated only through a secure payment provider.</small>
           </aside>
         </div>
       )}
