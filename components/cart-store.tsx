@@ -57,14 +57,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      setItems(raw ? sanitize(JSON.parse(raw)) : []);
-    } catch {
-      setItems([]);
-    } finally {
+    const timer = window.setTimeout(() => {
+      let restored: CartItem[] = [];
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        restored = raw ? sanitize(JSON.parse(raw)) : [];
+      } catch {
+        restored = [];
+      }
+      setItems(restored);
       setReady(true);
-    }
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
