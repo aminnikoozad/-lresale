@@ -9,28 +9,42 @@ import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 import { useCart } from "@/components/cart-store";
 
+export type CheckoutDeliveryDefaults = {
+  recipientName: string;
+  addressLine1: string;
+  city: string;
+  province: string;
+  postalCode: string;
+};
+
+type CheckoutClientProps = {
+  itemIds: string[];
+  initialDelivery?: CheckoutDeliveryDefaults | null;
+};
+
 function cad(cents: number) {
   return new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD" }).format(cents / 100);
 }
 
-export function CheckoutClient({ itemIds }: { itemIds: string[] }) {
+export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClientProps) {
   const router = useRouter();
   const { items } = useCart();
   const checkoutItems = useMemo(() => items.filter((item) => itemIds.includes(item.id)), [items, itemIds]);
   const subtotal = checkoutItems.reduce((sum, item) => sum + item.priceCents, 0);
-  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const [authenticated, setAuthenticated] = useState<boolean | null>(initialDelivery ? true : null);
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (authenticated === true) return;
     const check = async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       setAuthenticated(Boolean(user));
     };
     void check();
-  }, []);
+  }, [authenticated]);
 
   const submit = async (formData: FormData) => {
     setSubmitting(true);
@@ -117,23 +131,24 @@ export function CheckoutClient({ itemIds }: { itemIds: string[] }) {
           </div>
 
           <p className="checkout-intro">Enter the address that will be used for shipping quotes, tax calculation and the final payment step once payment processing is connected.</p>
+          {initialDelivery ? <div className="checkout-prefill-note"><Check /> We prefilled the delivery details saved in your REWEAR profile. Review them before continuing.</div> : null}
           {authenticated === false ? <div className="checkout-login-note">You’ll be asked to sign in before the order can be prepared.</div> : null}
           {error ? <div className="checkout-error">{error}</div> : null}
 
           <div className="checkout-field-section">
             <h2>Recipient</h2>
-            <label>Recipient name<Input name="recipient_name" minLength={2} maxLength={120} required autoComplete="name" /></label>
+            <label>Recipient name<Input name="recipient_name" defaultValue={initialDelivery?.recipientName ?? ""} minLength={2} maxLength={120} required autoComplete="name" /></label>
           </div>
 
           <div className="checkout-field-section">
             <h2>Shipping address</h2>
-            <label>Address<Input name="address_line1" minLength={5} maxLength={200} required autoComplete="address-line1" /></label>
+            <label>Address<Input name="address_line1" defaultValue={initialDelivery?.addressLine1 ?? ""} minLength={5} maxLength={200} required autoComplete="address-line1" /></label>
             <label>Apartment / unit (optional)<Input name="address_line2" maxLength={120} autoComplete="address-line2" /></label>
             <div className="checkout-grid">
-              <label>City<Input name="city" minLength={2} maxLength={100} required autoComplete="address-level2" /></label>
-              <label>Province<Input name="province" defaultValue="QC" minLength={2} maxLength={50} required autoComplete="address-level1" /></label>
+              <label>City<Input name="city" defaultValue={initialDelivery?.city ?? ""} minLength={2} maxLength={100} required autoComplete="address-level2" /></label>
+              <label>Province<Input name="province" defaultValue={initialDelivery?.province || "QC"} minLength={2} maxLength={50} required autoComplete="address-level1" /></label>
             </div>
-            <label>Postal code<Input name="postal_code" minLength={3} maxLength={20} required autoComplete="postal-code" /></label>
+            <label>Postal code<Input name="postal_code" defaultValue={initialDelivery?.postalCode ?? ""} minLength={3} maxLength={20} required autoComplete="postal-code" /></label>
           </div>
 
           <div className="checkout-next-step-preview">
