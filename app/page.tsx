@@ -109,7 +109,7 @@ export default async function Home() {
 
       <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Company-managed shopping</p><h2>Listings are prepared and reviewed by Rewear.</h2><p>Accepted fashion, electronics and Home &amp; Decor pieces are processed by our team before publication. If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
 
-      <footer><div className="brand">REWEAR<span>.</span></div><p>Women · Men · Kids · Shoes · Electronics · Home &amp; Decor</p><div className="footer-links"><Link href="/pickup-policy">Pickup policy</Link><Link href="/shipping-policy">Shipping policy</Link><Link href="/account">Customer account</Link></div></footer>
+      <footer><div className="brand">REWEAR<span>.</span></div><p>Women · Men · Kids · Shoes · Accessories · Electronics · Home &amp; Decor</p><div className="footer-links"><Link href="/pickup-policy">Pickup policy</Link><Link href="/shipping-policy">Shipping policy</Link><Link href="/account">Customer account</Link></div></footer>
     </main>
   );
 }
