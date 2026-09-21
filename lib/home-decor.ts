@@ -7,11 +7,11 @@ export const HOME_SUBCATEGORIES = [
   "Trays",
   "Small Lamps",
   "Clocks",
-  "Tableware & Decorative Dishes",
+  "Decorative Tableware",
   "Bookends",
   "Vintage",
   "Collectibles",
-  "Vintage & Collectibles",
+  "Other Home Decor",
 ] as const;
 export const HOME_ERAS = [
   "Contemporary",
@@ -264,10 +264,8 @@ export function homeCollectionMatches(
   now: number,
 ) {
   if (collection === "Under $50") return priceCents < 5000;
-  if (collection === "Vintage Finds")
-    return String(home.subcategory).includes("Vintage");
-  if (collection === "Collectibles")
-    return String(home.subcategory).includes("Collectibles");
+  if (collection === "Vintage Finds") return home.subcategory === "Vintage";
+  if (collection === "Collectibles") return home.subcategory === "Collectibles";
   if (collection === "Decorative Objects")
     return home.subcategory === "Decorative Objects";
   if (collection === "Art & Wall Decor") return home.subcategory === "Wall Art";
