@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { loadSellingRules } from "@/lib/business-rules";
+import {
+  isCatalogCategory,
+  isCatalogSubcategory,
+} from "@/lib/catalog-taxonomy";
 
 function text(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -69,6 +73,7 @@ export async function createAdminItem(formData: FormData) {
   const name = text(formData, "name");
   const brand = text(formData, "brand");
   const category = text(formData, "category");
+  const subcategory = text(formData, "subcategory");
   const size = text(formData, "size");
   const condition = text(formData, "item_condition");
   const priceCents = centsFromDollars(text(formData, "initial_price"));
@@ -82,12 +87,21 @@ export async function createAdminItem(formData: FormData) {
     redirect(itemsMessage(error instanceof Error ? error.message : "Check the item photos.", "error"));
   }
 
-  if (!ownerId || name.length < 2 || !Number.isInteger(priceCents) || priceCents < 1) {
-    redirect(itemsMessage("Check the customer, item name and proposed price.", "error"));
+  if (
+    !ownerId ||
+    name.length < 2 ||
+    !Number.isInteger(priceCents) ||
+    priceCents < 1 ||
+    !isCatalogCategory(category) ||
+    !isCatalogSubcategory(category, subcategory)
+  ) {
+    redirect(itemsMessage("Check the customer, item name, category, subcategory and proposed price.", "error"));
   }
 
-  const homeRule = category === 'home_decor' ? await supabase.from('home_acceptance_rules').select('minimum_value_cents').eq('category','home_decor').single() : null;
-  if(homeRule?.error)redirect(itemsMessage('Home acceptance rules could not be loaded.','error'));
+  const homeRule = category === "home_decor"
+    ? await supabase.from("home_acceptance_rules").select("minimum_value_cents").eq("category", "home_decor").single()
+    : null;
+  if (homeRule?.error) redirect(itemsMessage("Home acceptance rules could not be loaded.", "error"));
   const minimum = homeRule?.data?.minimum_value_cents ?? rules.minimumIndividualItemValueCents;
   if (priceCents < minimum && belowMinimumAction === "normal") {
     redirect(itemsMessage(
@@ -96,12 +110,13 @@ export async function createAdminItem(formData: FormData) {
     ));
   }
 
-  const { data: itemId, error: createError } = await supabase.rpc("admin_create_item_v2", {
+  const { data: itemId, error: createError } = await supabase.rpc("admin_create_item_v4", {
     target_owner_id: ownerId,
     target_collection_request_id: collectionRequestId || null,
     item_name: name,
     item_brand: brand || null,
     item_category: category,
+    item_subcategory: subcategory,
     item_size: size || null,
     item_condition: condition || null,
     proposed_price_cents: priceCents,
@@ -134,7 +149,7 @@ export async function createAdminItem(formData: FormData) {
   revalidatePath("/admin/operations");
   revalidatePath("/account");
   revalidatePath("/");
-  if(category === "home_decor")redirect(`/admin/home-decor?item=${itemId}`);
+  if (category === "home_decor") redirect(`/admin/home-decor?item=${itemId}`);
   redirect(itemsMessage("Item added to the customer account successfully.", "success"));
 }
 
