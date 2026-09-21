@@ -1,6 +1,13 @@
 "use client";
-import {HomeIntake} from "@/components/home-intake";
 
+import { HomeIntake } from "@/components/home-intake";
+import {
+  CATALOG_CATEGORIES,
+  FASHION_CATEGORIES,
+  categoryLabel,
+  subcategoriesFor,
+  type CatalogCategory,
+} from "@/lib/catalog-taxonomy";
 import { useState } from "react";
 import Link from "next/link";
 import {
@@ -139,7 +146,7 @@ export function Dashboard({
             <span>Items with us</span>
           </div>
           <strong>{items.length}</strong>
-          <small>Fashion and electronics</small>
+          <small>Fashion, electronics and Home &amp; Decor</small>
         </article>
         <article>
           <div>
@@ -257,7 +264,7 @@ export function Dashboard({
                     <div>
                       <b>{request.type}</b>
                       <span>
-                        {request.category} · {request.createdAt}
+                        {categoryLabel(request.category)} · {request.createdAt}
                       </span>
                     </div>
                     <div>
@@ -310,8 +317,8 @@ export function Dashboard({
         <span>✓ Individual listing value is normally $20+</span>
         <span>✓ $100+ estimated collections qualify for free priority pickup</span>
         <span>✓ Smaller pickup requests may carry a per-item pickup fee</span>
-        <span>✓ Washed and neatly folded</span>
-        <span>✓ No stains, tears or damage</span>
+        <span>✓ Clothing should be washed and neatly folded</span>
+        <span>✓ All items should be clean and accurately described</span>
       </section>
     </div>
   );
@@ -331,15 +338,17 @@ function RequestDialog({
   pickupSlots: PickupSlot[];
 }) {
   const [open, setOpen] = useState(false);
-  const [category, setCategory] = useState<"clothing" | "electronics" | "home_decor">(
-    "clothing",
-  );
+  const [category, setCategory] = useState<CatalogCategory>("women");
+  const [subcategory, setSubcategory] = useState("");
   const [serviceAreaId, setServiceAreaId] = useState(serviceAreas[0]?.id ?? "");
   const [estimatedValue, setEstimatedValue] = useState(100);
   const availableSlots = pickupSlots.filter(
     (slot) => slot.serviceAreaId === serviceAreaId,
   );
   const paidPickup = type === "pickup" && estimatedValue > 0 && estimatedValue < 100;
+  const fashionCategory = FASHION_CATEGORIES.includes(category);
+  const subcategoryOptions = subcategoriesFor(category);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -364,15 +373,40 @@ function RequestDialog({
               <select
                 name="category"
                 value={category}
-                onChange={(event) =>
-                  setCategory(event.target.value as "clothing" | "electronics" | "home_decor")
-                }
+                onChange={(event) => {
+                  setCategory(event.target.value as CatalogCategory);
+                  setSubcategory("");
+                }}
               >
-                <option value="clothing">Clothing, shoes or accessories</option>
-                <option value="electronics">Electronics</option><option value="home_decor">Home &amp; Decor</option>
+                {CATALOG_CATEGORIES.map((entry) => (
+                  <option value={entry.value} key={entry.value}>
+                    {entry.label}
+                  </option>
+                ))}
               </select>
             </label>
-            {category === "home_decor" ? <HomeIntake/> : null}
+            {category === "home_decor" ? (
+              <HomeIntake />
+            ) : (
+              <label>
+                Subcategory
+                <select
+                  name="subcategory_hint"
+                  required
+                  value={subcategory}
+                  onChange={(event) => setSubcategory(event.target.value)}
+                >
+                  <option value="" disabled>
+                    Choose a subcategory
+                  </option>
+                  {subcategoryOptions.map((option) => (
+                    <option value={option} key={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label>
               Pickup city
               <select
@@ -485,8 +519,14 @@ function RequestDialog({
               </label>
             ) : null}
             <div className="terms-box">
-              <b>Required terms for {category === "home_decor" ? "Home & Decor" : category}</b>
-              {category === "home_decor" ? (<><p>• Items must be clean, structurally sound, inspectable and suitable for resale.</p><p>• Acceptance depends on current category value requirements, condition and shipping feasibility. Restricted or uncertain items require review.</p><p>• Seller information is preliminary. REWEAR determines listing details after physical inspection.</p></>) : category === "clothing" ? (
+              <b>Required terms for {categoryLabel(category)}</b>
+              {category === "home_decor" ? (
+                <>
+                  <p>• Items must be clean, structurally sound, inspectable and suitable for resale.</p>
+                  <p>• Acceptance depends on current category value requirements, condition and shipping feasibility. Restricted or uncertain items require review.</p>
+                  <p>• Seller information is preliminary. REWEAR determines listing details after physical inspection.</p>
+                </>
+              ) : fashionCategory ? (
                 <>
                   <p>
                     • Individual listings normally require an approved value of
@@ -494,11 +534,11 @@ function RequestDialog({
                     bundle.
                   </p>
                   <p>
-                    • Items must be washed, folded and free of stains, tears,
-                    holes or missing parts.
+                    • Items must be washed or cleaned as appropriate and free of
+                    undisclosed stains, tears, holes or missing parts.
                   </p>
                   <p>
-                    • Accepted clothing is listed for up to 90 days. Unsold
+                    • Accepted fashion items are listed for up to 90 days. Unsold
                     item options are shown when the applicable account feature is available.
                   </p>
                 </>
@@ -506,7 +546,7 @@ function RequestDialog({
                 <>
                   <p>
                     • Devices must power on, function properly and be free of
-                    serious physical damage.
+                    serious physical damage unless disclosed for review.
                   </p>
                   <p>
                     • You must verify ownership. We may check identification,
@@ -517,17 +557,18 @@ function RequestDialog({
                     removed before collection.
                   </p>
                   <p>
-                    • Our technicians test the device and Rewear determines its
+                    • Our technicians test the device and REWEAR determines its
                     resale value.
                   </p>
                 </>
               )}
-              <p>• Pickup dates are determined and confirmed by Rewear.</p>
+              <p>• Pickup dates are determined and confirmed by REWEAR.</p>
               <p>
                 • Your commission is locked from the initial approved item
                 price: you receive 45% at $20–$99.99, 50% at $100–$249.99, 55%
                 at $250–$499.99 and 65% at $500+.
               </p>
+              <p>• Category and subcategory details are intake information; REWEAR confirms final listing taxonomy after physical inspection.</p>
             </div>
             <label className="check">
               <input
@@ -536,7 +577,7 @@ function RequestDialog({
                 required
                 type="checkbox"
               />{" "}
-              I confirm my {category === "home_decor" ? "Home & Decor items" : category} meets the condition, ownership and
+              I confirm my {categoryLabel(category)} items meet the condition, ownership and
               minimum-value requirements.
             </label>
             <label className="check">
