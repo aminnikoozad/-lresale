@@ -25,8 +25,8 @@ import "./checkout-readiness.css";
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Rewear Market | Secondhand fashion, shoes & electronics",
-  description: "Sell and shop quality secondhand clothing, shoes and electronics with managed pickup and Canada-wide shopping.",
+  title: "Rewear Market | Secondhand fashion, electronics & home decor",
+  description: "Sell and shop quality secondhand clothing, shoes, electronics and selected Home & Decor pieces with managed pickup and Canada-wide shopping.",
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };
 
