@@ -1,6 +1,10 @@
 "use server";
 
 import { HOME_SUBCATEGORIES } from "@/lib/home-decor";
+import {
+  isCatalogCategory,
+  isCatalogSubcategory,
+} from "@/lib/catalog-taxonomy";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isPhoneVerificationRequired } from "@/lib/canadian-phone";
@@ -33,6 +37,7 @@ export async function createCollectionRequest(formData: FormData) {
   const rules = await loadSellingRules(supabase);
   const requestType = value(formData, "request_type");
   const category = value(formData, "category");
+  const submittedSubcategory = value(formData, "subcategory_hint");
   const address = value(formData, "address");
   const serviceAreaId = value(formData, "service_area_id");
   const pickupSlotId = value(formData, "pickup_slot_id");
@@ -48,7 +53,7 @@ export async function createCollectionRequest(formData: FormData) {
 
   if (
     !["bag", "pickup"].includes(requestType) ||
-    !["clothing", "shoes", "electronics", "home_decor"].includes(category) ||
+    !isCatalogCategory(category) ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(serviceAreaId) ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(pickupSlotId) ||
     address.length < 10 ||
@@ -80,25 +85,34 @@ export async function createCollectionRequest(formData: FormData) {
   }
 
   const homeIntake: Record<string,string|boolean> = {};
-  if(category==='home_decor'){
-    const type=value(formData,'home_type');
-    if(!HOME_SUBCATEGORIES.includes(type as typeof HOME_SUBCATEGORIES[number]))redirect(accountMessage('Choose a Home & Decor item type.','error'));
-    for(const key of ['type','maker','age','dimensions','damage','mark']){
-      const text=value(formData,`home_${key}`);
-      if(text.length>1000)redirect(accountMessage('Please shorten your item description.','error'));
-      if(text)homeIntake[key]=text;
+  let subcategoryHint = submittedSubcategory;
+  if (category === "home_decor") {
+    const type = value(formData, "home_type");
+    if (!HOME_SUBCATEGORIES.includes(type as typeof HOME_SUBCATEGORIES[number])) {
+      redirect(accountMessage("Choose a Home & Decor item type.", "error"));
     }
-    homeIntake.fragile=formData.get('home_fragile')==='on';
+    subcategoryHint = type;
+    for (const key of ["type", "maker", "age", "dimensions", "damage", "mark"]) {
+      const text = value(formData, `home_${key}`);
+      if (text.length > 1000) redirect(accountMessage("Please shorten your item description.", "error"));
+      if (text) homeIntake[key] = text;
+    }
+    homeIntake.fragile = formData.get("home_fragile") === "on";
+  } else if (!isCatalogSubcategory(category, subcategoryHint)) {
+    redirect(accountMessage("Choose a valid subcategory for the collection.", "error"));
   }
-  // Pricing, priority and fee fields are deliberately not accepted from the browser.
-  // Production database triggers calculate those values from the approved selling rules.
+
+  // Category/subcategory are seller-provided intake hints. REWEAR confirms each item's
+  // final taxonomy after physical inspection. Pricing, priority and fee fields are not
+  // accepted from the browser; production database rules calculate those values.
   const { data: savedRequest, error } = await supabase
     .from("collection_requests")
     .insert({
       user_id: user.id,
       request_type: requestType,
       category,
-      home_intake:homeIntake,
+      subcategory_hint: subcategoryHint,
+      home_intake: homeIntake,
       address,
       service_area_id: serviceAreaId,
       pickup_slot_id: pickupSlotId,
