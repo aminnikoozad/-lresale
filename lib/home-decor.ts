@@ -1,4 +1,4 @@
-import { CATALOG_SUBCATEGORIES } from "@/lib/catalog-taxonomy";
+import { CATALOG_SUBCATEGORIES } from "./catalog-taxonomy";
 
 export const HOME_SUBCATEGORIES = CATALOG_SUBCATEGORIES.home_decor;
 export const HOME_ERAS = [
