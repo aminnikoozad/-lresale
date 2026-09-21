@@ -1,3 +1,5 @@
+import { HOME_SUBCATEGORIES } from "./home-decor";
+
 export const CATALOG_SUBCATEGORIES = {
   women: [
     "Tops",
@@ -99,22 +101,7 @@ export const CATALOG_SUBCATEGORIES = {
     "Chargers & Cables",
     "Other Electronics",
   ],
-  home_decor: [
-    "Wall Art",
-    "Mirrors",
-    "Vases",
-    "Candle Holders",
-    "Decorative Objects",
-    "Trays & Decorative Bowls",
-    "Small Lamps & Lighting",
-    "Clocks",
-    "Decorative Tableware",
-    "Bookends",
-    "Small Home Textiles",
-    "Vintage",
-    "Collectibles",
-    "Other Home Decor",
-  ],
+  home_decor: HOME_SUBCATEGORIES,
 } as const;
 
 export type CatalogCategory = keyof typeof CATALOG_SUBCATEGORIES;
