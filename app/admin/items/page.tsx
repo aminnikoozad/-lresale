@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AdminItemTaxonomyFields } from "@/components/admin-item-taxonomy-fields";
 import { createClient } from "@/lib/supabase/server";
 import { formatCadFromCents, loadSellingRules } from "@/lib/business-rules";
 import { createAdminBundle, createAdminItem, publishAdminItem, reviewAdminItem } from "./actions";
@@ -29,6 +30,7 @@ type AdminItem = {
   name: string;
   brand: string | null;
   category: string;
+  subcategory?: string | null;
   size?: string | null;
   item_condition?: string | null;
   photo_urls?: string[] | null;
@@ -63,7 +65,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
 
   if (permissionResult.error || !permissionResult.data) redirect("/account");
 
-  const itemResult = await supabase.rpc("admin_item_list_v2");
+  const itemResult = await supabase.rpc("admin_item_list_v4");
   const customers = (customerResult.data ?? []) as Customer[];
   const items = (itemResult.data ?? []) as AdminItem[];
   const candidates = items.filter(
@@ -99,7 +101,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
             <h1>Item & Bundle Management</h1>
             <p>
               Identify the seller by Customer ID, inspect and photograph every item, set brand, size,
-              category and price, then publish approved inventory to the live shop.
+              category, subcategory and price, then publish approved inventory to the live shop.
             </p>
           </div>
           <div className="rule-snapshot">
@@ -149,16 +151,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
             <label>Brand
               <input name="brand" maxLength={100} placeholder="Aritzia" />
             </label>
-            <label>Category
-              <select name="category" required defaultValue="women">
-                <option value="women">Women</option>
-                <option value="men">Men</option>
-                <option value="kids">Kids</option>
-                <option value="shoes">Shoes</option>
-                <option value="accessories">Accessories</option>
-                <option value="electronics">Electronics</option><option value="home_decor">Home &amp; Decor</option>
-              </select>
-            </label>
+            <AdminItemTaxonomyFields />
             <label>Size
               <input name="size" maxLength={40} placeholder="XS, M, 8Y, shoe 9, One Size" />
             </label>
@@ -193,7 +186,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
             </label>
             <button className="primary-action" type="submit">Save customer item</button>
           </form>
-          <p className="form-note">Brand and Size feed the customer-facing filters. Shoes use the same Size field as shoe size.</p>
+          <p className="form-note">Category and subcategory feed the customer-facing catalog filters. Shoes use the same Size field as shoe size.</p>
         </section>
 
         <section className="admin-items-card">
@@ -245,7 +238,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                 <div className="item-summary">
                   <div>
                     <h3>{item.name}</h3>
-                    <p>{item.brand || "No brand"} · {statusLabel(item.category)}{item.size ? ` · Size ${item.size}` : ""}</p>
+                    <p>{item.brand || "No brand"} · {statusLabel(item.category)}{item.subcategory ? ` · ${item.subcategory}` : ""}{item.size ? ` · Size ${item.size}` : ""}</p>
                   </div>
                   <span className={`status-badge status-${item.status}`}>{statusLabel(item.status)}</span>
                 </div>
@@ -253,6 +246,8 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                   <div><dt>Customer</dt><dd>{item.owner_name || "Customer"}</dd></div>
                   <div><dt>Username</dt><dd>@{item.owner_username || "—"}</dd></div>
                   <div><dt>Customer ID</dt><dd>{item.customer_code || "—"}</dd></div>
+                  <div><dt>Category</dt><dd>{statusLabel(item.category)}</dd></div>
+                  <div><dt>Subcategory</dt><dd>{item.subcategory || "—"}</dd></div>
                   <div><dt>Initial price</dt><dd>{item.initial_price_cents == null ? "Pending" : formatCadFromCents(item.initial_price_cents)}</dd></div>
                   <div><dt>Live price</dt><dd>{item.listed_price_cents == null ? "—" : formatCadFromCents(item.listed_price_cents)}</dd></div>
                   <div><dt>Size</dt><dd>{item.size || "—"}</dd></div>
