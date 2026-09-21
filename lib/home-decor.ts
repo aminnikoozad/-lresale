@@ -1,6 +1,19 @@
-import { CATALOG_SUBCATEGORIES } from "./catalog-taxonomy";
-
-export const HOME_SUBCATEGORIES = CATALOG_SUBCATEGORIES.home_decor;
+export const HOME_SUBCATEGORIES = [
+  "Wall Art",
+  "Mirrors",
+  "Vases",
+  "Candle Holders",
+  "Decorative Objects",
+  "Trays & Decorative Bowls",
+  "Small Lamps & Lighting",
+  "Clocks",
+  "Decorative Tableware",
+  "Bookends",
+  "Small Home Textiles",
+  "Vintage",
+  "Collectibles",
+  "Other Home Decor",
+] as const;
 export const HOME_ERAS = [
   "Contemporary",
   "2000s",
