@@ -86,9 +86,12 @@ export async function createAdminItem(formData: FormData) {
     redirect(itemsMessage("Check the customer, item name and proposed price.", "error"));
   }
 
-  if (priceCents < rules.minimumIndividualItemValueCents && belowMinimumAction === "normal") {
+  const homeRule = category === 'home_decor' ? await supabase.from('home_acceptance_rules').select('minimum_value_cents').eq('category','home_decor').single() : null;
+  if(homeRule?.error)redirect(itemsMessage('Home acceptance rules could not be loaded.','error'));
+  const minimum = homeRule?.data?.minimum_value_cents ?? rules.minimumIndividualItemValueCents;
+  if (priceCents < minimum && belowMinimumAction === "normal") {
     redirect(itemsMessage(
-      `This item is below the minimum individual listing value of $${(rules.minimumIndividualItemValueCents / 100).toFixed(2)}. Choose Add to Bundle, Reject, Manual Review or Owner Override.`,
+      `This item is below the minimum individual listing value of $${(minimum / 100).toFixed(2)}. Choose Add to Bundle, Reject, Manual Review or Owner Override.`,
       "error",
     ));
   }
@@ -123,7 +126,7 @@ export async function createAdminItem(formData: FormData) {
       if (photoError) throw new Error(photoError.message);
     } catch (error) {
       console.error("[admin/items] photo flow failed", error);
-      redirect(itemsMessage("The item was saved, but its photos could not be attached. You can add the item again after checking the secure upload connection.", "error"));
+      redirect(itemsMessage("The item was saved, but its photos could not be attached. Keep this saved item; use its inspection page to retry the upload.", "error"));
     }
   }
 
@@ -131,6 +134,7 @@ export async function createAdminItem(formData: FormData) {
   revalidatePath("/admin/operations");
   revalidatePath("/account");
   revalidatePath("/");
+  if(category === "home_decor")redirect(`/admin/home-decor?item=${itemId}`);
   redirect(itemsMessage("Item added to the customer account successfully.", "success"));
 }
 

@@ -1,4 +1,5 @@
 "use client";
+import {HomeIntake} from "@/components/home-intake";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -330,7 +331,7 @@ function RequestDialog({
   pickupSlots: PickupSlot[];
 }) {
   const [open, setOpen] = useState(false);
-  const [category, setCategory] = useState<"clothing" | "electronics">(
+  const [category, setCategory] = useState<"clothing" | "electronics" | "home_decor">(
     "clothing",
   );
   const [serviceAreaId, setServiceAreaId] = useState(serviceAreas[0]?.id ?? "");
@@ -364,13 +365,14 @@ function RequestDialog({
                 name="category"
                 value={category}
                 onChange={(event) =>
-                  setCategory(event.target.value as "clothing" | "electronics")
+                  setCategory(event.target.value as "clothing" | "electronics" | "home_decor")
                 }
               >
                 <option value="clothing">Clothing, shoes or accessories</option>
-                <option value="electronics">Electronics</option>
+                <option value="electronics">Electronics</option><option value="home_decor">Home &amp; Decor</option>
               </select>
             </label>
+            {category === "home_decor" ? <HomeIntake/> : null}
             <label>
               Pickup city
               <select
@@ -483,8 +485,8 @@ function RequestDialog({
               </label>
             ) : null}
             <div className="terms-box">
-              <b>Required terms for {category}</b>
-              {category === "clothing" ? (
+              <b>Required terms for {category === "home_decor" ? "Home & Decor" : category}</b>
+              {category === "home_decor" ? (<><p>• Items must be clean, structurally sound, inspectable and suitable for resale.</p><p>• Acceptance depends on current category value requirements, condition and shipping feasibility. Restricted or uncertain items require review.</p><p>• Seller information is preliminary. REWEAR determines listing details after physical inspection.</p></>) : category === "clothing" ? (
                 <>
                   <p>
                     • Individual listings normally require an approved value of
@@ -534,7 +536,7 @@ function RequestDialog({
                 required
                 type="checkbox"
               />{" "}
-              I confirm my {category} meets the condition, ownership and
+              I confirm my {category === "home_decor" ? "Home & Decor items" : category} meets the condition, ownership and
               minimum-value requirements.
             </label>
             <label className="check">

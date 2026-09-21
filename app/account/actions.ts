@@ -1,5 +1,6 @@
 "use server";
 
+import { HOME_SUBCATEGORIES } from "@/lib/home-decor";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isPhoneVerificationRequired } from "@/lib/canadian-phone";
@@ -47,7 +48,7 @@ export async function createCollectionRequest(formData: FormData) {
 
   if (
     !["bag", "pickup"].includes(requestType) ||
-    !["clothing", "shoes", "electronics"].includes(category) ||
+    !["clothing", "shoes", "electronics", "home_decor"].includes(category) ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(serviceAreaId) ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(pickupSlotId) ||
     address.length < 10 ||
@@ -78,6 +79,17 @@ export async function createCollectionRequest(formData: FormData) {
     ));
   }
 
+  const homeIntake: Record<string,string|boolean> = {};
+  if(category==='home_decor'){
+    const type=value(formData,'home_type');
+    if(!HOME_SUBCATEGORIES.includes(type as typeof HOME_SUBCATEGORIES[number]))redirect(accountMessage('Choose a Home & Decor item type.','error'));
+    for(const key of ['type','maker','age','dimensions','damage','mark']){
+      const text=value(formData,`home_${key}`);
+      if(text.length>1000)redirect(accountMessage('Please shorten your item description.','error'));
+      if(text)homeIntake[key]=text;
+    }
+    homeIntake.fragile=formData.get('home_fragile')==='on';
+  }
   // Pricing, priority and fee fields are deliberately not accepted from the browser.
   // Production database triggers calculate those values from the approved selling rules.
   const { data: savedRequest, error } = await supabase
@@ -86,6 +98,7 @@ export async function createCollectionRequest(formData: FormData) {
       user_id: user.id,
       request_type: requestType,
       category,
+      home_intake:homeIntake,
       address,
       service_area_id: serviceAreaId,
       pickup_slot_id: pickupSlotId,

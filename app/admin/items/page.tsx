@@ -86,7 +86,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
         <nav>
           <Link href="/admin">Dashboard</Link>
           <Link href="/admin/operations#pickup-requests">Pickup requests</Link>
-          <Link href="/admin/items">Items</Link>
+          <Link href="/admin/items">Items</Link><Link href="/admin/home-decor">Home &amp; Decor inspection</Link>
           <Link href="/admin/settings">Selling Rules</Link>
           <Link href="/account">Customer account</Link>
         </nav>
@@ -156,7 +156,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                 <option value="kids">Kids</option>
                 <option value="shoes">Shoes</option>
                 <option value="accessories">Accessories</option>
-                <option value="electronics">Electronics</option>
+                <option value="electronics">Electronics</option><option value="home_decor">Home &amp; Decor</option>
               </select>
             </label>
             <label>Size

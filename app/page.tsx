@@ -1,3 +1,5 @@
+import { connection } from "next/server";
+import type { HomeData } from "@/lib/home-decor";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ShieldCheck, Truck } from "lucide-react";
@@ -8,7 +10,7 @@ import { ShopCatalog, type CatalogCategory, type CatalogProduct } from "./shop-c
 
 export const dynamic = "force-dynamic";
 
-const allowedCategories = new Set<CatalogCategory>(["women", "men", "kids", "shoes", "accessories", "electronics"]);
+const allowedCategories = new Set<CatalogCategory>(["women", "men", "kids", "shoes", "accessories", "electronics", "home_decor"]);
 
 type CatalogRow = {
   item_id: string;
@@ -32,15 +34,21 @@ type ShippingPolicy = {
 };
 
 export default async function Home() {
+  await connection();
+  // A request-scoped timestamp keeps new-arrival filters consistent across hydration.
+  const requestTime = new Date().getTime();
   const supabase = createPublicClient();
-  const [{ data, error }, { data: shippingData, error: shippingError }] = await Promise.all([
+  const [{ data, error }, { data: shippingData, error: shippingError }, { data: homeData, error: homeError }] = await Promise.all([
     supabase.rpc("catalog_items"),
     supabase.rpc("get_shipping_policy"),
+    supabase.rpc("home_catalog_details"),
   ]);
 
   if (error) console.error("[home] catalog load failed", { code: error.code, message: error.message });
   if (shippingError) console.error("[home] shipping policy load failed", { code: shippingError.code, message: shippingError.message });
 
+  if(homeError)console.error('[home] Home details unavailable', {code:homeError.code});
+  const homeMap = new Map(((homeData??[]) as {item_id:string;details:HomeData;price_drop:boolean}[]).map(h=>[h.item_id,h]));
   const shipping = (shippingData ?? {}) as ShippingPolicy;
   const localRadius = Number(shipping.localFreeRadiusKm);
   const localCenter = shipping.localCenterName || "Montréal";
@@ -63,13 +71,15 @@ export default async function Home() {
       pattern: row.pattern,
       photoUrl: row.photo_url!,
       publishedAt: row.published_at,
+      home: homeMap.get(row.item_id)?.details,
+      priceDrop: homeMap.get(row.item_id)?.price_drop??false,
     }));
 
   return (
     <main>
       <header className="site-header">
         <Link href="/" className="brand" aria-label="Rewear home">REWEAR<span>.</span></Link>
-        <nav aria-label="Main navigation"><a href="#shop">Shop</a><a href="#women">Women</a><a href="#men">Men</a><a href="#shoes">Shoes</a></nav>
+        <nav aria-label="Main navigation"><a href="#shop">Shop</a><a href="#women">Women</a><a href="#men">Men</a><a href="#home_decor">Home &amp; Decor</a></nav>
         <div className="header-actions"><CartNavLink /><Link href="/account" className="header-account-link">My account</Link><Button asChild className="header-sell-button"><a href="#sell">Sell with us</a></Button></div>
       </header>
 
@@ -88,16 +98,16 @@ export default async function Home() {
 
       <section className="shipping-strip" aria-label="Canada delivery policy"><Truck /><div><strong>{shipping.canadaWideEnabled === false ? "Delivery policy" : "Shop from anywhere in Canada."}</strong><span>{shippingSummary}</span></div><Link href="/shipping-policy">Delivery details</Link></section>
 
-      <ShopCatalog products={catalogProducts} />
+      <ShopCatalog products={catalogProducts} now={requestTime} />
 
       <section id="sell" className="process-section">
         <div className="process-intro"><p className="eyebrow">The effortless way to resell</p><h2>We pick it up.<br />You’re done.</h2><p>From your door to the buyer, our team handles every step. You can follow progress whenever you want.</p><Button asChild variant="secondary"><Link href="/account">Arrange collection</Link></Button></div>
-        <ol className="steps"><li><b>01</b><div><h3>Tell us you’re ready</h3><p>Open your account and request a Bag or collection in just a few steps.</p></div></li><li><b>02</b><div><h3>We collect and prepare everything</h3><p>Our team receives, inspects, photographs, prices and lists your accepted clothing, shoes, accessories and electronics.</p></div></li><li><b>03</b><div><h3>We sell. You earn.</h3><p>We handle buyers and the sale. Your earnings are tracked in your account according to the current payout process.</p></div></li></ol>
+        <ol className="steps"><li><b>01</b><div><h3>Tell us you’re ready</h3><p>Open your account and request a Bag or collection in just a few steps.</p></div></li><li><b>02</b><div><h3>We collect and prepare everything</h3><p>Our team receives, inspects, photographs, prices and lists your accepted clothing, shoes, accessories, electronics and selected Home &amp; Decor pieces.</p></div></li><li><b>03</b><div><h3>We sell. You earn.</h3><p>We handle buyers and the sale. Your earnings are tracked in your account according to the current payout process.</p></div></li></ol>
       </section>
 
-      <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Company-managed shopping</p><h2>Listings are prepared and reviewed by Rewear.</h2><p>Accepted clothing, shoes and electronics are processed by our team before publication. If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
+      <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Company-managed shopping</p><h2>Listings are prepared and reviewed by Rewear.</h2><p>Accepted fashion, electronics and Home &amp; Decor pieces are processed by our team before publication. If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
 
-      <footer><div className="brand">REWEAR<span>.</span></div><p>Women · Men · Kids · Shoes · Electronics</p><div className="footer-links"><Link href="/pickup-policy">Pickup policy</Link><Link href="/shipping-policy">Shipping policy</Link><Link href="/account">Customer account</Link></div></footer>
+      <footer><div className="brand">REWEAR<span>.</span></div><p>Women · Men · Kids · Shoes · Electronics · Home &amp; Decor</p><div className="footer-links"><Link href="/pickup-policy">Pickup policy</Link><Link href="/shipping-policy">Shipping policy</Link><Link href="/account">Customer account</Link></div></footer>
     </main>
   );
 }
