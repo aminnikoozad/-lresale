@@ -23,6 +23,21 @@ test("Home form separates staff-only evidence and rejects invalid numeric input"
     form.set("height_cm", value);
     assert.throws(() => homeFormData(form));
   }
+  assert.deepEqual([...HOME_SUBCATEGORIES], [
+    "Decor",
+    "Wall Art",
+    "Vases",
+    "Candle Holders",
+    "Decorative Objects",
+    "Trays",
+    "Small Lamps",
+    "Clocks",
+    "Decorative Tableware",
+    "Bookends",
+    "Vintage",
+    "Collectibles",
+    "Other Home Decor",
+  ]);
   assert.ok(!HOME_SUBCATEGORIES.some((s) => String(s) === "Antiques"));
 });
 test("Gallery preserves explicit roles and places disclosed defects last", () => {
@@ -55,7 +70,17 @@ test("Merchandising uses actual attributes, dates and strict price bounds", () =
   assert.equal(
     homeCollectionMatches(
       "Vintage Finds",
-      { subcategory: "Vintage & Collectibles" },
+      { subcategory: "Vintage" },
+      10000,
+      null,
+      now,
+    ),
+    true,
+  );
+  assert.equal(
+    homeCollectionMatches(
+      "Collectibles",
+      { subcategory: "Collectibles" },
       10000,
       null,
       now,
