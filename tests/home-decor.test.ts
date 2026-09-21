@@ -24,16 +24,17 @@ test("Home form separates staff-only evidence and rejects invalid numeric input"
     assert.throws(() => homeFormData(form));
   }
   assert.deepEqual([...HOME_SUBCATEGORIES], [
-    "Decor",
     "Wall Art",
+    "Mirrors",
     "Vases",
     "Candle Holders",
     "Decorative Objects",
-    "Trays",
-    "Small Lamps",
+    "Trays & Decorative Bowls",
+    "Small Lamps & Lighting",
     "Clocks",
     "Decorative Tableware",
     "Bookends",
+    "Small Home Textiles",
     "Vintage",
     "Collectibles",
     "Other Home Decor",
