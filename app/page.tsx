@@ -17,6 +17,7 @@ type CatalogRow = {
   name: string;
   brand: string;
   category: string;
+  subcategory: string | null;
   size: string | null;
   item_condition: string | null;
   color: string | null;
@@ -39,7 +40,7 @@ export default async function Home() {
   const requestTime = new Date().getTime();
   const supabase = createPublicClient();
   const [{ data, error }, { data: shippingData, error: shippingError }, { data: homeData, error: homeError }] = await Promise.all([
-    supabase.rpc("catalog_items"),
+    supabase.rpc("catalog_items_v3"),
     supabase.rpc("get_shipping_policy"),
     supabase.rpc("home_catalog_details"),
   ]);
@@ -64,6 +65,7 @@ export default async function Home() {
       brand: row.brand,
       priceCents: row.price_cents,
       category: row.category as CatalogCategory,
+      subcategory: row.subcategory,
       condition: row.item_condition,
       size: row.size,
       color: row.color,
