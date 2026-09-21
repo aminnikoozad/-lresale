@@ -33,6 +33,7 @@ export type CatalogProduct = {
   brand: string;
   priceCents: number;
   category: CatalogCategory;
+  subcategory: string | null;
   condition: string | null;
   size: string | null;
   color: string | null;
@@ -149,6 +150,10 @@ export function ShopCatalog({
     }),
     [categoryProducts],
   );
+  const categorySubcategories = useMemo(
+    () => unique(categoryProducts.map((product) => product.subcategory)),
+    [categoryProducts],
+  );
 
   const minCents =
     minPrice.trim() === ""
@@ -162,10 +167,10 @@ export function ShopCatalog({
     const q = query.trim().toLowerCase();
     const next = categoryProducts.filter((product) => {
       const haystack =
-        `${product.name} ${product.brand} ${product.category} ${product.color || ""} ${product.material || ""} ${product.pattern || ""} ${product.home?.designer || ""} ${product.home?.era || ""} ${product.home?.subcategory || ""} ${product.home?.keywords || ""}`.toLowerCase();
+        `${product.name} ${product.brand} ${product.category} ${product.subcategory || ""} ${product.color || ""} ${product.material || ""} ${product.pattern || ""} ${product.home?.designer || ""} ${product.home?.era || ""} ${product.home?.keywords || ""}`.toLowerCase();
       return (
         (!subcategories.length ||
-          subcategories.includes(String(product.home?.subcategory))) &&
+          (product.subcategory && subcategories.includes(product.subcategory))) &&
         (!eras.length || eras.includes(String(product.home?.era))) &&
         homeFlags.every((f) =>
           f === "price_drop"
@@ -287,20 +292,19 @@ export function ShopCatalog({
         setMinPrice={setMinPrice}
         setMaxPrice={setMaxPrice}
         clearFilters={clearFilters}
+        extraActiveCount={subcategories.length + eras.length + homeFlags.length + (collection ? 1 : 0)}
       />
+      {activeCategory !== "all" ? (
+        <FilterGroup
+          title="Subcategory"
+          values={categorySubcategories}
+          selected={subcategories}
+          onToggle={(value) => toggle(setSubcategories, value)}
+        />
+      ) : null}
       {activeCategory === "home_decor" ? (
         <details className="home-filters" open>
           <summary>Home &amp; Decor filters</summary>
-          <FilterGroup
-            title="Subcategory"
-            values={unique(
-              categoryProducts.map(
-                (p) => String(p.home?.subcategory ?? "") || null,
-              ),
-            )}
-            selected={subcategories}
-            onToggle={(v) => toggle(setSubcategories, v)}
-          />
           <FilterGroup
             title="Era"
             values={unique(
@@ -348,8 +352,8 @@ export function ShopCatalog({
           <h2>Curated finds. Another life.</h2>
         </div>
         <p>
-          Search inspected items and narrow by price, brand, size, condition,
-          colour, material and pattern.
+          Search inspected items and narrow by category, subcategory, price,
+          brand, size, condition, colour, material and pattern.
         </p>
       </div>
       <div className="catalog-searchbar">
@@ -358,7 +362,7 @@ export function ShopCatalog({
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search brand, item, colour…"
+            placeholder="Search brand, item, subcategory, colour…"
           />
         </label>
         <select
@@ -507,6 +511,7 @@ function FilterPanel({
   setMinPrice,
   setMaxPrice,
   clearFilters,
+  extraActiveCount,
 }: {
   activeCategory: TabValue;
   options: {
@@ -538,11 +543,13 @@ function FilterPanel({
   setMinPrice: (value: string) => void;
   setMaxPrice: (value: string) => void;
   clearFilters: () => void;
+  extraActiveCount: number;
 }) {
   const any =
     Object.values(state).some((values) => values.length) ||
     minPrice ||
-    maxPrice;
+    maxPrice ||
+    extraActiveCount > 0;
   return (
     <>
       <div className="filter-title">
@@ -712,11 +719,15 @@ function ProductGrid({
                 <h3>{product.name}</h3>
               </Link>
               <span>
-                {product.size
-                  ? `Size ${product.size}`
-                  : product.category === "home_decor"
-                    ? "Home & Decor"
-                    : product.category}
+                {product.subcategory
+                  ? product.size
+                    ? `${product.subcategory} · Size ${product.size}`
+                    : product.subcategory
+                  : product.size
+                    ? `Size ${product.size}`
+                    : product.category === "home_decor"
+                      ? "Home & Decor"
+                      : product.category}
               </span>
               <div>
                 <b>{cad(product.priceCents)}</b>
