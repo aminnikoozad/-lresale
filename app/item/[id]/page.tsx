@@ -26,6 +26,7 @@ type Product = {
   name: string;
   brand: string;
   category: string;
+  subcategory: string | null;
   size: string | null;
   item_condition: string | null;
   color: string | null;
@@ -59,7 +60,7 @@ export default async function ProductPage({ params }: Props) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
 
   const supabase = createPublicClient();
-  const { data, error } = await supabase.rpc("catalog_item_detail", {
+  const { data, error } = await supabase.rpc("catalog_item_detail_v3", {
     target_item_id: id,
   });
   if (error) {
@@ -156,6 +157,12 @@ export default async function ProductPage({ params }: Props) {
           </div>
 
           <dl className="product-specs">
+            {product.subcategory ? (
+              <div>
+                <dt>Subcategory</dt>
+                <dd>{product.subcategory}</dd>
+              </div>
+            ) : null}
             {product.size ? (
               <div>
                 <dt>Size</dt>
@@ -204,7 +211,6 @@ export default async function ProductPage({ params }: Props) {
               <h2>About this piece</h2>
               <dl className="product-specs">
                 {[
-                  "subcategory",
                   "designer",
                   "era",
                   "height_cm",
