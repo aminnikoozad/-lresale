@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 import { useCart } from "@/components/cart-store";
+import { isCanadianPostal, normalizeCanadianPostal, shippingMessage, type ShippingQuote } from "@/lib/shipping";
 
 export type CheckoutDeliveryDefaults = {
   recipientName: string;
@@ -35,10 +36,29 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [postal, setPostal] = useState(initialDelivery?.postalCode ?? "");
+  const [quote, setQuote] = useState<ShippingQuote | null>(null);
+  const [quoting, setQuoting] = useState(false);
+
+  const refreshQuote = async (value = postal) => {
+    const normalized = normalizeCanadianPostal(value);
+    if (!isCanadianPostal(normalized)) { setQuote({ status: "invalid_postal" }); return null; }
+    setQuoting(true);
+    try {
+      const response = await fetch("/api/shipping/quote", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ itemIds, postalCode: normalized }) });
+      const next = await response.json() as ShippingQuote;
+      setQuote(next);
+      return next;
+    } catch {
+      const next: ShippingQuote = { status: "configuration_error" }; setQuote(next); return next;
+    } finally { setQuoting(false); }
+  };
 
   useEffect(() => {
     if (authenticated === true) return;
     const check = async () => {
+      const currentQuote = await refreshQuote(String(formData.get("postal_code") || ""));
+      if (!currentQuote || !["ok", "local_free"].includes(currentQuote.status)) throw new Error(shippingMessage(currentQuote ?? { status: "configuration_error" }));
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       setAuthenticated(Boolean(user));
@@ -148,7 +168,9 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
               <label>City<Input name="city" defaultValue={initialDelivery?.city ?? ""} minLength={2} maxLength={100} required autoComplete="address-level2" /></label>
               <label>Province<Input name="province" defaultValue={initialDelivery?.province || "QC"} minLength={2} maxLength={50} required autoComplete="address-level1" /></label>
             </div>
-            <label>Postal code<Input name="postal_code" defaultValue={initialDelivery?.postalCode ?? ""} minLength={3} maxLength={20} required autoComplete="postal-code" /></label>
+            <label>Postal code<Input name="postal_code" value={postal} onChange={(e) => { setPostal(e.target.value); setQuote(null); }} minLength={6} maxLength={7} required autoComplete="postal-code" /></label>
+            <Button type="button" variant="outline" onClick={() => void refreshQuote()} disabled={quoting}>{quoting ? "Calculating…" : "Calculate shipping"}</Button>
+            {quote ? <div className="checkout-prefill-note">{shippingMessage(quote)}</div> : null}
           </div>
 
           <div className="checkout-next-step-preview">
@@ -168,15 +190,15 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
               <strong>{cad(item.priceCents)}</strong>
             </div>
           ))}
-          <div className="checkout-summary-row"><span>Shipping</span><span>Pending address quote</span></div>
+          <div className="checkout-summary-row"><span>Shipping</span><span>{quote ? shippingMessage(quote) : "Enter postal code"}</span></div>
           <div className="checkout-summary-row"><span>Taxes</span><span>Calculated before payment</span></div>
-          <div className="cart-total"><span>Subtotal</span><strong>{cad(subtotal)}</strong></div>
+          <div className="cart-total"><span>Estimated total</span><strong>{cad(subtotal + (quote && ["ok","local_free"].includes(quote.status) ? (quote.shippingCents ?? 0) : 0))}</strong></div>
           <div className="checkout-assurance-list">
             <span><ShieldCheck /> Inspected inventory</span>
             <span><LockKeyhole /> Server-verified price</span>
             <span><Truck /> Canada delivery details captured</span>
           </div>
-          <p>Final total will only be shown after shipping and tax logic are connected to the payment step.</p>
+          <p>Shipping is recalculated server-side immediately before order creation. Taxes remain calculated before payment.</p>
         </aside>
       </div>
     </div>
