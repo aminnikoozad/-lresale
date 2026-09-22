@@ -1,23 +1,18 @@
 -- Configurable Canada-wide shipping engine for REWEAR.
 -- Additive migration: existing taxonomy, checkout reservations and Home & Decor data remain authoritative.
 
-create table if not exists public.shipping_settings (
-  id boolean primary key default true check (id),
-  canada_wide_enabled boolean not null default true,
-  free_local_enabled boolean not null default true,
-  dimensional_divisor integer not null default 5000 check (dimensional_divisor between 1 and 100000),
-  handling_cents integer not null default 0 check (handling_cents >= 0),
-  minimum_cents integer not null default 0 check (minimum_cents >= 0),
-  maximum_cents integer check (maximum_cents is null or maximum_cents >= 0),
-  heavy_threshold_grams integer not null default 15000 check (heavy_threshold_grams > 0),
-  heavy_surcharge_cents integer not null default 0 check (heavy_surcharge_cents >= 0),
-  oversize_surcharge_cents integer not null default 0 check (oversize_surcharge_cents >= 0),
-  fragile_surcharge_cents integer not null default 0 check (fragile_surcharge_cents >= 0),
-  quote_ttl_seconds integer not null default 1800 check (quote_ttl_seconds between 60 and 86400),
-  rule_version integer not null default 1 check (rule_version > 0),
-  updated_at timestamptz not null default now()
-);
-insert into public.shipping_settings(id) values(true) on conflict (id) do nothing;
+-- Extend the existing shipping_settings singleton instead of duplicating the established 20 km/local-delivery configuration.
+alter table public.shipping_settings add column if not exists free_local_enabled boolean not null default true;
+alter table public.shipping_settings add column if not exists dimensional_divisor integer not null default 5000 check (dimensional_divisor between 1 and 100000);
+alter table public.shipping_settings add column if not exists handling_cents integer not null default 0 check (handling_cents >= 0);
+alter table public.shipping_settings add column if not exists minimum_cents integer not null default 0 check (minimum_cents >= 0);
+alter table public.shipping_settings add column if not exists maximum_cents integer check (maximum_cents is null or maximum_cents >= 0);
+alter table public.shipping_settings add column if not exists heavy_threshold_grams integer not null default 15000 check (heavy_threshold_grams > 0);
+alter table public.shipping_settings add column if not exists heavy_surcharge_cents integer not null default 0 check (heavy_surcharge_cents >= 0);
+alter table public.shipping_settings add column if not exists oversize_surcharge_cents integer not null default 0 check (oversize_surcharge_cents >= 0);
+alter table public.shipping_settings add column if not exists fragile_surcharge_cents integer not null default 0 check (fragile_surcharge_cents >= 0);
+alter table public.shipping_settings add column if not exists quote_ttl_seconds integer not null default 1800 check (quote_ttl_seconds between 60 and 86400);
+alter table public.shipping_settings add column if not exists rule_version integer not null default 1 check (rule_version > 0);
 
 create table if not exists public.shipping_zones (
   id uuid primary key default gen_random_uuid(),
@@ -162,7 +157,7 @@ begin
     return jsonb_build_object('status','invalid_postal');
   end if;
   fsa := left(normalized,3);
-  select * into s from public.shipping_settings where id=true;
+  select * into s from public.shipping_settings where singleton=true;
   if not found then return jsonb_build_object('status','configuration_error'); end if;
   rule_v := s.rule_version;
 
@@ -274,9 +269,9 @@ grant execute on function public.quote_shipping(uuid[],text) to anon,authenticat
 create or replace function public.admin_shipping_state()
 returns jsonb language plpgsql security definer set search_path='' as $$
 begin
- if not coalesce(public.can_manage_items(),false) then raise exception 'Admin permission required'; end if;
+ perform private.assert_admin_permission('shipping');
  return jsonb_build_object(
-  'settings',(select to_jsonb(s) from public.shipping_settings s where id=true),
+  'settings',(select to_jsonb(s) from public.shipping_settings s where singleton=true),
   'zones',(select coalesce(jsonb_agg(to_jsonb(z) order by z.priority,z.name),'[]'::jsonb) from public.shipping_zones z),
   'postalRules',(select coalesce(jsonb_agg(to_jsonb(r) order by r.priority,r.fsa_prefix),'[]'::jsonb) from public.shipping_zone_postal_rules r),
   'profiles',(select coalesce(jsonb_agg(to_jsonb(p) order by p.name),'[]'::jsonb) from public.shipping_profiles p),
@@ -290,9 +285,9 @@ create or replace function public.admin_shipping_simulate(postal_code text, p_ca
 returns jsonb language plpgsql security definer set search_path='' as $$
 declare result jsonb; p public.shipping_profiles%rowtype; s public.shipping_settings%rowtype; fsa text; zr public.shipping_zone_postal_rules%rowtype; z public.shipping_zones%rowtype; cr public.shipping_category_rules%rowtype; dim_g bigint; billable bigint; total bigint; sur bigint;
 begin
- if not coalesce(public.can_manage_items(),false) then raise exception 'Admin permission required'; end if;
+ perform private.assert_admin_permission('shipping');
  if not private.valid_canadian_postal(postal_code) then return jsonb_build_object('status','invalid_postal'); end if;
- select * into s from public.shipping_settings where id=true;
+ select * into s from public.shipping_settings where singleton=true;
  fsa:=left(private.normalize_canadian_postal(postal_code),3);
  select * into zr from public.shipping_zone_postal_rules where fsa_prefix=fsa and active order by priority limit 1;
  if found and s.free_local_enabled and zr.is_local_free then return jsonb_build_object('status','local_free','shippingCents',0,'ruleVersion',s.rule_version,'packageCount',1); end if;
@@ -314,7 +309,7 @@ grant execute on function public.admin_shipping_simulate(text,text,text,integer,
 create or replace function public.admin_set_item_shipping(p_item uuid,p_weight_grams integer,p_length_mm integer,p_width_mm integer,p_height_mm integer,p_fragile boolean,p_oversize boolean,p_separate boolean,p_local_only boolean,p_profile uuid)
 returns void language plpgsql security definer set search_path='' as $$
 begin
- if not coalesce(public.can_manage_items(),false) then raise exception 'Admin permission required'; end if;
+ perform private.assert_admin_permission('shipping');
  update public.items set shipping_weight_grams=p_weight_grams,shipping_length_mm=p_length_mm,shipping_width_mm=p_width_mm,shipping_height_mm=p_height_mm,
  shipping_fragile=p_fragile,shipping_oversize=p_oversize,shipping_separately=p_separate,local_delivery_only=p_local_only,shipping_profile_override_id=p_profile where id=p_item;
  if not found then raise exception 'Item not found'; end if;
@@ -389,7 +384,7 @@ end $$;
 create or replace function public.admin_update_shipping_settings(p jsonb)
 returns void language plpgsql security definer set search_path='' as $$
 begin
- if not coalesce(public.can_manage_items(),false) then raise exception 'Admin permission required'; end if;
+ perform private.assert_admin_permission('shipping');
  update public.shipping_settings set
   canada_wide_enabled=coalesce((p->>'canada_wide_enabled')::boolean,canada_wide_enabled),
   free_local_enabled=coalesce((p->>'free_local_enabled')::boolean,free_local_enabled),
@@ -403,7 +398,7 @@ begin
   fragile_surcharge_cents=coalesce((p->>'fragile_surcharge_cents')::integer,fragile_surcharge_cents),
   quote_ttl_seconds=coalesce((p->>'quote_ttl_seconds')::integer,quote_ttl_seconds),
   rule_version=rule_version+1,updated_at=now()
- where id=true;
+ where singleton=true;
 end $$;
 revoke all on function public.admin_update_shipping_settings(jsonb) from public;
 grant execute on function public.admin_update_shipping_settings(jsonb) to authenticated;
@@ -412,15 +407,15 @@ create or replace function public.admin_upsert_shipping_zone(p jsonb)
 returns uuid language plpgsql security definer set search_path='' as $$
 declare rid uuid:=nullif(p->>'id','')::uuid;
 begin
- if not coalesce(public.can_manage_items(),false) then raise exception 'Admin permission required'; end if;
+ perform private.assert_admin_permission('shipping');
  if rid is null then
   insert into public.shipping_zones(name,base_cents,additional_kg_cents,enabled,priority,rule_version)
-  values(trim(p->>'name'),(p->>'base_cents')::integer,(p->>'additional_kg_cents')::integer,coalesce((p->>'enabled')::boolean,true),coalesce((p->>'priority')::integer,100),(select rule_version+1 from public.shipping_settings where id=true))
+  values(trim(p->>'name'),(p->>'base_cents')::integer,(p->>'additional_kg_cents')::integer,coalesce((p->>'enabled')::boolean,true),coalesce((p->>'priority')::integer,100),(select rule_version+1 from public.shipping_settings where singleton=true))
   returning id into rid;
  else
-  update public.shipping_zones set name=trim(p->>'name'),base_cents=(p->>'base_cents')::integer,additional_kg_cents=(p->>'additional_kg_cents')::integer,enabled=coalesce((p->>'enabled')::boolean,enabled),priority=coalesce((p->>'priority')::integer,priority),rule_version=(select rule_version+1 from public.shipping_settings where id=true),updated_at=now() where id=rid;
+  update public.shipping_zones set name=trim(p->>'name'),base_cents=(p->>'base_cents')::integer,additional_kg_cents=(p->>'additional_kg_cents')::integer,enabled=coalesce((p->>'enabled')::boolean,enabled),priority=coalesce((p->>'priority')::integer,priority),rule_version=(select rule_version+1 from public.shipping_settings where singleton=true),updated_at=now() where id=rid;
  end if;
- update public.shipping_settings set rule_version=rule_version+1,updated_at=now() where id=true;
+ update public.shipping_settings set rule_version=rule_version+1,updated_at=now() where singleton=true;
  return rid;
 end $$;
 revoke all on function public.admin_upsert_shipping_zone(jsonb) from public;
@@ -430,15 +425,15 @@ create or replace function public.admin_upsert_shipping_postal_rule(p jsonb)
 returns uuid language plpgsql security definer set search_path='' as $$
 declare rid uuid:=nullif(p->>'id','')::uuid; fsa text:=upper(trim(p->>'fsa_prefix'));
 begin
- if not coalesce(public.can_manage_items(),false) then raise exception 'Admin permission required'; end if;
+ perform private.assert_admin_permission('shipping');
  if fsa !~ '^[ABCEGHJKLMNPRSTVXY][0-9][ABCEGHJKLMNPRSTVWXYZ]$' then raise exception 'Invalid FSA'; end if;
  if rid is null then
   insert into public.shipping_zone_postal_rules(zone_id,fsa_prefix,is_local_free,shipping_disabled,active,priority,rule_version)
-  values(nullif(p->>'zone_id','')::uuid,fsa,coalesce((p->>'is_local_free')::boolean,false),coalesce((p->>'shipping_disabled')::boolean,false),coalesce((p->>'active')::boolean,true),coalesce((p->>'priority')::integer,100),(select rule_version+1 from public.shipping_settings where id=true)) returning id into rid;
+  values(nullif(p->>'zone_id','')::uuid,fsa,coalesce((p->>'is_local_free')::boolean,false),coalesce((p->>'shipping_disabled')::boolean,false),coalesce((p->>'active')::boolean,true),coalesce((p->>'priority')::integer,100),(select rule_version+1 from public.shipping_settings where singleton=true)) returning id into rid;
  else
-  update public.shipping_zone_postal_rules set zone_id=nullif(p->>'zone_id','')::uuid,fsa_prefix=fsa,is_local_free=coalesce((p->>'is_local_free')::boolean,is_local_free),shipping_disabled=coalesce((p->>'shipping_disabled')::boolean,shipping_disabled),active=coalesce((p->>'active')::boolean,active),priority=coalesce((p->>'priority')::integer,priority),rule_version=(select rule_version+1 from public.shipping_settings where id=true) where id=rid;
+  update public.shipping_zone_postal_rules set zone_id=nullif(p->>'zone_id','')::uuid,fsa_prefix=fsa,is_local_free=coalesce((p->>'is_local_free')::boolean,is_local_free),shipping_disabled=coalesce((p->>'shipping_disabled')::boolean,shipping_disabled),active=coalesce((p->>'active')::boolean,active),priority=coalesce((p->>'priority')::integer,priority),rule_version=(select rule_version+1 from public.shipping_settings where singleton=true) where id=rid;
  end if;
- update public.shipping_settings set rule_version=rule_version+1,updated_at=now() where id=true; return rid;
+ update public.shipping_settings set rule_version=rule_version+1,updated_at=now() where singleton=true; return rid;
 end $$;
 revoke all on function public.admin_upsert_shipping_postal_rule(jsonb) from public;
 grant execute on function public.admin_upsert_shipping_postal_rule(jsonb) to authenticated;
@@ -447,14 +442,14 @@ create or replace function public.admin_upsert_shipping_profile(p jsonb)
 returns uuid language plpgsql security definer set search_path='' as $$
 declare rid uuid:=nullif(p->>'id','')::uuid;
 begin
- if not coalesce(public.can_manage_items(),false) then raise exception 'Admin permission required'; end if;
+ perform private.assert_admin_permission('shipping');
  if rid is null then
   insert into public.shipping_profiles(name,weight_grams,length_mm,width_mm,height_mm,fragile,oversize,ships_separately,local_delivery_only,compatibility_group,active,rule_version)
-  values(trim(p->>'name'),(p->>'weight_grams')::integer,(p->>'length_mm')::integer,(p->>'width_mm')::integer,(p->>'height_mm')::integer,coalesce((p->>'fragile')::boolean,false),coalesce((p->>'oversize')::boolean,false),coalesce((p->>'ships_separately')::boolean,false),coalesce((p->>'local_delivery_only')::boolean,false),coalesce(nullif(trim(p->>'compatibility_group'),''),'general'),coalesce((p->>'active')::boolean,true),(select rule_version+1 from public.shipping_settings where id=true)) returning id into rid;
+  values(trim(p->>'name'),(p->>'weight_grams')::integer,(p->>'length_mm')::integer,(p->>'width_mm')::integer,(p->>'height_mm')::integer,coalesce((p->>'fragile')::boolean,false),coalesce((p->>'oversize')::boolean,false),coalesce((p->>'ships_separately')::boolean,false),coalesce((p->>'local_delivery_only')::boolean,false),coalesce(nullif(trim(p->>'compatibility_group'),''),'general'),coalesce((p->>'active')::boolean,true),(select rule_version+1 from public.shipping_settings where singleton=true)) returning id into rid;
  else
-  update public.shipping_profiles set name=trim(p->>'name'),weight_grams=(p->>'weight_grams')::integer,length_mm=(p->>'length_mm')::integer,width_mm=(p->>'width_mm')::integer,height_mm=(p->>'height_mm')::integer,fragile=coalesce((p->>'fragile')::boolean,fragile),oversize=coalesce((p->>'oversize')::boolean,oversize),ships_separately=coalesce((p->>'ships_separately')::boolean,ships_separately),local_delivery_only=coalesce((p->>'local_delivery_only')::boolean,local_delivery_only),compatibility_group=coalesce(nullif(trim(p->>'compatibility_group'),''),compatibility_group),active=coalesce((p->>'active')::boolean,active),rule_version=(select rule_version+1 from public.shipping_settings where id=true) where id=rid;
+  update public.shipping_profiles set name=trim(p->>'name'),weight_grams=(p->>'weight_grams')::integer,length_mm=(p->>'length_mm')::integer,width_mm=(p->>'width_mm')::integer,height_mm=(p->>'height_mm')::integer,fragile=coalesce((p->>'fragile')::boolean,fragile),oversize=coalesce((p->>'oversize')::boolean,oversize),ships_separately=coalesce((p->>'ships_separately')::boolean,ships_separately),local_delivery_only=coalesce((p->>'local_delivery_only')::boolean,local_delivery_only),compatibility_group=coalesce(nullif(trim(p->>'compatibility_group'),''),compatibility_group),active=coalesce((p->>'active')::boolean,active),rule_version=(select rule_version+1 from public.shipping_settings where singleton=true) where id=rid;
  end if;
- update public.shipping_settings set rule_version=rule_version+1,updated_at=now() where id=true; return rid;
+ update public.shipping_settings set rule_version=rule_version+1,updated_at=now() where singleton=true; return rid;
 end $$;
 revoke all on function public.admin_upsert_shipping_profile(jsonb) from public;
 grant execute on function public.admin_upsert_shipping_profile(jsonb) to authenticated;
@@ -463,14 +458,14 @@ create or replace function public.admin_upsert_shipping_category_rule(p jsonb)
 returns uuid language plpgsql security definer set search_path='' as $$
 declare rid uuid:=nullif(p->>'id','')::uuid;
 begin
- if not coalesce(public.can_manage_items(),false) then raise exception 'Admin permission required'; end if;
+ perform private.assert_admin_permission('shipping');
  if rid is null then
   insert into public.shipping_category_rules(category,subcategory,profile_id,surcharge_cents,active,priority,rule_version)
-  values(p->>'category',nullif(p->>'subcategory',''),nullif(p->>'profile_id','')::uuid,coalesce((p->>'surcharge_cents')::integer,0),coalesce((p->>'active')::boolean,true),coalesce((p->>'priority')::integer,100),(select rule_version+1 from public.shipping_settings where id=true)) returning id into rid;
+  values(p->>'category',nullif(p->>'subcategory',''),nullif(p->>'profile_id','')::uuid,coalesce((p->>'surcharge_cents')::integer,0),coalesce((p->>'active')::boolean,true),coalesce((p->>'priority')::integer,100),(select rule_version+1 from public.shipping_settings where singleton=true)) returning id into rid;
  else
-  update public.shipping_category_rules set category=p->>'category',subcategory=nullif(p->>'subcategory',''),profile_id=nullif(p->>'profile_id','')::uuid,surcharge_cents=coalesce((p->>'surcharge_cents')::integer,surcharge_cents),active=coalesce((p->>'active')::boolean,active),priority=coalesce((p->>'priority')::integer,priority),rule_version=(select rule_version+1 from public.shipping_settings where id=true) where id=rid;
+  update public.shipping_category_rules set category=p->>'category',subcategory=nullif(p->>'subcategory',''),profile_id=nullif(p->>'profile_id','')::uuid,surcharge_cents=coalesce((p->>'surcharge_cents')::integer,surcharge_cents),active=coalesce((p->>'active')::boolean,active),priority=coalesce((p->>'priority')::integer,priority),rule_version=(select rule_version+1 from public.shipping_settings where singleton=true) where id=rid;
  end if;
- update public.shipping_settings set rule_version=rule_version+1,updated_at=now() where id=true; return rid;
+ update public.shipping_settings set rule_version=rule_version+1,updated_at=now() where singleton=true; return rid;
 end $$;
 revoke all on function public.admin_upsert_shipping_category_rule(jsonb) from public;
 grant execute on function public.admin_upsert_shipping_category_rule(jsonb) to authenticated;
@@ -479,7 +474,7 @@ create or replace function public.admin_item_shipping_overrides()
 returns table(item_id uuid,weight_grams integer,length_mm integer,width_mm integer,height_mm integer,fragile boolean,oversize boolean,ships_separately boolean,local_delivery_only boolean,profile_id uuid)
 language plpgsql security definer set search_path='' as $$
 begin
- if not coalesce(public.can_manage_items(),false) then raise exception 'Admin permission required'; end if;
+ perform private.assert_admin_permission('shipping');
  return query select i.id,i.shipping_weight_grams,i.shipping_length_mm,i.shipping_width_mm,i.shipping_height_mm,i.shipping_fragile,i.shipping_oversize,i.shipping_separately,i.local_delivery_only,i.shipping_profile_override_id from public.items i order by i.created_at desc;
 end $$;
 revoke all on function public.admin_item_shipping_overrides() from public;
