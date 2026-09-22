@@ -4,6 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Check, LockKeyhole, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { isCanadianPostal, normalizeCanadianPostal, shippingMessage, type ShippingQuote } from "@/lib/shipping";
 import { useCart } from "@/components/cart-store";
 
 function cad(cents: number) {
@@ -14,6 +17,19 @@ export default function CartPage() {
   const { items, remove, clear } = useCart();
   const subtotal = items.reduce((sum, item) => sum + item.priceCents, 0);
   const checkoutHref = items.length ? `/checkout?items=${encodeURIComponent(items.map((item) => item.id).join(","))}` : "#";
+  const [postal, setPostal] = useState("");
+  const [quote, setQuote] = useState<ShippingQuote | null>(null);
+  const [quoting, setQuoting] = useState(false);
+  async function calculateShipping() {
+    const normalized = normalizeCanadianPostal(postal);
+    if (!isCanadianPostal(normalized)) { setQuote({ status: "invalid_postal" }); return; }
+    setQuoting(true);
+    try {
+      const response = await fetch("/api/shipping/quote", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ itemIds: items.map((i) => i.id), postalCode: normalized }) });
+      setQuote(await response.json());
+    } catch { setQuote({ status: "configuration_error" }); } finally { setQuoting(false); }
+  }
+  const shippingCents = quote && ["ok","local_free"].includes(quote.status) ? (quote.shippingCents ?? 0) : null;
 
   return (
     <main className="cart-page section-wrap">
@@ -61,9 +77,11 @@ export default function CartPage() {
           <aside className="cart-summary">
             <h2>Order summary</h2>
             <div><span>{items.length} {items.length === 1 ? "item" : "items"}</span><b>{cad(subtotal)}</b></div>
-            <div><span>Shipping</span><span>Confirmed before payment</span></div>
+            <div className="cart-shipping-quote"><span>Shipping</span><span>{quote ? shippingMessage(quote) : "Enter postal code below"}</span></div>
+            <label>Canadian postal code<Input value={postal} onChange={(e) => { setPostal(e.target.value); setQuote(null); }} placeholder="A1A 1A1" maxLength={7} /></label>
+            <Button type="button" variant="outline" onClick={calculateShipping} disabled={quoting}>{quoting ? "Calculating…" : "Calculate shipping"}</Button>
             <div><span>Taxes</span><span>Calculated when payment is activated</span></div>
-            <div className="cart-total"><span>Subtotal</span><strong>{cad(subtotal)}</strong></div>
+            <div className="cart-total"><span>Estimated order total</span><strong>{cad(subtotal + (shippingCents ?? 0))}</strong></div>
             <Button asChild size="lg"><Link href={checkoutHref}>Continue to delivery</Link></Button>
             <div className="cart-readiness-list">
               <span><LockKeyhole /> Server-side price & availability check</span>

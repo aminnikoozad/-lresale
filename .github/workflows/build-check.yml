@@ -3,6 +3,8 @@ name: Build Check
 on:
   push:
     branches: [ci-check]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:

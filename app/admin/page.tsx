@@ -102,7 +102,7 @@ export default async function AdminPage() {
           <div className="area-grid">
             <article><div><b>Pickup Scheduler</b><span>Create and pause customer-selectable time windows.</span></div><Link href="/admin/operations">Open</Link></article>
             <article><div><b>Item & Bundle Management</b><span>Inspect, price, photograph, bundle and publish seller items.</span></div><Link href="/admin/items">Open</Link></article>
-            <article><div><b>Selling Rules</b><span>Minimums, commissions and configurable business rules.</span></div><Link href="/admin/settings">Open</Link></article>
+            <article><div><b>Selling Rules</b><span>Minimums, commissions and configurable business rules.</span></div><Link href="/admin/settings">Open</Link></article><article><div><b>Shipping</b><span>Canada-wide zones, FSA rules, parcel profiles, surcharges and simulator.</span></div><Link href="/admin/shipping">Open</Link></article>
             <article><div><b>Security</b><span>Password, MFA status and privileged account controls.</span></div><Link href="/admin/security">Open</Link></article>
           </div>
         </section>

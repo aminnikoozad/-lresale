@@ -2,7 +2,7 @@ name: CodeQL
 
 on:
   push:
-    branches: [ci-check]
+    branches: [ci-check, shipping-canada-configurable-20260922]
   workflow_dispatch:
   schedule:
     - cron: "17 7 * * 1"
