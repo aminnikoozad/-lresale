@@ -381,7 +381,8 @@ begin
 end $$;
 
 
-create or replace function public.admin_update_shipping_settings(p jsonb)
+drop function if exists public.admin_update_shipping_settings(jsonb);
+create or replace function public.admin_update_shipping_engine_settings(p jsonb)
 returns void language plpgsql security definer set search_path='' as $$
 begin
  perform private.assert_admin_permission('shipping');
@@ -400,8 +401,8 @@ begin
   rule_version=rule_version+1,updated_at=now()
  where singleton=true;
 end $$;
-revoke all on function public.admin_update_shipping_settings(jsonb) from public;
-grant execute on function public.admin_update_shipping_settings(jsonb) to authenticated;
+revoke all on function public.admin_update_shipping_engine_settings(jsonb) from public;
+grant execute on function public.admin_update_shipping_engine_settings(jsonb) to authenticated;
 
 create or replace function public.admin_upsert_shipping_zone(p jsonb)
 returns uuid language plpgsql security definer set search_path='' as $$
