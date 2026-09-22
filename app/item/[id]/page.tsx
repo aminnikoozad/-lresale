@@ -15,6 +15,7 @@ import {
   Truck,
 } from "lucide-react";
 import { createPublicClient } from "@/lib/supabase/public";
+import { ShippingEstimator } from "@/components/shipping-estimator";
 import {
   AddToCartButton,
   FavoriteButton,
@@ -143,6 +144,8 @@ export default async function ProductPage({ params }: Props) {
             <AddToCartButton item={cartItem} />
             <FavoriteButton itemId={product.item_id} />
           </div>
+
+          <ShippingEstimator itemIds={[product.item_id]} />
 
           <div className="product-trust product-trust-primary">
             <ShieldCheck />
