@@ -57,7 +57,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
         body: JSON.stringify({
           city: String(formData.get("city") || ""),
           postalCode: String(formData.get("postal_code") || ""),
-          items: checkoutItems.map((item) => ({ category: item.category, weightKg: item.weightKg })),
+          items: checkoutItems.map((item) => ({ id: item.id })),
         }),
       });
       const quoteData = await quoteResponse.json();
