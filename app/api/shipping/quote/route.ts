@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 type QuoteItem = { category?: string | null; weightKg?: number | null };
 
 function xmlValue(xml: string, tag: string) {
-  const match = xml.match(new RegExp("<(?:\\\\w+:)?"+tag+"[^>]*>([\\\\s\\\\S]*?)</(?:\\\\w+:)?"+tag+">", "i"));
+  const match = xml.match(new RegExp("<(?:\\w+:)?" + tag + "[^>]*>([\\s\\S]*?)</(?:\\w+:)?" + tag + ">", "i"));
   return match?.[1]?.replace(/<[^>]+>/g, "").trim() ?? "";
 }
 
