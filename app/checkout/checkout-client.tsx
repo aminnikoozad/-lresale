@@ -35,10 +35,24 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [shippingQuote, setShippingQuote] = useState<{ provider: string; weightKg: number; weightClass: string; selected: { serviceName: string; priceCents: number; expectedDeliveryDate?: string | null } } | null>(null);
 
   useEffect(() => {
     if (authenticated === true) return;
     const check = async () => {
+      const quoteResponse = await fetch("/api/shipping/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          city: String(formData.get("city") || ""),
+          postalCode: String(formData.get("postal_code") || ""),
+          items: checkoutItems.map((item) => ({ category: item.category, weightKg: item.weightKg })),
+        }),
+      });
+      const quoteData = await quoteResponse.json();
+      if (!quoteResponse.ok || !quoteData?.selected) throw new Error(quoteData?.error || "Shipping quote is unavailable.");
+      setShippingQuote(quoteData);
+
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       setAuthenticated(Boolean(user));
@@ -70,7 +84,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
       setOrderId(String(data));
     } catch (cause) {
       console.error("[checkout] order creation failed", cause);
-      setError("We couldn’t prepare this order. One of the items may no longer be available. Refresh your bag and try again.");
+      setError(cause instanceof Error ? cause.message : "We couldn’t prepare this order. Refresh your bag and try again.");
     } finally {
       setSubmitting(false);
     }
@@ -98,6 +112,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
         <LockKeyhole />
         <h1>Checkout details saved</h1>
         <p>Your order reference is <strong>{orderId.slice(0, 8).toUpperCase()}</strong>.</p>
+        {shippingQuote ? <div className="checkout-readiness-card"><Truck /><div><b>{shippingQuote.provider} · {shippingQuote.selected.serviceName}</b><span>{shippingQuote.weightKg.toFixed(2)} kg · {shippingQuote.weightClass} parcel · {cad(shippingQuote.selected.priceCents)} shipping{shippingQuote.selected.expectedDeliveryDate ? ` · expected ${shippingQuote.selected.expectedDeliveryDate}` : ""}</span></div></div> : null}
         <div className="payment-pending">
           <CreditCard />
           <div>
@@ -156,7 +171,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
             <div><b>Next: Payment</b><span>Card or wallet fields will appear here after the payment provider is connected. They are intentionally disabled today.</span></div>
           </div>
 
-          <Button type="submit" size="lg" disabled={submitting}>{submitting ? "Checking availability…" : "Save delivery & prepare payment"}</Button>
+          <Button type="submit" size="lg" disabled={submitting}>{submitting ? "Getting Canada Post rate…" : "Calculate shipping & prepare payment"}</Button>
           <small>Preparing checkout does not charge your card. The database verifies current price and availability again before creating the order.</small>
         </form>
 
@@ -168,7 +183,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
               <strong>{cad(item.priceCents)}</strong>
             </div>
           ))}
-          <div className="checkout-summary-row"><span>Shipping</span><span>Pending address quote</span></div>
+          <div className="checkout-summary-row"><span>Shipping</span><span>{shippingQuote ? `${shippingQuote.provider} · ${cad(shippingQuote.selected.priceCents)}` : "Calculated from address"}</span></div>
           <div className="checkout-summary-row"><span>Taxes</span><span>Calculated before payment</span></div>
           <div className="cart-total"><span>Subtotal</span><strong>{cad(subtotal)}</strong></div>
           <div className="checkout-assurance-list">
