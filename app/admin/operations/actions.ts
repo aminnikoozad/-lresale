@@ -127,6 +127,9 @@ export async function updateShippingSettings(formData: FormData) {
   const mode = text(formData, "fee_mode");
   const flatFeeText = text(formData, "flat_fee");
   const flatFeeCents = flatFeeText ? Math.round(Number(flatFeeText) * 100) : null;
+  if (!Number.isFinite(radiusKm) || radiusKm <= 0 || radiusKm > 200) redirect(message("Enter a valid local radius.", "error"));
+  if (!["carrier_quote", "flat_fee"].includes(mode)) redirect(message("Choose a valid shipping fee mode.", "error"));
+  if (mode === "flat_fee" && (flatFeeCents === null || !Number.isFinite(flatFeeCents) || flatFeeCents < 0)) redirect(message("Enter a valid flat shipping fee.", "error"));
   const { error } = await supabase.rpc("admin_update_shipping_settings", {
     p_local_free_radius_km: radiusKm,
     p_nonlocal_fee_mode: mode,
