@@ -40,6 +40,17 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
   useEffect(() => {
     if (authenticated === true) return;
     const check = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setAuthenticated(Boolean(user));
+    };
+    void check();
+  }, [authenticated]);
+
+  const submit = async (formData: FormData) => {
+    setSubmitting(true);
+    setError(null);
+    try {
       const quoteResponse = await fetch("/api/shipping/quote", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -53,17 +64,6 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
       if (!quoteResponse.ok || !quoteData?.selected) throw new Error(quoteData?.error || "Shipping quote is unavailable.");
       setShippingQuote(quoteData);
 
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      setAuthenticated(Boolean(user));
-    };
-    void check();
-  }, [authenticated]);
-
-  const submit = async (formData: FormData) => {
-    setSubmitting(true);
-    setError(null);
-    try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
