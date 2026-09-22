@@ -4,6 +4,7 @@ import { AdminItemTaxonomyFields } from "@/components/admin-item-taxonomy-fields
 import { createClient } from "@/lib/supabase/server";
 import { formatCadFromCents, loadSellingRules } from "@/lib/business-rules";
 import { createAdminBundle, createAdminItem, publishAdminItem, reviewAdminItem } from "./actions";
+import { saveItemShipping } from "../shipping/actions";
 import "./items.css";
 
 export const dynamic = "force-dynamic";
@@ -65,9 +66,15 @@ export default async function AdminItemsPage({ searchParams }: Props) {
 
   if (permissionResult.error || !permissionResult.data) redirect("/account");
 
-  const itemResult = await supabase.rpc("admin_item_list_v4");
+  const [itemResult, shippingOverridesResult, shippingStateResult] = await Promise.all([
+    supabase.rpc("admin_item_list_v4"),
+    supabase.rpc("admin_item_shipping_overrides"),
+    supabase.rpc("admin_shipping_state"),
+  ]);
   const customers = (customerResult.data ?? []) as Customer[];
   const items = (itemResult.data ?? []) as AdminItem[];
+  const shippingOverrides = new Map(((shippingOverridesResult.data ?? []) as any[]).map((row) => [row.item_id, row]));
+  const shippingProfiles = ((shippingStateResult.data as any)?.profiles ?? []) as any[];
   const candidates = items.filter(
     (item) => ["bundle_candidate", "manual_review"].includes(item.status) && !item.seller_approved_at,
   );
@@ -258,6 +265,22 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                   <div><dt>Seller approval</dt><dd>{item.seller_approved_at ? "Approved / locked" : "Pending"}</dd></div>
                   <div><dt>Shop</dt><dd>{item.status === "listed" ? "LIVE" : "Not live"}</dd></div>
                 </dl>
+                <details>
+                  <summary>Internal shipping attributes</summary>
+                  <form className="review-form" action={saveItemShipping}>
+                    <input type="hidden" name="item_id" value={item.item_id} />
+                    <label>Weight (kg)<input name="weight" type="number" min="0.001" step="0.001" defaultValue={shippingOverrides.get(item.item_id)?.weight_grams ? shippingOverrides.get(item.item_id).weight_grams / 1000 : ""} /></label>
+                    <label>Length (cm)<input name="length" type="number" min="0.1" step="0.1" defaultValue={shippingOverrides.get(item.item_id)?.length_mm ? shippingOverrides.get(item.item_id).length_mm / 10 : ""} /></label>
+                    <label>Width (cm)<input name="width" type="number" min="0.1" step="0.1" defaultValue={shippingOverrides.get(item.item_id)?.width_mm ? shippingOverrides.get(item.item_id).width_mm / 10 : ""} /></label>
+                    <label>Height (cm)<input name="height" type="number" min="0.1" step="0.1" defaultValue={shippingOverrides.get(item.item_id)?.height_mm ? shippingOverrides.get(item.item_id).height_mm / 10 : ""} /></label>
+                    <label>Profile override<select name="profile_id" defaultValue={shippingOverrides.get(item.item_id)?.profile_id ?? ""}><option value="">Use category/subcategory default</option>{shippingProfiles.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
+                    <label><input name="fragile" type="checkbox" defaultChecked={shippingOverrides.get(item.item_id)?.fragile === true} /> Fragile</label>
+                    <label><input name="oversize" type="checkbox" defaultChecked={shippingOverrides.get(item.item_id)?.oversize === true} /> Oversize</label>
+                    <label><input name="separate" type="checkbox" defaultChecked={shippingOverrides.get(item.item_id)?.ships_separately === true} /> Ships separately</label>
+                    <label><input name="local_only" type="checkbox" defaultChecked={shippingOverrides.get(item.item_id)?.local_delivery_only === true} /> Local delivery only</label>
+                    <button type="submit">Save shipping attributes</button>
+                  </form>
+                </details>
 
                 {item.photo_urls?.length ? (
                   <div className="item-photo-links">
