@@ -57,8 +57,6 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
   useEffect(() => {
     if (authenticated === true) return;
     const check = async () => {
-      const currentQuote = await refreshQuote(String(formData.get("postal_code") || ""));
-      if (!currentQuote || !["ok", "local_free"].includes(currentQuote.status)) throw new Error(shippingMessage(currentQuote ?? { status: "configuration_error" }));
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       setAuthenticated(Boolean(user));
@@ -70,6 +68,8 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
     setSubmitting(true);
     setError(null);
     try {
+      const currentQuote = await refreshQuote(String(formData.get("postal_code") || ""));
+      if (!currentQuote || !["ok", "local_free"].includes(currentQuote.status)) throw new Error(shippingMessage(currentQuote ?? { status: "configuration_error" }));
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
