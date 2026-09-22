@@ -1,0 +1,51 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync,readdirSync } from 'node:fs';
+import { PGlite } from '@electric-sql/pglite';
+const directory=new URL('../supabase/migrations/',import.meta.url);
+const migration=readFileSync(new URL(readdirSync(directory).find(n=>n.endsWith('_postal_carrier_rates.sql'))!,directory),'utf8');
+const owner='00000000-0000-4000-8000-000000000001',buyer='00000000-0000-4000-8000-000000000002',other='00000000-0000-4000-8000-000000000003',item='00000000-0000-4000-8000-000000000004';
+test('Postgres postal permissions, rate limits, private fields, quote ownership and checkout validation',async()=>{
+ const db=new PGlite();
+ try {
+ await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create schema private;
+ create table auth.users(id uuid primary key);insert into auth.users values('${owner}'),('${buyer}'),('${other}');
+ create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('test.uid',true),'')::uuid$$;
+ create function auth.jwt() returns jsonb language sql stable as $$select jsonb_build_object('aal',current_setting('test.aal',true))$$;
+ grant usage on schema auth,public to anon,authenticated,service_role;grant execute on all functions in schema auth to anon,authenticated;
+ create function private.assert_admin_permission(text) returns void language plpgsql as $$begin if auth.uid()<>'${owner}' or auth.uid() is null then raise exception 'admin permission denied';end if;end$$;
+ create table public.items(id uuid primary key,name text,category text,status text,created_at timestamptz default now(),brand text,size text,item_condition text,listed_price_cents integer,initial_approved_price_cents integer);
+ insert into public.items values('${item}','Lamp','home_decor','listed',now(),'Maker','', 'Good',10000,10000);
+ create table public.orders(id uuid primary key default gen_random_uuid(),buyer_id uuid,status text,payment_status text,subtotal_cents integer,shipping_cents integer,total_cents integer,recipient_name text,address_line1 text,address_line2 text,city text,province text,postal_code text,reservation_expires_at timestamptz);
+ create table public.order_items(order_id uuid,item_id uuid,item_name text,brand text,size text,item_condition text,unit_price_cents integer);
+ create table public.inventory_reservations(order_id uuid,item_id uuid,buyer_id uuid,status text,expires_at timestamptz,updated_at timestamptz);
+ create table public.home_item_details(item_id uuid,public_data jsonb,staff_data jsonb,updated_at timestamptz default now());
+ insert into public.home_item_details values('${item}','{}','{"inspection_notes":"PRIVATE","packaged_weight_kg":0.5,"packaged_length_cm":20,"packaged_width_cm":15,"packaged_height_cm":10}',now());
+ create table public.shipping_settings(singleton boolean,canada_wide_enabled boolean,nonlocal_fee_mode text);insert into public.shipping_settings values(true,true,'carrier_quote');
+ create table public.audit_logs(admin_user_id uuid,action text,entity_type text,entity_id text,previous_value jsonb,new_value jsonb,reason text);
+ `);
+ const existing=readFileSync(new URL('20260921141207_checkout_reservation_and_admin_rate_limit_hardening.sql',directory),'utf8');
+ await db.exec(existing.slice(0,existing.indexOf('$function$;')+11));
+ await db.exec(migration);
+ const asUser=async(uid:string,aal='aal1')=>{await db.exec(`reset role;set test.uid='${uid}';set test.aal='${aal}';set role authenticated;`);};
+ await db.exec('set role anon');await assert.rejects(db.query('select public.prepare_postal_quote($1)',[[item]]));await assert.rejects(db.query('select * from public.postal_parcels'));
+ assert.deepEqual((await db.query('select public.postal_weight_bands() as bands')).rows[0],{bands:[500,2000,5000,30000]});
+ await asUser(buyer);await assert.rejects(db.query("select public.admin_save_postal_config(true,'H2X1Y4',array[500,2000,5000,30000])"));
+ await asUser(owner);await assert.rejects(db.query('select public.admin_postal_state()'));
+ await asUser(owner,'aal2');await db.query("select public.admin_save_postal_config(true,'H2X1Y4',array[500,2000,5000,30000])");
+ await assert.rejects(db.query("select public.admin_save_postal_config(true,'H2X1Y4',array[500,400,5000,30000])"));
+ await asUser(buyer);const prepared=await db.query<{s:Record<string,unknown>}>('select public.prepare_postal_quote($1) s',[[item]]);const snapshot=prepared.rows[0].s;assert.equal(snapshot.status,'ready');assert.ok(!JSON.stringify(snapshot).includes('PRIVATE'));assert.ok(!JSON.stringify(snapshot).includes('inspection_notes'));
+ await assert.rejects(db.query("insert into public.postal_quotes(buyer_id,item_ids,destination,snapshot,rates,expires_at) values($1,$2,'K1A0B1',$3,'[]',now()+interval '10 minutes')",[buyer,[item],snapshot]));
+ await db.exec('reset role;set role service_role');const q=await db.query<{id:string}>("insert into public.postal_quotes(buyer_id,item_ids,destination,snapshot,rates,expires_at) values($1,$2,'K1A0B1',$3,'[{\"serviceCode\":\"DOM.RP\",\"totalCents\":1234}]',now()+interval '10 minutes') returning id",[buyer,[item],snapshot]);const id=q.rows[0].id;
+ const checkout=(qid=id,postal='K1A0B1',service='DOM.RP')=>db.query("select public.create_postal_checkout($1,$2,'Test Buyer','10 Example Street','','Ottawa','ON',$3) oid",[qid,service,postal]);
+ await asUser(other);assert.equal((await db.query('select * from public.postal_quotes')).rows.length,0);await assert.rejects(checkout());
+ await asUser(buyer);assert.equal((await db.query('select * from public.postal_quotes')).rows.length,1);await assert.rejects(checkout(id,'M5V1A1'));await assert.rejects(checkout(id,'K1A0B1','FAKE'));
+ await db.exec("reset role;update public.postal_quotes set expires_at=now()-interval '1 second',created_at=now()-interval '11 minutes';");await asUser(buyer);await assert.rejects(checkout());
+ await db.exec("reset role;update public.postal_quotes set created_at=now(),expires_at=now()+interval '10 minutes';update public.home_item_details set updated_at=clock_timestamp();");await asUser(buyer);await assert.rejects(checkout());
+ // Refresh the server snapshot after the staff edit; only service code, never price, is accepted from buyer.
+ await db.exec(`reset role;update public.postal_quotes set snapshot=private.postal_snapshot(array['${item}']::uuid[]);`);await asUser(buyer);await checkout();await assert.rejects(checkout());
+ await db.exec('reset role');const order=(await db.query<{shipping_cents:number,total_cents:null,payment_status:string}>('select shipping_cents,total_cents,payment_status from public.orders')).rows[0];assert.equal(order.shipping_cents,1234);assert.equal(order.total_cents,null);assert.equal(order.payment_status,'not_configured');
+ await db.exec('delete from public.inventory_reservations');await asUser(buyer);for(let i=0;i<6;i++)await db.query('select public.prepare_postal_quote($1)',[[item]]);assert.equal((await db.query<{s:{status:string}}>('select public.prepare_postal_quote($1) s',[[item]])).rows[0].s.status,'rate_limited');
+ await asUser(owner,'aal2');await db.query('select public.admin_save_postal_parcel($1,500,200,150,100,true,false,false,false)',[item]);await db.exec('reset role');assert.equal((await db.query<{s:{status:string}}>('select private.postal_snapshot($1) s',[[item]])).rows[0].s.status,'manual_review');
+ } finally {await db.close();}
+});

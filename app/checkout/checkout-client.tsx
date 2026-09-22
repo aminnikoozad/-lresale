@@ -7,6 +7,8 @@ import { Check, CreditCard, LockKeyhole, MapPin, ShieldCheck, Truck } from "luci
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
+import { PostalEstimator, type PostalSelection } from "@/components/postal-estimator";
+import { postalCode } from "@/lib/postal";
 import { useCart } from "@/components/cart-store";
 
 export type CheckoutDeliveryDefaults = {
@@ -32,6 +34,8 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
   const checkoutItems = useMemo(() => items.filter((item) => itemIds.includes(item.id)), [items, itemIds]);
   const subtotal = checkoutItems.reduce((sum, item) => sum + item.priceCents, 0);
   const [authenticated, setAuthenticated] = useState<boolean | null>(initialDelivery ? true : null);
+  const [destination, setDestination] = useState(initialDelivery?.postalCode ?? "");
+  const [postalSelection, setPostalSelection] = useState<PostalSelection | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -57,8 +61,9 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
         return;
       }
 
-      const { data, error: rpcError } = await supabase.rpc("create_checkout_order", {
-        item_ids: itemIds,
+      if (postalSelection && (postalSelection.postalCode !== postalCode(String(formData.get("postal_code") || "")) || Date.parse(postalSelection.expiresAt) <= Date.now())) throw new Error("Postal quote expired");
+      const { data, error: rpcError } = await supabase.rpc(postalSelection ? "create_postal_checkout" : "create_checkout_order", {
+        ...(postalSelection ? { p_quote: postalSelection.quoteId, p_service: postalSelection.serviceCode } : { item_ids: itemIds }),
         recipient_name: String(formData.get("recipient_name") || ""),
         address_line1: String(formData.get("address_line1") || ""),
         address_line2: String(formData.get("address_line2") || ""),
@@ -70,7 +75,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
       setOrderId(String(data));
     } catch (cause) {
       console.error("[checkout] order creation failed", cause);
-      setError("We couldn’t prepare this order. One of the items may no longer be available. Refresh your bag and try again.");
+      setError("We couldn’t prepare this order. An item or shipping quote may have changed. Recalculate shipping and try again.");
     } finally {
       setSubmitting(false);
     }
@@ -148,9 +153,11 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
               <label>City<Input name="city" defaultValue={initialDelivery?.city ?? ""} minLength={2} maxLength={100} required autoComplete="address-level2" /></label>
               <label>Province<Input name="province" defaultValue={initialDelivery?.province || "QC"} minLength={2} maxLength={50} required autoComplete="address-level1" /></label>
             </div>
-            <label>Postal code<Input name="postal_code" defaultValue={initialDelivery?.postalCode ?? ""} minLength={3} maxLength={20} required autoComplete="postal-code" /></label>
+            <label>Postal code<Input name="postal_code" value={destination} onChange={e => {setDestination(e.target.value);setPostalSelection(null);}} minLength={3} maxLength={20} required autoComplete="postal-code" /></label>
           </div>
 
+          <PostalEstimator itemIds={itemIds} destination={destination} onSelect={setPostalSelection}/>
+          {!postalSelection ? <p>Without a selected postal service, delivery details are saved for review only; shipping remains unconfirmed.</p> : null}
           <div className="checkout-next-step-preview">
             <CreditCard />
             <div><b>Next: Payment</b><span>Card or wallet fields will appear here after the payment provider is connected. They are intentionally disabled today.</span></div>
@@ -168,7 +175,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
               <strong>{cad(item.priceCents)}</strong>
             </div>
           ))}
-          <div className="checkout-summary-row"><span>Shipping</span><span>Pending address quote</span></div>
+          <div className="checkout-summary-row"><span>Shipping</span><span>{postalSelection ? cad(postalSelection.totalCents) : "Not yet confirmed"}</span></div>
           <div className="checkout-summary-row"><span>Taxes</span><span>Calculated before payment</span></div>
           <div className="cart-total"><span>Subtotal</span><strong>{cad(subtotal)}</strong></div>
           <div className="checkout-assurance-list">
@@ -176,7 +183,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
             <span><LockKeyhole /> Server-verified price</span>
             <span><Truck /> Canada delivery details captured</span>
           </div>
-          <p>Final total will only be shown after shipping and tax logic are connected to the payment step.</p>
+          <p>Postal quotes include shipping taxes. Item taxes and the final payable total are confirmed separately before payment.</p>
         </aside>
       </div>
     </div>

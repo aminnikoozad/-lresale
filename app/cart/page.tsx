@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { PostalEstimator } from "@/components/postal-estimator";
 import Link from "next/link";
 import { ArrowLeft, Check, LockKeyhole, ShoppingBag, Trash2, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -64,6 +65,7 @@ export default function CartPage() {
             <div><span>Shipping</span><span>Confirmed before payment</span></div>
             <div><span>Taxes</span><span>Calculated when payment is activated</span></div>
             <div className="cart-total"><span>Subtotal</span><strong>{cad(subtotal)}</strong></div>
+            <PostalEstimator itemIds={items.map(item => item.id)}/>
             <Button asChild size="lg"><Link href={checkoutHref}>Continue to delivery</Link></Button>
             <div className="cart-readiness-list">
               <span><LockKeyhole /> Server-side price & availability check</span>

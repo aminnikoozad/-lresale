@@ -29,6 +29,7 @@ export default async function AdminPage() {
           <Link href="/admin/items">Items</Link>
           <Link href="/admin/operations">Operations</Link>
           <Link href="/admin/settings">Selling Rules</Link>
+          {access.can_manage_shipping ? <Link href="/admin/postal">Postal Shipping</Link> : null}
           <Link href="/admin/security">Security</Link>
         </nav>
       </header>
