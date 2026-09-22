@@ -140,3 +140,33 @@ export async function updateShippingSettings(formData: FormData) {
   revalidatePath("/");
   redirect(message("Canada-wide shipping settings saved.", "success"));
 }
+
+
+export async function updateShippingCalculator(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const money = (key: string, nullable = false) => {
+    const raw = text(formData, key);
+    if (nullable && !raw) return null;
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < 0) throw new Error("Invalid shipping amount");
+    return Math.round(value * 100);
+  };
+  try {
+    const provinces = text(formData, "remote_provinces").toUpperCase().split(",").map((value) => value.trim()).filter(Boolean);
+    if (provinces.some((value) => !/^[A-Z]{2}$/.test(value))) throw new Error("Invalid province");
+    const { error } = await supabase.rpc("admin_update_shipping_calculator", {
+      p_calculator_enabled: formData.get("calculator_enabled") === "on",
+      p_base_fee_cents: money("base_fee"),
+      p_per_kg_cents: money("per_kg"),
+      p_free_shipping_threshold_cents: money("free_shipping_threshold", true),
+      p_remote_surcharge_cents: money("remote_surcharge"),
+      p_remote_provinces: provinces,
+    });
+    if (error) throw error;
+  } catch {
+    redirect(message("Shipping calculator settings could not be saved. Check all amounts and province codes.", "error"));
+  }
+  revalidatePath("/admin/operations");
+  revalidatePath("/checkout");
+  redirect(message("Shipping calculator settings saved.", "success"));
+}
