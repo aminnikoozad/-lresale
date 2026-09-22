@@ -94,6 +94,8 @@ export default async function ProductPage({ params }: Props) {
     photoUrl: product.photo_urls[0],
     size: product.size,
     condition: product.item_condition,
+    category: product.category,
+    weightKg: typeof home?.weight_kg === "number" ? home.weight_kg : null,
   };
   const inspectedOn = inspectionDate(product.inspected_at);
 

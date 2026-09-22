@@ -12,6 +12,8 @@ export type CartItem = {
   photoUrl: string;
   size: string | null;
   condition: string | null;
+  category?: string | null;
+  weightKg?: number | null;
 };
 
 type CartContextValue = {
@@ -47,6 +49,8 @@ function sanitize(value: unknown): CartItem[] {
       priceCents: Number(item.priceCents),
       size: typeof item.size === "string" ? item.size.slice(0, 80) : null,
       condition: typeof item.condition === "string" ? item.condition.slice(0, 80) : null,
+      category: typeof item.category === "string" ? item.category.slice(0, 40) : null,
+      weightKg: typeof item.weightKg === "number" && Number.isFinite(item.weightKg) && item.weightKg > 0 ? Math.min(30, item.weightKg) : null,
     });
   }
   return [...unique.values()].slice(0, 25);

@@ -691,6 +691,8 @@ function ProductGrid({
           photoUrl: product.photoUrl,
           size: product.size,
           condition: product.condition,
+          category: product.category,
+          weightKg: typeof product.home?.weight_kg === "number" ? product.home.weight_kg : null,
         };
         return (
           <article className="shop-card" key={product.id}>

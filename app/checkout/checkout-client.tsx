@@ -36,6 +36,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
   const [authenticated, setAuthenticated] = useState<boolean | null>(initialDelivery ? true : null);
   const [destination, setDestination] = useState(initialDelivery?.postalCode ?? "");
   const [postalSelection, setPostalSelection] = useState<PostalSelection | null>(null);
+  const [savedShipping, setSavedShipping] = useState<PostalSelection | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +73,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
         postal_code: String(formData.get("postal_code") || ""),
       });
       if (rpcError) throw rpcError;
+      setSavedShipping(postalSelection);
       setOrderId(String(data));
     } catch (cause) {
       console.error("[checkout] order creation failed", cause);
@@ -103,6 +105,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
         <LockKeyhole />
         <h1>Checkout details saved</h1>
         <p>Your order reference is <strong>{orderId.slice(0, 8).toUpperCase()}</strong>.</p>
+        {savedShipping ? <div className="checkout-readiness-card"><Truck /><div><b>Canada Post · {savedShipping.serviceCode}</b><span>{cad(savedShipping.totalCents)} shipping, including carrier shipping taxes. Reconfirmation is required before payment.</span></div></div> : null}
         <div className="payment-pending">
           <CreditCard />
           <div>
