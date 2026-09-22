@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import { normalizeCanadianPostalCode, parcelWeightKg, weightClassFor } from "@/lib/shipping";
 
 export const runtime = "nodejs";
 
-type QuoteItem = { category?: string | null; weightKg?: number | null };
+type QuoteItem = { id?: string | null };
 
 function xmlValue(xml: string, tag: string) {
   const match = xml.match(new RegExp("<(?:\\w+:)?" + tag + "[^>]*>([\\s\\S]*?)</(?:\\w+:)?" + tag + ">", "i"));
@@ -24,15 +25,31 @@ export async function POST(request: Request) {
   try {
     const body = await request.json() as { postalCode?: string; city?: string; items?: QuoteItem[] };
     const postalCode = normalizeCanadianPostalCode(String(body.postalCode ?? ""));
-    const items = Array.isArray(body.items) ? body.items.slice(0, 25) : [];
-    if (!/^[A-Z]\\d[A-Z]\\d[A-Z]\\d$/.test(postalCode) || !items.length) {
+    const requestedIds = Array.isArray(body.items) ? [...new Set(body.items.map((item) => String(item?.id ?? "")).filter((id) => /^[0-9a-f-]{36}$/i.test(id)))].slice(0, 25) : [];
+    if (!/^[A-Z]\\d[A-Z]\\d[A-Z]\\d$/.test(postalCode) || !requestedIds.length) {
       return NextResponse.json({ error: "Enter a valid Canadian postal code and at least one item." }, { status: 400 });
     }
 
-    const weightKg = parcelWeightKg(items);
+    const supabase = createPublicClient();
+    const resolved: Array<{ category?: string | null; weightKg?: number | null }> = [];
+    for (const id of requestedIds) {
+      const { data, error } = await supabase.rpc("catalog_item_detail_v3", { target_item_id: id });
+      const product = data?.[0];
+      if (error || !product) return NextResponse.json({ error: "One or more items are no longer available." }, { status: 409 });
+      let weightKg: number | null = null;
+      if (product.category === "home_decor") {
+        const home = await supabase.rpc("home_catalog_details", { target_item_id: id });
+        const rawWeight = home.data?.[0]?.details?.weight_kg;
+        weightKg = typeof rawWeight === "number" && Number.isFinite(rawWeight) && rawWeight > 0 ? rawWeight : null;
+      }
+      resolved.push({ category: product.category, weightKg });
+    }
+
+    const weightKg = parcelWeightKg(resolved);
     const weightClass = weightClassFor(weightKg);
     const city = String(body.city ?? "").trim().toLowerCase();
-    if (["montreal", "montréal"].includes(city)) {
+    const isMontrealPostalCode = /^H[1-589][A-Z]\\d[A-Z]\\d$/i.test(postalCode);
+    if (["montreal", "montréal"].includes(city) && isMontrealPostalCode) {
       return NextResponse.json({ provider: "REWEAR local", weightKg, weightClass, selected: { serviceName: "Montréal local delivery", priceCents: 0, expectedDeliveryDate: null }, rates: [] });
     }
 
