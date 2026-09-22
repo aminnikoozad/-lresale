@@ -127,6 +127,9 @@ export async function updateShippingSettings(formData: FormData) {
   const mode = text(formData, "fee_mode");
   const flatFeeText = text(formData, "flat_fee");
   const flatFeeCents = flatFeeText ? Math.round(Number(flatFeeText) * 100) : null;
+  if (!Number.isFinite(radiusKm) || radiusKm <= 0 || radiusKm > 200) redirect(message("Enter a valid local radius.", "error"));
+  if (!["carrier_quote", "flat_fee"].includes(mode)) redirect(message("Choose a valid shipping fee mode.", "error"));
+  if (mode === "flat_fee" && (flatFeeCents === null || !Number.isFinite(flatFeeCents) || flatFeeCents < 0)) redirect(message("Enter a valid flat shipping fee.", "error"));
   const { error } = await supabase.rpc("admin_update_shipping_settings", {
     p_local_free_radius_km: radiusKm,
     p_nonlocal_fee_mode: mode,
@@ -136,4 +139,34 @@ export async function updateShippingSettings(formData: FormData) {
   revalidatePath("/admin/operations");
   revalidatePath("/");
   redirect(message("Canada-wide shipping settings saved.", "success"));
+}
+
+
+export async function updateShippingCalculator(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const money = (key: string, nullable = false) => {
+    const raw = text(formData, key);
+    if (nullable && !raw) return null;
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < 0) throw new Error("Invalid shipping amount");
+    return Math.round(value * 100);
+  };
+  try {
+    const provinces = text(formData, "remote_provinces").toUpperCase().split(",").map((value) => value.trim()).filter(Boolean);
+    if (provinces.some((value) => !/^[A-Z]{2}$/.test(value))) throw new Error("Invalid province");
+    const { error } = await supabase.rpc("admin_update_shipping_calculator", {
+      p_calculator_enabled: formData.get("calculator_enabled") === "on",
+      p_base_fee_cents: money("base_fee"),
+      p_per_kg_cents: money("per_kg"),
+      p_free_shipping_threshold_cents: money("free_shipping_threshold", true),
+      p_remote_surcharge_cents: money("remote_surcharge"),
+      p_remote_provinces: provinces,
+    });
+    if (error) throw error;
+  } catch {
+    redirect(message("Shipping calculator settings could not be saved. Check all amounts and province codes.", "error"));
+  }
+  revalidatePath("/admin/operations");
+  revalidatePath("/checkout");
+  redirect(message("Shipping calculator settings saved.", "success"));
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
-import { createPickupSlot, togglePickupSlot, toggleServiceArea, updateReminderSettings, updateShippingSettings } from "./actions";
+import { createPickupSlot, togglePickupSlot, toggleServiceArea, updateReminderSettings, updateShippingSettings, updateShippingCalculator } from "./actions";
 import { PickupInbox, type PickupRequest } from "./pickup-inbox";
 import "./operations.css";
 
@@ -41,6 +41,12 @@ type ShippingSettings = {
   local_free_radius_km: number;
   nonlocal_fee_mode: "carrier_quote" | "flat_fee";
   nonlocal_flat_fee_cents: number | null;
+  calculator_enabled?: boolean;
+  base_fee_cents?: number;
+  per_kg_cents?: number;
+  free_shipping_threshold_cents?: number | null;
+  remote_surcharge_cents?: number;
+  remote_provinces?: string[];
 };
 
 function localDateTime(value: string) {
@@ -157,6 +163,19 @@ export default async function AdminOperationsPage({ searchParams }: Props) {
               <button type="submit">Save delivery rules</button>
             </form>
             <p className="integration-note">Canada-wide purchasing is enabled. Checkout must use these settings when the payment/order flow is activated.</p>
+            <div className="shipping-calculator-admin">
+              <div className="ops-card-title"><div><h2>Outside Montréal shipping calculator</h2><p>Configure a predictable fallback rate from order weight and destination province. Carrier quotes can still replace this amount at checkout later.</p></div></div>
+              <form action={updateShippingCalculator} className="settings-form">
+                <label className="check"><input name="calculator_enabled" type="checkbox" defaultChecked={shipping.calculator_enabled ?? true} /> Enable calculated shipping</label>
+                <label>Base fee (CAD)<input name="base_fee" type="number" min="0" step="0.01" defaultValue={(shipping.base_fee_cents ?? 900) / 100} required /></label>
+                <label>Per started kg (CAD)<input name="per_kg" type="number" min="0" step="0.01" defaultValue={(shipping.per_kg_cents ?? 250) / 100} required /></label>
+                <label>Free shipping threshold (CAD, optional)<input name="free_shipping_threshold" type="number" min="0" step="0.01" defaultValue={shipping.free_shipping_threshold_cents == null ? "" : shipping.free_shipping_threshold_cents / 100} /></label>
+                <label>Remote surcharge (CAD)<input name="remote_surcharge" type="number" min="0" step="0.01" defaultValue={(shipping.remote_surcharge_cents ?? 700) / 100} required /></label>
+                <label>Remote province/territory codes<input name="remote_provinces" type="text" defaultValue={(shipping.remote_provinces ?? ["YT","NT","NU"]).join(", ")} placeholder="YT, NT, NU" /></label>
+                <button type="submit">Save shipping calculator</button>
+              </form>
+              <p className="integration-note">Formula: base fee + each started kg × per-kg rate + optional remote surcharge. Orders at or above the configured threshold ship free.</p>
+            </div>
           </div>
         </section>
       </section>

@@ -66,6 +66,16 @@ export default async function AdminSecurityPage({ searchParams }: Props) {
         </section>
 
         <section className="ops-card">
+          <div className="ops-card-title"><div><h2>Automated security & bug tests</h2><p>Deployment checks now include regression tests for privileged Admin access, MFA enforcement, direct-table exposure, accidental secret logging, checkout reservation safety and shipping-calculator edge cases.</p></div><strong>CI enforced</strong></div>
+          <div className="area-grid">
+            <article><div><b>Admin authorization</b><span>Checks privileged mutations remain behind server-side role and AAL2 validation.</span></div></article>
+            <article><div><b>Database exposure</b><span>Checks operational tables stay protected by RLS and revoked direct client access.</span></div></article>
+            <article><div><b>Secret regression</b><span>Scans critical Server Actions for common accidental secret and credential logging patterns.</span></div></article>
+            <article><div><b>Business-logic bugs</b><span>Tests shipping rounding, remote surcharge, free-shipping thresholds and invalid inputs.</span></div></article>
+          </div>
+        </section>
+
+        <section className="ops-card">
           <div className="ops-card-title"><div><h2>Security model now enforced</h2></div></div>
           <div className="area-grid">
             <article><div><b>No customer-facing Admin link</b><span>The private Admin sign-in path is not linked from the public marketplace.</span></div></article>
