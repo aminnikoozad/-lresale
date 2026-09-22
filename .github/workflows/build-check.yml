@@ -2,7 +2,9 @@ name: Build Check
 
 on:
   push:
-    branches: [ci-check, shipping-canada-configurable-20260922]
+    branches: [ci-check]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
