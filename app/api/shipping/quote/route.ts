@@ -12,7 +12,7 @@ function xmlValue(xml: string, tag: string) {
 }
 
 function parseRates(xml: string) {
-  const blocks = xml.match(/<(?:\\w+:)?price-quote\\b[\\s\\S]*?<\\/(?:\\w+:)?price-quote>/gi) ?? [];
+  const blocks = xml.match(/<(?:\w+:)?price-quote\b[\s\S]*?<\/(?:\w+:)?price-quote>/gi) ?? [];
   return blocks.map((block) => ({
     serviceCode: xmlValue(block, "service-code"),
     serviceName: xmlValue(block, "service-name"),
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     const body = await request.json() as { postalCode?: string; city?: string; items?: QuoteItem[] };
     const postalCode = normalizeCanadianPostalCode(String(body.postalCode ?? ""));
     const requestedIds = Array.isArray(body.items) ? [...new Set(body.items.map((item) => String(item?.id ?? "")).filter((id) => /^[0-9a-f-]{36}$/i.test(id)))].slice(0, 25) : [];
-    if (!/^[A-Z]\\d[A-Z]\\d[A-Z]\\d$/.test(postalCode) || !requestedIds.length) {
+    if (!/^[A-Z]\d[A-Z]\d[A-Z]\d$/.test(postalCode) || !requestedIds.length) {
       return NextResponse.json({ error: "Enter a valid Canadian postal code and at least one item." }, { status: 400 });
     }
 
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     const weightKg = parcelWeightKg(resolved);
     const weightClass = weightClassFor(weightKg);
     const city = String(body.city ?? "").trim().toLowerCase();
-    const isMontrealPostalCode = /^H[1-589][A-Z]\\d[A-Z]\\d$/i.test(postalCode);
+    const isMontrealPostalCode = /^H[1-589][A-Z]\d[A-Z]\d$/i.test(postalCode);
     if (["montreal", "montréal"].includes(city) && isMontrealPostalCode) {
       return NextResponse.json({ provider: "REWEAR local", weightKg, weightClass, selected: { serviceName: "Montréal local delivery", priceCents: 0, expectedDeliveryDate: null }, rates: [] });
     }
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     const password = process.env.CANADA_POST_API_PASSWORD;
     const customerNumber = process.env.CANADA_POST_CUSTOMER_NUMBER;
     const originPostalCode = normalizeCanadianPostalCode(process.env.CANADA_POST_ORIGIN_POSTAL_CODE ?? "");
-    if (!username || !password || !customerNumber || !/^[A-Z]\\d[A-Z]\\d[A-Z]\\d$/.test(originPostalCode)) {
+    if (!username || !password || !customerNumber || !/^[A-Z]\d[A-Z]\d[A-Z]\d$/.test(originPostalCode)) {
       return NextResponse.json({
         error: "Canada Post live rates are not configured yet.",
         code: "CARRIER_NOT_CONFIGURED",
