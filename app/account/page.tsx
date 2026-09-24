@@ -11,6 +11,7 @@ import {
   commissionTierForInitialPrice,
   loadSellingRules,
 } from "@/lib/business-rules";
+import { PILOT_MODE } from "@/lib/catalog-taxonomy";
 import {
   commissionPercent,
   earningsFromSalePrice,
@@ -178,6 +179,12 @@ export default async function AccountPage({ searchParams }: Props) {
     profile?.customer_code || fallbackCustomerCode(user.id);
   const message = typeof params.message === "string" ? params.message : null;
 
+  const pilotPickupSlots = (pickupSlotsResult.data ?? []).filter((slot) => {
+    if (!PILOT_MODE.enabled) return true;
+    const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: "America/Toronto" }).format(new Date(slot.window_start));
+    return weekday === "Sat";
+  });
+
   return (
     <main className="account-shell">
       <header className="account-top">
@@ -285,7 +292,7 @@ export default async function AccountPage({ searchParams }: Props) {
           city: area.city,
           pickupMode: area.pickup_mode,
         }))}
-        pickupSlots={(pickupSlotsResult.data ?? [])
+        pickupSlots={pilotPickupSlots
           .filter((slot) => slot.booked_count < slot.capacity)
           .map((slot) => ({
             id: slot.id,
