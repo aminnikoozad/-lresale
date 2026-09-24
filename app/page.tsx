@@ -6,8 +6,9 @@ import { ArrowRight, ShieldCheck, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CartNavLink } from "@/components/cart-store";
 import { createPublicClient } from "@/lib/supabase/public";
+import { CATALOG_CATEGORIES } from "@/lib/catalog-taxonomy";
+import { loadPilotSettings, pilotAllowsCategory } from "@/lib/pilot-settings";
 import { ShopCatalog, type CatalogCategory, type CatalogProduct } from "./shop-catalog";
-import { PILOT_MODE, isPilotCategory } from "@/lib/catalog-taxonomy";
 
 export const dynamic = "force-dynamic";
 
@@ -37,20 +38,20 @@ type ShippingPolicy = {
 
 export default async function Home() {
   await connection();
-  // A request-scoped timestamp keeps new-arrival filters consistent across hydration.
   const requestTime = new Date().getTime();
   const supabase = createPublicClient();
-  const [{ data, error }, { data: shippingData, error: shippingError }, { data: homeData, error: homeError }] = await Promise.all([
+  const [{ data, error }, { data: shippingData, error: shippingError }, { data: homeData, error: homeError }, pilot] = await Promise.all([
     supabase.rpc("catalog_items_v3"),
     supabase.rpc("get_shipping_policy"),
     supabase.rpc("home_catalog_details"),
+    loadPilotSettings(supabase),
   ]);
 
   if (error) console.error("[home] catalog load failed", { code: error.code, message: error.message });
   if (shippingError) console.error("[home] shipping policy load failed", { code: shippingError.code, message: shippingError.message });
+  if (homeError) console.error("[home] Home details unavailable", { code: homeError.code });
 
-  if(homeError)console.error('[home] Home details unavailable', {code:homeError.code});
-  const homeMap = new Map(((homeData??[]) as {item_id:string;details:HomeData;price_drop:boolean}[]).map(h=>[h.item_id,h]));
+  const homeMap = new Map(((homeData ?? []) as { item_id: string; details: HomeData; price_drop: boolean }[]).map((h) => [h.item_id, h]));
   const shipping = (shippingData ?? {}) as ShippingPolicy;
   const localRadius = Number(shipping.localFreeRadiusKm);
   const localCenter = shipping.localCenterName || "Montréal";
@@ -58,9 +59,20 @@ export default async function Home() {
     ? `Free local delivery in ${localCenter} and within the configured ${localRadius} km local radius when the delivery address is eligible. Shipping fees apply outside the local area.`
     : "Local delivery eligibility is confirmed from the delivery address. Shipping fees may apply outside the local area.";
 
+  const activeCategories = pilot.enabled ? pilot.categories : CATALOG_CATEGORIES.map((entry) => entry.value);
   const catalogProducts: CatalogProduct[] = ((data ?? []) as CatalogRow[])
-    .filter((row) => typeof row.item_id === "string" && typeof row.name === "string" && typeof row.brand === "string" && allowedCategories.has(row.category as CatalogCategory) && isPilotCategory(row.category) && typeof row.photo_url === "string" && row.photo_url.length > 0 && Number.isInteger(row.price_cents) && row.price_cents > 0)
-    .slice(0, PILOT_MODE.enabled ? PILOT_MODE.maxActiveItems : undefined)
+    .filter((row) =>
+      typeof row.item_id === "string" &&
+      typeof row.name === "string" &&
+      typeof row.brand === "string" &&
+      allowedCategories.has(row.category as CatalogCategory) &&
+      pilotAllowsCategory(row.category, pilot) &&
+      typeof row.photo_url === "string" &&
+      row.photo_url.length > 0 &&
+      Number.isInteger(row.price_cents) &&
+      row.price_cents > 0,
+    )
+    .slice(0, pilot.enabled ? pilot.itemCap : undefined)
     .map((row) => ({
       id: row.item_id,
       name: row.name,
@@ -76,14 +88,19 @@ export default async function Home() {
       photoUrl: row.photo_url!,
       publishedAt: row.published_at,
       home: homeMap.get(row.item_id)?.details,
-      priceDrop: homeMap.get(row.item_id)?.price_drop??false,
+      priceDrop: homeMap.get(row.item_id)?.price_drop ?? false,
     }));
+
+  const navCategories = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value));
 
   return (
     <main>
       <header className="site-header">
         <Link href="/" className="brand" aria-label="Rewear home">REWEAR<span>.</span></Link>
-        <nav aria-label="Main navigation"><a href="#shop">Shop</a><a href="#women">Women</a>{!PILOT_MODE.enabled ? <><a href="#men">Men</a><a href="#home_decor">Home &amp; Decor</a></> : null}</nav>
+        <nav aria-label="Main navigation">
+          <a href="#shop">Shop</a>
+          {navCategories.map((entry) => <a key={entry.value} href={`#${entry.value}`}>{entry.label}</a>)}
+        </nav>
         <div className="header-actions"><CartNavLink /><Link href="/account" className="header-account-link">My account</Link><Button asChild className="header-sell-button"><a href="#sell">Sell with us</a></Button></div>
       </header>
 
@@ -102,16 +119,16 @@ export default async function Home() {
 
       <section className="shipping-strip" aria-label="Canada delivery policy"><Truck /><div><strong>{shipping.canadaWideEnabled === false ? "Delivery policy" : "Shop from anywhere in Canada."}</strong><span>{shippingSummary}</span></div><Link href="/shipping-policy">Delivery details</Link></section>
 
-      <ShopCatalog products={catalogProducts} now={requestTime} />
+      <ShopCatalog products={catalogProducts} now={requestTime} activeCategories={activeCategories} />
 
       <section id="sell" className="process-section">
         <div className="process-intro"><p className="eyebrow">The effortless way to resell</p><h2>We pick it up.<br />You’re done.</h2><p>From your door to the buyer, our team handles every step. You can follow progress whenever you want.</p><Button asChild variant="secondary"><Link href="/account">Arrange collection</Link></Button></div>
-        <ol className="steps"><li><b>01</b><div><h3>Tell us you’re ready</h3><p>Open your account and request a Bag or collection in just a few steps.</p></div></li><li><b>02</b><div><h3>We collect and prepare everything</h3><p>Our team receives, inspects, photographs, prices and lists your accepted clothing, shoes, accessories, electronics and selected Home &amp; Decor pieces.</p></div></li><li><b>03</b><div><h3>We sell. You earn.</h3><p>We handle buyers and the sale. Your earnings are tracked in your account according to the current payout process.</p></div></li></ol>
+        <ol className="steps"><li><b>01</b><div><h3>Tell us you’re ready</h3><p>Open your account and request a Bag or collection in just a few steps.</p></div></li><li><b>02</b><div><h3>We collect and prepare everything</h3><p>Our team receives, inspects, photographs, prices and lists accepted items in the categories currently enabled by Rewear.</p></div></li><li><b>03</b><div><h3>We sell. You earn.</h3><p>We handle buyers and the sale. Your earnings are tracked in your account according to the current payout process.</p></div></li></ol>
       </section>
 
-      <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Company-managed shopping</p><h2>Listings are prepared and reviewed by Rewear.</h2><p>During the pilot, accepted women’s clothing is processed by our team before publication. If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
+      <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Company-managed shopping</p><h2>Listings are prepared and reviewed by Rewear.</h2><p>{pilot.enabled ? "During the pilot, only the categories enabled in Pilot Settings are accepted and published." : "Rewear reviews accepted items before publication."} If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
 
-      <footer><div className="brand">REWEAR<span>.</span></div><p>{PILOT_MODE.enabled ? "Women’s clothing pilot" : "Women · Men · Kids · Shoes · Accessories · Electronics · Home & Decor"}</p><div className="footer-links"><Link href="/pickup-policy">Pickup policy</Link><Link href="/shipping-policy">Shipping policy</Link><Link href="/account">Customer account</Link></div></footer>
+      <footer><div className="brand">REWEAR<span>.</span></div><p>{pilot.enabled ? `${navCategories.map((entry) => entry.label).join(" · ")} pilot` : "Women · Men · Kids · Shoes · Accessories · Electronics · Home & Decor"}</p><div className="footer-links"><Link href="/pickup-policy">Pickup policy</Link><Link href="/shipping-policy">Shipping policy</Link><Link href="/account">Customer account</Link></div></footer>
     </main>
   );
 }
