@@ -10,7 +10,6 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PILOT_MODE } from "@/lib/catalog-taxonomy";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AddToCartButton,
@@ -56,11 +55,8 @@ const allLabels: { value: TabValue; label: string }[] = [
   { value: "electronics", label: "Electronics" },
   { value: "home_decor", label: "Home & Decor" },
 ];
-const labels = PILOT_MODE.enabled
-  ? allLabels.filter((entry) => entry.value === "all" || entry.value === "women")
-  : allLabels;
 
-function hashCategory(hash: string): TabValue | null {
+function hashCategory(hash: string, labels: { value: TabValue; label: string }[]): TabValue | null {
   const value = hash.replace(/^#/, "").toLowerCase();
   return labels.some((entry) => entry.value === value)
     ? (value as TabValue)
@@ -82,10 +78,16 @@ function unique(values: (string | null)[]) {
 export function ShopCatalog({
   products,
   now,
+  activeCategories,
 }: {
   products: CatalogProduct[];
   now: number;
+  activeCategories: CatalogCategory[];
 }) {
+  const labels = useMemo(
+    () => allLabels.filter((entry) => entry.value === "all" || activeCategories.includes(entry.value as CatalogCategory)),
+    [activeCategories],
+  );
   const [activeCategory, setActiveCategory] = useState<TabValue>("all");
   const [subcategories, setSubcategories] = useState<string[]>([]);
   const [eras, setEras] = useState<string[]>([]);
@@ -105,7 +107,7 @@ export function ShopCatalog({
 
   useEffect(() => {
     const syncHash = () => {
-      const next = hashCategory(window.location.hash);
+      const next = hashCategory(window.location.hash, labels);
       if (next) {
         setActiveCategory(next);
         setBrands([]);
@@ -120,12 +122,14 @@ export function ShopCatalog({
         setCollection("");
         setMinPrice("");
         setMaxPrice("");
+      } else if (!labels.some((entry) => entry.value === activeCategory)) {
+        setActiveCategory("all");
       }
     };
     syncHash();
     window.addEventListener("hashchange", syncHash);
     return () => window.removeEventListener("hashchange", syncHash);
-  }, []);
+  }, [activeCategory, labels]);
 
   useEffect(() => {
     if (!filterOpen) return;
