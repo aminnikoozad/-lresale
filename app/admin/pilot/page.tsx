@@ -111,7 +111,7 @@ export default async function PilotDashboard({ searchParams }: Props) {
             <h1>Pilot control & economics</h1>
             <p>Control the active pilot without code, then track inventory, cumulative sales KPIs and the real cost of pickup, packing and labor.</p>
           </div>
-          <div className="security-chip">Pilot {pilot.enabled ? "active" : "paused"} · max {pilot.itemCap} live items</div>
+          <div className="security-chip">Pilot {pilot.enabled ? "active" : "paused"} · {pilot.itemCap === null ? "no live-item cap" : `max ${pilot.itemCap} live items`}</div>
         </div>
 
         {message ? <div className={`ops-message ${type}`}>{message}</div> : null}
@@ -133,7 +133,7 @@ export default async function PilotDashboard({ searchParams }: Props) {
               </div>
             </fieldset>
             <div className="pilot-control-grid">
-              <label>Maximum live items<input name="item_cap" type="number" min="1" max="1000" defaultValue={pilot.itemCap} required /></label>
+              <label>Optional live-item safety cap<input name="item_cap" type="number" min="1" max="10000" defaultValue={pilot.itemCap ?? ""} placeholder="No limit" /></label>
               <label>Duration (weeks)<input name="duration_weeks" type="number" min="1" max="52" defaultValue={pilot.durationWeeks} required /></label>
               <label>Pilot start (Toronto time)<input name="started_at" type="datetime-local" defaultValue={torontoDateTimeInput(pilot.startedAt)} required /></label>
             </div>
@@ -146,7 +146,7 @@ export default async function PilotDashboard({ searchParams }: Props) {
               </div>
             </fieldset>
             <button type="submit" disabled={!access.can_manage_selling_rules}>Save pilot settings</button>
-            <small>Turning pilot restrictions off restores the full existing catalog taxonomy. No category records or features are deleted.</small>
+            <small>Leave the live-item cap blank to publish all approved inventory. Turning pilot restrictions off restores the full existing catalog taxonomy. No category records or features are deleted.</small>
           </form>
         </section>
 
@@ -154,7 +154,7 @@ export default async function PilotDashboard({ searchParams }: Props) {
           <>
             <section className="pilot-period">
               <div><span>Pilot window</span><b>{localDate(snapshot.start_date)} → {localDate(snapshot.end_date)}</b></div>
-              <div><span>Live inventory</span><b>{snapshot.active_listed_items} / {pilot.itemCap}</b></div>
+              <div><span>Live inventory</span><b>{snapshot.active_listed_items}{pilot.itemCap === null ? "" : ` / ${pilot.itemCap}`}</b></div>
               <div><span>Sold</span><b>{snapshot.sold_items}</b></div>
               <div><span>Gross sales</span><b>{formatCad(snapshot.gross_sales_cents)}</b></div>
             </section>

@@ -17,6 +17,14 @@ function integer(value: FormDataEntryValue | null) {
   return parsed;
 }
 
+function optionalPositiveInteger(value: FormDataEntryValue | null) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 10_000) throw new Error("Optional item cap must be between 1 and 10,000");
+  return parsed;
+}
+
 function torontoOffsetMinutes(at: Date) {
   const zone = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/Toronto",
@@ -77,13 +85,12 @@ export async function updatePilotSettings(formData: FormData) {
       .getAll("pickup_days")
       .map((value) => Number.parseInt(String(value), 10))
       .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6);
-    const itemCap = integer(formData.get("item_cap"));
+    const itemCap = optionalPositiveInteger(formData.get("item_cap"));
     const durationWeeks = integer(formData.get("duration_weeks"));
     const startRaw = String(formData.get("started_at") ?? "").trim();
 
     if (!categories.length) throw new Error("Select at least one category");
     if (!pickupDays.length) throw new Error("Select at least one pickup day");
-    if (itemCap < 1 || itemCap > 1000) throw new Error("Item cap must be between 1 and 1000");
     if (durationWeeks < 1 || durationWeeks > 52) throw new Error("Pilot duration must be between 1 and 52 weeks");
 
     const startedAt = startRaw ? torontoLocalToIso(startRaw) : new Date().toISOString();

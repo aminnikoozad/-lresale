@@ -4,7 +4,7 @@ import { CATALOG_CATEGORIES, isCatalogCategory, type CatalogCategory } from "./c
 export type PilotSettings = {
   enabled: boolean;
   categories: CatalogCategory[];
-  itemCap: number;
+  itemCap: number | null;
   pickupDays: number[];
   durationWeeks: number;
   startedAt: string | null;
@@ -13,7 +13,7 @@ export type PilotSettings = {
 export const DEFAULT_PILOT_SETTINGS: PilotSettings = {
   enabled: true,
   categories: ["women"],
-  itemCap: 30,
+  itemCap: null,
   pickupDays: [6],
   durationWeeks: 8,
   startedAt: "2026-09-24T00:00:00-04:00",
@@ -28,12 +28,13 @@ export function normalizePilotSettings(value: unknown): PilotSettings {
   const pickupDays = Array.isArray(row.pickup_days)
     ? row.pickup_days.map(Number).filter((day) => Number.isInteger(day) && day >= 0 && day <= 6)
     : [];
-  const itemCap = Number(row.item_cap);
+  const rawItemCap = row.item_cap;
+  const itemCap = rawItemCap === null || rawItemCap === undefined ? null : Number(rawItemCap);
   const durationWeeks = Number(row.duration_weeks);
   return {
     enabled: typeof row.enabled === "boolean" ? row.enabled : DEFAULT_PILOT_SETTINGS.enabled,
     categories: categories.length ? categories : DEFAULT_PILOT_SETTINGS.categories,
-    itemCap: Number.isInteger(itemCap) && itemCap > 0 ? itemCap : DEFAULT_PILOT_SETTINGS.itemCap,
+    itemCap: itemCap === null ? null : Number.isInteger(itemCap) && itemCap > 0 ? itemCap : DEFAULT_PILOT_SETTINGS.itemCap,
     pickupDays: pickupDays.length ? pickupDays : DEFAULT_PILOT_SETTINGS.pickupDays,
     durationWeeks: Number.isInteger(durationWeeks) && durationWeeks > 0 ? durationWeeks : DEFAULT_PILOT_SETTINGS.durationWeeks,
     startedAt: typeof row.started_at === "string" && row.started_at ? row.started_at : DEFAULT_PILOT_SETTINGS.startedAt,

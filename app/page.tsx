@@ -72,7 +72,7 @@ export default async function Home() {
       Number.isInteger(row.price_cents) &&
       row.price_cents > 0,
     )
-    .slice(0, pilot.enabled ? pilot.itemCap : undefined)
+    .slice(0, pilot.enabled && pilot.itemCap !== null ? pilot.itemCap : undefined)
     .map((row) => ({
       id: row.item_id,
       name: row.name,
