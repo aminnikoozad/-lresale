@@ -20,6 +20,7 @@ import "./premium-components.css";
 import "./premium-flows.css";
 import "./premium-route-overrides.css";
 import "./storefront.css";
+import "./curated-quality.css";
 import "./checkout-readiness.css";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });

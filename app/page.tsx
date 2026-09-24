@@ -109,6 +109,7 @@ export default async function Home() {
           <div className="hero-copy">
             <p className="eyebrow">Managed secondhand, made effortless</p>
             <h1 id="home-hero-title">Great pieces deserve another life.</h1>
+            <p className="hero-positioning">Boutique-quality secondhand, hand-inspected — not thrift-store luck.</p>
             <p>Shop inspected secondhand finds or let Rewear handle the work of reselling your items—from collection and photography to pricing and buyer messages.</p>
             <div className="hero-actions"><Button asChild size="lg"><a href="#shop">Shop now <ArrowRight /></a></Button><Button asChild size="lg" variant="outline"><a href="#sell">Sell your items</a></Button></div>
             <div className="hero-trust" aria-label="Rewear service highlights"><span>Inspected listings</span><span>Managed resale</span><span>Canada-wide shopping</span></div>
@@ -122,8 +123,29 @@ export default async function Home() {
       <ShopCatalog products={catalogProducts} now={requestTime} activeCategories={activeCategories} />
 
       <section id="sell" className="process-section">
-        <div className="process-intro"><p className="eyebrow">The effortless way to resell</p><h2>We pick it up.<br />You’re done.</h2><p>From your door to the buyer, our team handles every step. You can follow progress whenever you want.</p><Button asChild variant="secondary"><Link href="/account">Arrange collection</Link></Button></div>
-        <ol className="steps"><li><b>01</b><div><h3>Tell us you’re ready</h3><p>Open your account and request a Bag or collection in just a few steps.</p></div></li><li><b>02</b><div><h3>We collect and prepare everything</h3><p>Our team receives, inspects, photographs, prices and lists accepted items in the categories currently enabled by Rewear.</p></div></li><li><b>03</b><div><h3>We sell. You earn.</h3><p>We handle buyers and the sale. Your earnings are tracked in your account according to the current payout process.</p></div></li></ol>
+        <div className="process-intro">
+          <p className="eyebrow">The effortless way to resell</p>
+          <div className="sell-positioning-block">
+            <h2>Like Marketplace, without the work.</h2>
+            <p>We&apos;re not a thrift store. Every piece is hand-inspected and curated — if it&apos;s not boutique-quality, we don&apos;t list it. You do nothing, we do everything.</p>
+            <p className="sell-commission-teaser">Sellers keep up to 65% of the sale.</p>
+          </div>
+          <Button asChild variant="secondary"><Link href="/account">Arrange collection</Link></Button>
+        </div>
+        <ol className="steps"><li><b>01</b><div><h3>Tell us you’re ready</h3><p>Open your account and request a Bag or collection in just a few steps.</p></div></li><li><b>02</b><div><h3>We collect and prepare everything</h3><p>Our team hand-inspects every piece and only accepts boutique-quality items. Accepted pieces are photographed, priced and listed by Rewear.</p></div></li><li><b>03</b><div><h3>We sell. You earn.</h3><p>We handle buyers and the sale. Your earnings are tracked in your account according to the current payout process.</p></div></li></ol>
+      </section>
+
+      <section className="quality-promise-section" aria-labelledby="quality-promise-title">
+        <div className="quality-promise-heading">
+          <p className="eyebrow">Curated by Rewear</p>
+          <h2 id="quality-promise-title">Our quality promise</h2>
+        </div>
+        <ol className="quality-promise-steps">
+          <li><b>01</b><div><h3>Inspect by hand</h3><p>We check condition, construction and visible wear in person.</p></div></li>
+          <li><b>02</b><div><h3>Curate for quality</h3><p>Only pieces that meet Rewear&apos;s boutique-quality standard move forward.</p></div></li>
+          <li><b>03</b><div><h3>List with clarity</h3><p>Accepted pieces are photographed and described so buyers know what they&apos;re getting.</p></div></li>
+        </ol>
+        <p className="quality-promise-rule">What doesn&apos;t pass our inspection never gets listed.</p>
       </section>
 
       <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Company-managed shopping</p><h2>Listings are prepared and reviewed by Rewear.</h2><p>{pilot.enabled ? "During the pilot, only the categories enabled in Pilot Settings are accepted and published." : "Rewear reviews accepted items before publication."} If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
