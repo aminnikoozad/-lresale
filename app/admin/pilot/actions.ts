@@ -17,6 +17,46 @@ function integer(value: FormDataEntryValue | null) {
   return parsed;
 }
 
+function torontoOffsetMinutes(at: Date) {
+  const zone = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Toronto",
+    timeZoneName: "longOffset",
+    hour: "2-digit",
+  }).formatToParts(at).find((part) => part.type === "timeZoneName")?.value;
+  const match = zone?.match(/^GMT([+-])(\d{2}):(\d{2})$/);
+  if (!match) throw new Error("Could not resolve Toronto timezone");
+  const minutes = Number(match[2]) * 60 + Number(match[3]);
+  return match[1] === "+" ? minutes : -minutes;
+}
+
+function torontoLocalToIso(input: string) {
+  const match = input.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+  if (!match) throw new Error("Invalid local date/time");
+  const [, year, month, day, hour, minute] = match;
+  const localAsUtc = Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute));
+  let offset = torontoOffsetMinutes(new Date(localAsUtc));
+  let instant = new Date(localAsUtc - offset * 60_000);
+  const correctedOffset = torontoOffsetMinutes(instant);
+  if (correctedOffset !== offset) {
+    offset = correctedOffset;
+    instant = new Date(localAsUtc - offset * 60_000);
+  }
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Toronto",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(instant);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  const roundTrip = `${values.year}-${values.month}-${values.day}T${values.hour}:${values.minute}`;
+  if (roundTrip !== input) throw new Error("That Toronto local time is not valid");
+  return instant.toISOString();
+}
+
 function pilotRedirect(message: string, type: "success" | "error" = "success") {
   const params = new URLSearchParams({ message });
   if (type === "error") params.set("type", "error");
@@ -46,8 +86,7 @@ export async function updatePilotSettings(formData: FormData) {
     if (itemCap < 1 || itemCap > 1000) throw new Error("Item cap must be between 1 and 1000");
     if (durationWeeks < 1 || durationWeeks > 52) throw new Error("Pilot duration must be between 1 and 52 weeks");
 
-    const startedAt = startRaw ? new Date(startRaw) : new Date();
-    if (Number.isNaN(startedAt.getTime())) throw new Error("Invalid pilot start date");
+    const startedAt = startRaw ? torontoLocalToIso(startRaw) : new Date().toISOString();
 
     const { error } = await supabase.rpc("admin_save_pilot", {
       p_enabled: enabled,
@@ -55,7 +94,7 @@ export async function updatePilotSettings(formData: FormData) {
       p_cap: itemCap,
       p_days: pickupDays,
       p_weeks: durationWeeks,
-      p_start: startedAt.toISOString(),
+      p_start: startedAt,
     });
     if (error) throw error;
   } catch (error) {
@@ -87,7 +126,7 @@ export async function addPilotCost(formData: FormData) {
       p_labor_minutes: laborMinutes,
       p_hourly_cost_cents: hourlyCostCents,
       p_note: note || null,
-      p_occurred_at: occurred ? new Date(occurred).toISOString() : new Date().toISOString(),
+      p_occurred_at: occurred ? torontoLocalToIso(occurred) : new Date().toISOString(),
     });
     if (error) throw error;
   } catch (error) {
