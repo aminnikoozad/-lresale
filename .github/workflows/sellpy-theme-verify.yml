@@ -1,0 +1,105 @@
+name: Sellpy Theme Verification
+
+on:
+  push:
+    branches: [sellpy-theme-preview]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout themed branch
+        uses: actions/checkout@v4
+        with:
+          path: after
+
+      - name: Checkout before-theme baseline
+        uses: actions/checkout@v4
+        with:
+          ref: curated-quality-message
+          path: before
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install and gate themed build
+        working-directory: after
+        run: |
+          npm ci --ignore-scripts
+          npm audit --omit=dev --audit-level=high
+          npm run test:security
+          npm run lint
+          npm run build
+
+      - name: Build baseline
+        working-directory: before
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+
+      - name: Start both builds
+        run: |
+          (cd before && PORT=3001 npm start > ../before-server.log 2>&1 & echo $! > ../before.pid)
+          (cd after && PORT=3002 npm start > ../after-server.log 2>&1 & echo $! > ../after.pid)
+          for port in 3001 3002; do
+            ready=0
+            for i in {1..45}; do
+              if curl --fail --silent "http://127.0.0.1:$port/" > /dev/null; then ready=1; break; fi
+              sleep 1
+            done
+            if [ "$ready" -ne 1 ]; then
+              cat before-server.log || true
+              cat after-server.log || true
+              exit 1
+            fi
+          done
+
+      - name: Smoke test themed routes
+        run: |
+          curl --fail --silent --location http://127.0.0.1:3002/ > after-home.html
+          curl --fail --silent --location http://127.0.0.1:3002/cart > /dev/null
+          curl --fail --silent --location http://127.0.0.1:3002/login > /dev/null
+          curl --fail --silent --location http://127.0.0.1:3002/checkout > /dev/null
+          grep -F "Boutique-quality secondhand, hand-inspected — not thrift-store luck." after-home.html
+          ITEM_PATH=$(grep -oE 'href="/item/[0-9a-f-]{36}"' after-home.html | head -n 1 | cut -d'"' -f2 || true)
+          echo "item_path=$ITEM_PATH" > item-path.txt
+          if [ -n "$ITEM_PATH" ]; then
+            curl --fail --silent --location "http://127.0.0.1:3002$ITEM_PATH" > /dev/null
+          fi
+
+      - name: Install Chromium
+        run: npx --yes playwright@1.55.0 install --with-deps chromium
+
+      - name: Capture before and after desktop
+        run: |
+          npx --yes playwright@1.55.0 screenshot --browser=chromium --viewport-size="1440,1000" --full-page http://127.0.0.1:3001/ before-desktop.png
+          npx --yes playwright@1.55.0 screenshot --browser=chromium --viewport-size="1440,1000" --full-page http://127.0.0.1:3002/ after-desktop.png
+
+      - name: Capture before and after mobile
+        run: |
+          npx --yes playwright@1.55.0 screenshot --browser=chromium --viewport-size="390,844" --full-page http://127.0.0.1:3001/ before-mobile-390.png
+          npx --yes playwright@1.55.0 screenshot --browser=chromium --viewport-size="390,844" --full-page http://127.0.0.1:3002/ after-mobile-390.png
+
+      - name: Capture themed cart mobile
+        run: npx --yes playwright@1.55.0 screenshot --browser=chromium --viewport-size="390,844" --full-page http://127.0.0.1:3002/cart after-cart-mobile-390.png
+
+      - name: Upload comparison artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sellpy-theme-before-after
+          path: |
+            before-desktop.png
+            after-desktop.png
+            before-mobile-390.png
+            after-mobile-390.png
+            after-cart-mobile-390.png
+            item-path.txt
+            before-server.log
+            after-server.log
+          if-no-files-found: error
