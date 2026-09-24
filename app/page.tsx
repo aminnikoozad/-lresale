@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { CartNavLink } from "@/components/cart-store";
 import { createPublicClient } from "@/lib/supabase/public";
 import { ShopCatalog, type CatalogCategory, type CatalogProduct } from "./shop-catalog";
+import { PILOT_MODE, isPilotCategory } from "@/lib/catalog-taxonomy";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +59,8 @@ export default async function Home() {
     : "Local delivery eligibility is confirmed from the delivery address. Shipping fees may apply outside the local area.";
 
   const catalogProducts: CatalogProduct[] = ((data ?? []) as CatalogRow[])
-    .filter((row) => typeof row.item_id === "string" && typeof row.name === "string" && typeof row.brand === "string" && allowedCategories.has(row.category as CatalogCategory) && typeof row.photo_url === "string" && row.photo_url.length > 0 && Number.isInteger(row.price_cents) && row.price_cents > 0)
+    .filter((row) => typeof row.item_id === "string" && typeof row.name === "string" && typeof row.brand === "string" && allowedCategories.has(row.category as CatalogCategory) && isPilotCategory(row.category) && typeof row.photo_url === "string" && row.photo_url.length > 0 && Number.isInteger(row.price_cents) && row.price_cents > 0)
+    .slice(0, PILOT_MODE.enabled ? PILOT_MODE.maxActiveItems : undefined)
     .map((row) => ({
       id: row.item_id,
       name: row.name,
@@ -81,7 +83,7 @@ export default async function Home() {
     <main>
       <header className="site-header">
         <Link href="/" className="brand" aria-label="Rewear home">REWEAR<span>.</span></Link>
-        <nav aria-label="Main navigation"><a href="#shop">Shop</a><a href="#women">Women</a><a href="#men">Men</a><a href="#home_decor">Home &amp; Decor</a></nav>
+        <nav aria-label="Main navigation"><a href="#shop">Shop</a><a href="#women">Women</a>{!PILOT_MODE.enabled ? <><a href="#men">Men</a><a href="#home_decor">Home &amp; Decor</a></> : null}</nav>
         <div className="header-actions"><CartNavLink /><Link href="/account" className="header-account-link">My account</Link><Button asChild className="header-sell-button"><a href="#sell">Sell with us</a></Button></div>
       </header>
 
@@ -107,9 +109,9 @@ export default async function Home() {
         <ol className="steps"><li><b>01</b><div><h3>Tell us you’re ready</h3><p>Open your account and request a Bag or collection in just a few steps.</p></div></li><li><b>02</b><div><h3>We collect and prepare everything</h3><p>Our team receives, inspects, photographs, prices and lists your accepted clothing, shoes, accessories, electronics and selected Home &amp; Decor pieces.</p></div></li><li><b>03</b><div><h3>We sell. You earn.</h3><p>We handle buyers and the sale. Your earnings are tracked in your account according to the current payout process.</p></div></li></ol>
       </section>
 
-      <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Company-managed shopping</p><h2>Listings are prepared and reviewed by Rewear.</h2><p>Accepted fashion, electronics and Home &amp; Decor pieces are processed by our team before publication. If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
+      <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Company-managed shopping</p><h2>Listings are prepared and reviewed by Rewear.</h2><p>During the pilot, accepted women’s clothing is processed by our team before publication. If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
 
-      <footer><div className="brand">REWEAR<span>.</span></div><p>Women · Men · Kids · Shoes · Accessories · Electronics · Home &amp; Decor</p><div className="footer-links"><Link href="/pickup-policy">Pickup policy</Link><Link href="/shipping-policy">Shipping policy</Link><Link href="/account">Customer account</Link></div></footer>
+      <footer><div className="brand">REWEAR<span>.</span></div><p>{PILOT_MODE.enabled ? "Women’s clothing pilot" : "Women · Men · Kids · Shoes · Accessories · Electronics · Home & Decor"}</p><div className="footer-links"><Link href="/pickup-policy">Pickup policy</Link><Link href="/shipping-policy">Shipping policy</Link><Link href="/account">Customer account</Link></div></footer>
     </main>
   );
 }

@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PILOT_MODE } from "@/lib/catalog-taxonomy";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AddToCartButton,
@@ -45,7 +46,7 @@ export type CatalogProduct = {
   priceDrop?: boolean;
 };
 
-const labels: { value: TabValue; label: string }[] = [
+const allLabels: { value: TabValue; label: string }[] = [
   { value: "all", label: "All items" },
   { value: "women", label: "Women" },
   { value: "men", label: "Men" },
@@ -55,6 +56,9 @@ const labels: { value: TabValue; label: string }[] = [
   { value: "electronics", label: "Electronics" },
   { value: "home_decor", label: "Home & Decor" },
 ];
+const labels = PILOT_MODE.enabled
+  ? allLabels.filter((entry) => entry.value === "all" || entry.value === "women")
+  : allLabels;
 
 function hashCategory(hash: string): TabValue | null {
   const value = hash.replace(/^#/, "").toLowerCase();
