@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
-import { PILOT_MODE } from "@/lib/catalog-taxonomy";
+import { CATALOG_CATEGORIES } from "@/lib/catalog-taxonomy";
+import { loadPilotSettings } from "@/lib/pilot-settings";
 import {
   PILOT_TARGETS,
   type PilotSnapshot,
@@ -8,7 +9,7 @@ import {
   formatPercent,
   pilotSignal,
 } from "@/lib/pilot-metrics";
-import { addPilotCost } from "./actions";
+import { addPilotCost, updatePilotSettings } from "./actions";
 import "./pilot.css";
 import "../operations/operations.css";
 
@@ -26,6 +27,11 @@ type CostEntry = {
   note: string | null;
 };
 
+const PICKUP_DAYS = [
+  [0, "Sunday"], [1, "Monday"], [2, "Tuesday"], [3, "Wednesday"],
+  [4, "Thursday"], [5, "Friday"], [6, "Saturday"],
+] as const;
+
 function signalClass(signal: ReturnType<typeof pilotSignal>) {
   return signal === "met" ? "pilot-met" : signal === "watch" ? "pilot-watch" : "pilot-not-yet";
 }
@@ -34,24 +40,45 @@ function localDate(value: string) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Toronto", dateStyle: "medium" }).format(new Date(value));
 }
 
+function torontoDateTimeInput(value: string | null) {
+  if (!value) return "";
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Toronto",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(value));
+  const p = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
+}
+
 export default async function PilotDashboard({ searchParams }: Props) {
   const { supabase, access } = await requireAdmin();
   const params = await searchParams;
   const message = typeof params.message === "string" ? params.message : null;
   const type = params.type === "error" ? "error" : "success";
 
-  const [{ data: snapshotData, error: snapshotError }, { data: costs, error: costsError }] = await Promise.all([
+  const [
+    { data: snapshotData, error: snapshotError },
+    { data: costs, error: costsError },
+    pilot,
+  ] = await Promise.all([
     supabase.rpc("admin_pilot_snapshot"),
     supabase
       .from("pilot_cost_entries")
       .select("id,occurred_at,category,amount_cents,labor_minutes,hourly_cost_cents,note")
       .order("occurred_at", { ascending: false })
       .limit(20),
+    loadPilotSettings(supabase),
   ]);
 
   const snapshot = snapshotError ? null : (snapshotData as PilotSnapshot | null);
   const costRows = costsError ? [] : ((costs ?? []) as CostEntry[]);
   const databaseReady = Boolean(snapshot && !snapshotError && !costsError);
+  const activeLabels = CATALOG_CATEGORIES.filter((entry) => pilot.categories.includes(entry.value)).map((entry) => entry.label).join(", ");
 
   const metrics = snapshot
     ? [
@@ -81,24 +108,53 @@ export default async function PilotDashboard({ searchParams }: Props) {
         <div className="ops-heading">
           <div>
             <p className="eyebrow dark">Admin → Pilot</p>
-            <h1>Women’s pilot economics</h1>
-            <p>Track live inventory, cumulative sales KPIs and the real cost of pickup, packing, labor and other operating work.</p>
+            <h1>Pilot control & economics</h1>
+            <p>Control the active pilot without code, then track inventory, cumulative sales KPIs and the real cost of pickup, packing and labor.</p>
           </div>
-          <div className="security-chip">Pilot {PILOT_MODE.enabled ? "active" : "paused"} · max {PILOT_MODE.maxActiveItems} live items</div>
+          <div className="security-chip">Pilot {pilot.enabled ? "active" : "paused"} · max {pilot.itemCap} live items</div>
         </div>
 
         {message ? <div className={`ops-message ${type}`}>{message}</div> : null}
-        {!databaseReady ? (
-          <div className="ops-message error">
-            Pilot database tracking is not active yet. The migration is committed with this release, but it must be applied to the connected production Supabase project before live KPI/cost data can load.
+        {!databaseReady ? <div className="ops-message error">Pilot KPI tracking could not be loaded from production.</div> : null}
+
+        <section className="ops-card">
+          <div className="ops-card-title">
+            <div><h2>Pilot controls</h2><p>These settings drive the storefront, seller intake and database enforcement. Hidden categories are preserved and can be restored here without rewriting code.</p></div>
+            <strong>{pilot.enabled ? activeLabels || "No category" : "Full catalog mode"}</strong>
           </div>
-        ) : null}
+          <form action={updatePilotSettings} className="pilot-controls-form">
+            <label className="pilot-toggle"><input name="enabled" type="checkbox" defaultChecked={pilot.enabled} /> Enable pilot restrictions</label>
+            <fieldset>
+              <legend>Categories accepted during pilot</legend>
+              <div className="pilot-check-grid">
+                {CATALOG_CATEGORIES.map((entry) => (
+                  <label key={entry.value}><input type="checkbox" name="categories" value={entry.value} defaultChecked={pilot.categories.includes(entry.value)} /> {entry.label}</label>
+                ))}
+              </div>
+            </fieldset>
+            <div className="pilot-control-grid">
+              <label>Maximum live items<input name="item_cap" type="number" min="1" max="1000" defaultValue={pilot.itemCap} required /></label>
+              <label>Duration (weeks)<input name="duration_weeks" type="number" min="1" max="52" defaultValue={pilot.durationWeeks} required /></label>
+              <label>Pilot start (Toronto time)<input name="started_at" type="datetime-local" defaultValue={torontoDateTimeInput(pilot.startedAt)} required /></label>
+            </div>
+            <fieldset>
+              <legend>Pickup weekdays</legend>
+              <div className="pilot-check-grid">
+                {PICKUP_DAYS.map(([day, label]) => (
+                  <label key={day}><input type="checkbox" name="pickup_days" value={day} defaultChecked={pilot.pickupDays.includes(day)} /> {label}</label>
+                ))}
+              </div>
+            </fieldset>
+            <button type="submit" disabled={!access.can_manage_selling_rules}>Save pilot settings</button>
+            <small>Turning pilot restrictions off restores the full existing catalog taxonomy. No category records or features are deleted.</small>
+          </form>
+        </section>
 
         {snapshot ? (
           <>
             <section className="pilot-period">
               <div><span>Pilot window</span><b>{localDate(snapshot.start_date)} → {localDate(snapshot.end_date)}</b></div>
-              <div><span>Live inventory</span><b>{snapshot.active_listed_items} / {PILOT_MODE.maxActiveItems}</b></div>
+              <div><span>Live inventory</span><b>{snapshot.active_listed_items} / {pilot.itemCap}</b></div>
               <div><span>Sold</span><b>{snapshot.sold_items}</b></div>
               <div><span>Gross sales</span><b>{formatCad(snapshot.gross_sales_cents)}</b></div>
             </section>
@@ -164,7 +220,7 @@ export default async function PilotDashboard({ searchParams }: Props) {
         </section>
 
         <section className="ops-card">
-          <div className="ops-card-title"><div><h2>Pilot decision guardrails</h2><p>Use the KPI trend plus contribution economics at the end of the 6–8 week test; do not expand categories just because the site can support them.</p></div></div>
+          <div className="ops-card-title"><div><h2>Pilot decision guardrails</h2><p>Use the KPI trend plus contribution economics at the end of the configured test; do not expand categories just because the site can support them.</p></div></div>
           <p className="empty">Operational watch-outs: too much unsold inventory, weak average sale price, pickup/labor cost overtaking commission, scattered pickup routes, or inventory growing materially faster than sales.</p>
         </section>
       </section>
