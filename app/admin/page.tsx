@@ -23,6 +23,7 @@ export default async function AdminPage() {
         <div><span className="brand">REWEAR<span>.</span></span><b>Admin</b></div>
         <nav>
           <Link href="/admin">Dashboard</Link>
+          <Link href="/admin/pilot">Pilot</Link>
           <Link href="/admin/ai-trainer">Chat with Bot</Link>
           <Link href="/admin/support">Support{supportStats?.waiting ? ` (${supportStats.waiting})` : ""}</Link>
           <Link href="/admin/operations#pickup-requests">Pickup Inbox{newRequests.count ? ` (${newRequests.count})` : ""}</Link>
@@ -99,8 +100,9 @@ export default async function AdminPage() {
         </section>
 
         <section className="ops-card">
-          <div className="ops-card-title"><div><h2>Operations</h2><p>Manage scheduling, item processing, business rules and secure owner controls.</p></div></div>
+          <div className="ops-card-title"><div><h2>Operations</h2><p>Manage scheduling, pilot scope, item processing, business rules and secure owner controls.</p></div></div>
           <div className="area-grid">
+            <article><div><b>Pilot Control & Economics</b><span>Change pilot categories, live-item cap, pickup days, duration and record real operating costs without editing code.</span></div><Link href="/admin/pilot">Open</Link></article>
             <article><div><b>Pickup Scheduler</b><span>Create and pause customer-selectable time windows.</span></div><Link href="/admin/operations">Open</Link></article>
             <article><div><b>Item & Bundle Management</b><span>Inspect, price, photograph, bundle and publish seller items.</span></div><Link href="/admin/items">Open</Link></article>
             <article><div><b>Selling Rules</b><span>Minimums, commissions and configurable business rules.</span></div><Link href="/admin/settings">Open</Link></article>
