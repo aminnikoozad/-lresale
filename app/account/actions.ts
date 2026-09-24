@@ -4,8 +4,8 @@ import { HOME_SUBCATEGORIES } from "@/lib/home-decor";
 import {
   isCatalogCategory,
   isCatalogSubcategory,
-  isPilotCategory,
 } from "@/lib/catalog-taxonomy";
+import { loadPilotSettings, pilotAllowsCategory } from "@/lib/pilot-settings";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isPhoneVerificationRequired } from "@/lib/canadian-phone";
@@ -35,7 +35,10 @@ export async function createCollectionRequest(formData: FormData) {
   if (!user) redirect("/login");
   if (isPhoneVerificationRequired() && !user.phone_confirmed_at) redirect("/verify-phone");
 
-  const rules = await loadSellingRules(supabase);
+  const [rules, pilot] = await Promise.all([
+    loadSellingRules(supabase),
+    loadPilotSettings(supabase),
+  ]);
   const requestType = value(formData, "request_type");
   const category = value(formData, "category");
   const submittedSubcategory = value(formData, "subcategory_hint");
@@ -55,7 +58,7 @@ export async function createCollectionRequest(formData: FormData) {
   if (
     !["bag", "pickup"].includes(requestType) ||
     !isCatalogCategory(category) ||
-    !isPilotCategory(category) ||
+    !pilotAllowsCategory(category, pilot) ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(serviceAreaId) ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(pickupSlotId) ||
     address.length < 10 ||
@@ -104,9 +107,6 @@ export async function createCollectionRequest(formData: FormData) {
     redirect(accountMessage("Choose a valid subcategory for the collection.", "error"));
   }
 
-  // Category/subcategory are seller-provided intake hints. REWEAR confirms each item's
-  // final taxonomy after physical inspection. Pricing, priority and fee fields are not
-  // accepted from the browser; production database rules calculate those values.
   const { data: savedRequest, error } = await supabase
     .from("collection_requests")
     .insert({
