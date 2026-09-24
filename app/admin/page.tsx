@@ -28,6 +28,7 @@ export default async function AdminPage() {
           <Link href="/admin/operations#pickup-requests">Pickup Inbox{newRequests.count ? ` (${newRequests.count})` : ""}</Link>
           <Link href="/admin/items">Items</Link>
           <Link href="/admin/operations">Operations</Link>
+          <Link href="/admin/pilot">Pilot Settings</Link>
           <Link href="/admin/settings">Selling Rules</Link>
           {access.can_manage_shipping ? <Link href="/admin/postal">Postal Shipping</Link> : null}
           <Link href="/admin/security">Security</Link>
@@ -103,7 +104,8 @@ export default async function AdminPage() {
           <div className="area-grid">
             <article><div><b>Pickup Scheduler</b><span>Create and pause customer-selectable time windows.</span></div><Link href="/admin/operations">Open</Link></article>
             <article><div><b>Item & Bundle Management</b><span>Inspect, price, photograph, bundle and publish seller items.</span></div><Link href="/admin/items">Open</Link></article>
-            <article><div><b>Selling Rules</b><span>Minimums, commissions and configurable business rules.</span></div><Link href="/admin/settings">Open</Link></article>
+            <article><div><b>Selling Rules</b><span>Minimums, commissions and configurable business rules.</span></div><Link href="/admin/pilot">Pilot Settings</Link>
+          <Link href="/admin/settings">Open</Link></article>
             <article><div><b>Security</b><span>Password, MFA status and privileged account controls.</span></div><Link href="/admin/security">Open</Link></article>
           </div>
         </section>

@@ -1,3 +1,5 @@
+import {loadPilot} from '@/lib/pilot';
+import {CATALOG_CATEGORIES} from '@/lib/catalog-taxonomy';
 import { connection } from "next/server";
 import type { HomeData } from "@/lib/home-decor";
 import Image from "next/image";
@@ -36,6 +38,7 @@ type ShippingPolicy = {
 
 export default async function Home() {
   await connection();
+  const pilot=await loadPilot();
   // A request-scoped timestamp keeps new-arrival filters consistent across hydration.
   const requestTime = new Date().getTime();
   const supabase = createPublicClient();
@@ -58,7 +61,7 @@ export default async function Home() {
     : "Local delivery eligibility is confirmed from the delivery address. Shipping fees may apply outside the local area.";
 
   const catalogProducts: CatalogProduct[] = ((data ?? []) as CatalogRow[])
-    .filter((row) => typeof row.item_id === "string" && typeof row.name === "string" && typeof row.brand === "string" && allowedCategories.has(row.category as CatalogCategory) && typeof row.photo_url === "string" && row.photo_url.length > 0 && Number.isInteger(row.price_cents) && row.price_cents > 0)
+    .filter((row) => typeof row.item_id === "string" && typeof row.name === "string" && typeof row.brand === "string" && allowedCategories.has(row.category as CatalogCategory) && (!pilot.enabled || pilot.categories.includes(row.category)) && typeof row.photo_url === "string" && row.photo_url.length > 0 && Number.isInteger(row.price_cents) && row.price_cents > 0)
     .map((row) => ({
       id: row.item_id,
       name: row.name,
@@ -81,7 +84,7 @@ export default async function Home() {
     <main>
       <header className="site-header">
         <Link href="/" className="brand" aria-label="Rewear home">REWEAR<span>.</span></Link>
-        <nav aria-label="Main navigation"><a href="#shop">Shop</a><a href="#women">Women</a><a href="#men">Men</a><a href="#home_decor">Home &amp; Decor</a></nav>
+        <nav aria-label="Main navigation"><a href="#shop">Shop</a>{CATALOG_CATEGORIES.filter(c=>!pilot.enabled||pilot.categories.includes(c.value)).map(c=><a key={c.value} href={'#'+c.value}>{c.label}</a>)}</nav>
         <div className="header-actions"><CartNavLink /><Link href="/account" className="header-account-link">My account</Link><Button asChild className="header-sell-button"><a href="#sell">Sell with us</a></Button></div>
       </header>
 
@@ -92,16 +95,17 @@ export default async function Home() {
             <h1 id="home-hero-title">Great pieces deserve another life.</h1>
             <p>Shop inspected secondhand finds or let Rewear handle the work of reselling your items—from collection and photography to pricing and buyer messages.</p>
             <div className="hero-actions"><Button asChild size="lg"><a href="#shop">Shop now <ArrowRight /></a></Button><Button asChild size="lg" variant="outline"><a href="#sell">Sell your items</a></Button></div>
-            <div className="hero-trust" aria-label="Rewear service highlights"><span>Inspected listings</span><span>Managed resale</span><span>Canada-wide shopping</span></div>
+            <div className="hero-trust" aria-label="Rewear service highlights"><span>Inspected listings</span><span>Managed resale</span><span>Montréal pilot</span></div>
           </div>
           <div className="hero-media" aria-hidden="true"><Image src="/fashion-hero.webp" alt="" fill priority sizes="(max-width: 900px) 100vw, 55vw" /></div>
         </div>
       </section>
 
-      <section className="shipping-strip" aria-label="Canada delivery policy"><Truck /><div><strong>{shipping.canadaWideEnabled === false ? "Delivery policy" : "Shop from anywhere in Canada."}</strong><span>{shippingSummary}</span></div><Link href="/shipping-policy">Delivery details</Link></section>
+      <section className="shipping-strip" aria-label="Canada delivery policy"><Truck /><div><strong>{shipping.canadaWideEnabled === false ? "Delivery policy" : "Delivery availability"}</strong><span>{shippingSummary}</span></div><Link href="/shipping-policy">Delivery details</Link></section>
 
-      <ShopCatalog products={catalogProducts} now={requestTime} />
+      <ShopCatalog products={catalogProducts} now={requestTime} enabledCategories={pilot.enabled?pilot.categories:undefined} />
 
+      <p className="section-wrap">Sellers receive up to 65% of the sale price. <Link href="/account">Sign in to see commission details.</Link></p>
       <section id="sell" className="process-section">
         <div className="process-intro"><p className="eyebrow">The effortless way to resell</p><h2>We pick it up.<br />You’re done.</h2><p>From your door to the buyer, our team handles every step. You can follow progress whenever you want.</p><Button asChild variant="secondary"><Link href="/account">Arrange collection</Link></Button></div>
         <ol className="steps"><li><b>01</b><div><h3>Tell us you’re ready</h3><p>Open your account and request a Bag or collection in just a few steps.</p></div></li><li><b>02</b><div><h3>We collect and prepare everything</h3><p>Our team receives, inspects, photographs, prices and lists your accepted clothing, shoes, accessories, electronics and selected Home &amp; Decor pieces.</p></div></li><li><b>03</b><div><h3>We sell. You earn.</h3><p>We handle buyers and the sale. Your earnings are tracked in your account according to the current payout process.</p></div></li></ol>
@@ -109,7 +113,7 @@ export default async function Home() {
 
       <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Company-managed shopping</p><h2>Listings are prepared and reviewed by Rewear.</h2><p>Accepted fashion, electronics and Home &amp; Decor pieces are processed by our team before publication. If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
 
-      <footer><div className="brand">REWEAR<span>.</span></div><p>Women · Men · Kids · Shoes · Accessories · Electronics · Home &amp; Decor</p><div className="footer-links"><Link href="/pickup-policy">Pickup policy</Link><Link href="/shipping-policy">Shipping policy</Link><Link href="/account">Customer account</Link></div></footer>
+      <footer><div className="brand">REWEAR<span>.</span></div><p>{CATALOG_CATEGORIES.filter(c=>!pilot.enabled||pilot.categories.includes(c.value)).map(c=>c.label).join(' · ')}</p><div className="footer-links"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/returns">Returns</Link><Link href="/pickup-policy">Pickup policy</Link><Link href="/shipping-policy">Shipping policy</Link><Link href="/account">Customer account</Link></div></footer>
     </main>
   );
 }

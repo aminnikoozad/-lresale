@@ -78,10 +78,13 @@ function unique(values: (string | null)[]) {
 export function ShopCatalog({
   products,
   now,
+  enabledCategories,
 }: {
   products: CatalogProduct[];
   now: number;
+  enabledCategories?: string[];
 }) {
+  const visibleLabels=labels.filter(c=>c.value==='all'||!enabledCategories||enabledCategories.includes(c.value));
   const [activeCategory, setActiveCategory] = useState<TabValue>("all");
   const [subcategories, setSubcategories] = useState<string[]>([]);
   const [eras, setEras] = useState<string[]>([]);
@@ -102,7 +105,7 @@ export function ShopCatalog({
   useEffect(() => {
     const syncHash = () => {
       const next = hashCategory(window.location.hash);
-      if (next) {
+      if (next && (next==='all'||!enabledCategories||enabledCategories.includes(next))) {
         setActiveCategory(next);
         setBrands([]);
         setSizes([]);
@@ -121,7 +124,7 @@ export function ShopCatalog({
     syncHash();
     window.addEventListener("hashchange", syncHash);
     return () => window.removeEventListener("hashchange", syncHash);
-  }, []);
+  }, [enabledCategories]);
 
   useEffect(() => {
     if (!filterOpen) return;
@@ -412,13 +415,13 @@ export function ShopCatalog({
       ) : null}
       <Tabs value={activeCategory} onValueChange={changeCategory}>
         <TabsList className="catalog-shortcuts" aria-label="Shop by category">
-          {labels.map((entry) => (
+          {visibleLabels.map((entry) => (
             <TabsTrigger key={entry.value} value={entry.value}>
               {entry.label}
             </TabsTrigger>
           ))}
         </TabsList>
-        {labels.map((tab) => (
+        {visibleLabels.map((tab) => (
           <TabsContent key={tab.value} value={tab.value}>
             <div className="catalog-body">
               <aside

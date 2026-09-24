@@ -1,3 +1,4 @@
+import {loadPilot,pickupDayAllowed} from '@/lib/pilot';
 import Link from "next/link";
 import { ArrowLeft, LogOut, UserRound } from "lucide-react";
 import { redirect } from "next/navigation";
@@ -78,6 +79,7 @@ export default async function AccountPage({ searchParams }: Props) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  const pilot=await loadPilot();
   if (isPhoneVerificationRequired() && !user.phone_confirmed_at)
     redirect("/verify-phone");
 
@@ -195,7 +197,7 @@ export default async function AccountPage({ searchParams }: Props) {
           </form>
         </div>
       </header>
-      <Dashboard
+      <Dashboard enabledCategories={pilot.enabled?pilot.categories:undefined}
         name={displayName}
         username={username}
         customerCode={customerCode}
@@ -286,7 +288,7 @@ export default async function AccountPage({ searchParams }: Props) {
           pickupMode: area.pickup_mode,
         }))}
         pickupSlots={(pickupSlotsResult.data ?? [])
-          .filter((slot) => slot.booked_count < slot.capacity)
+          .filter((slot) => slot.booked_count < slot.capacity && pickupDayAllowed(slot.window_start,pilot))
           .map((slot) => ({
             id: slot.id,
             serviceAreaId: slot.service_area_id,

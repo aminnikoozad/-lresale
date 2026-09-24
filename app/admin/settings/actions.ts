@@ -55,8 +55,8 @@ export async function updateSellingRules(formData: FormData) {
   const bagMinimumEstimatedValueCents = dollarsToCents(number(formData, "bag_minimum_value"));
   const sellingPeriodDays = number(formData, "selling_period_days");
   const highValueThresholdCents = dollarsToCents(number(formData, "high_value_threshold"));
-  const secondMissedPickupFeeCents = dollarsToCents(number(formData, "second_missed_pickup_fee"));
-  const suspendFreePickupAfterMisses = number(formData, "suspend_after_misses");
+  const secondMissedPickupFeeCents = 0;
+  const suspendFreePickupAfterMisses = 2;
   const storeCreditBonusBps = percentToBps(number(formData, "store_credit_bonus_percent"));
   const returnPeriodText = text(formData, "return_period_days");
   const returnPeriodDays = returnPeriodText ? Number(returnPeriodText) : null;

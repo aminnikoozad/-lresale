@@ -75,6 +75,7 @@ type Props = {
   requests: Request[];
   serviceAreas: ServiceArea[];
   pickupSlots: PickupSlot[];
+  enabledCategories?: string[];
 };
 
 export function Dashboard({
@@ -89,6 +90,7 @@ export function Dashboard({
   requests,
   serviceAreas,
   pickupSlots,
+  enabledCategories,
 }: Props) {
   return (
     <div className="dashboard">
@@ -112,6 +114,7 @@ export function Dashboard({
             icon={<Package />}
             serviceAreas={serviceAreas}
             pickupSlots={pickupSlots}
+            enabledCategories={enabledCategories}
           />
           <RequestDialog
             type="pickup"
@@ -119,6 +122,7 @@ export function Dashboard({
             icon={<Truck />}
             serviceAreas={serviceAreas}
             pickupSlots={pickupSlots}
+            enabledCategories={enabledCategories}
           />
         </div>
       </section>
@@ -179,6 +183,7 @@ export function Dashboard({
                 icon={<Truck />}
                 serviceAreas={serviceAreas}
                 pickupSlots={pickupSlots}
+            enabledCategories={enabledCategories}
               />
             </div>
             {items.length ? (
@@ -314,7 +319,7 @@ export function Dashboard({
       </section>
       <section className="mini-rules">
         <b>Quick check before sending</b>
-        <span>✓ Individual listing value is normally $20+</span>
+        <span>✓ Individual listing value is normally $25+</span>
         <span>✓ $100+ estimated collections qualify for free priority pickup</span>
         <span>✓ Smaller pickup requests may carry a per-item pickup fee</span>
         <span>✓ Clothing should be washed and neatly folded</span>
@@ -330,12 +335,14 @@ function RequestDialog({
   type,
   serviceAreas,
   pickupSlots,
+  enabledCategories,
 }: {
   label: string;
   icon: React.ReactNode;
   type: "bag" | "pickup";
   serviceAreas: ServiceArea[];
   pickupSlots: PickupSlot[];
+  enabledCategories?: string[];
 }) {
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<CatalogCategory>("women");
@@ -378,7 +385,7 @@ function RequestDialog({
                   setSubcategory("");
                 }}
               >
-                {CATALOG_CATEGORIES.map((entry) => (
+                {CATALOG_CATEGORIES.filter(c=>!enabledCategories||enabledCategories.includes(c.value)).map((entry) => (
                   <option value={entry.value} key={entry.value}>
                     {entry.label}
                   </option>

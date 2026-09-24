@@ -384,21 +384,7 @@ async function tryPolicyCalculation(service: any, question: string, context: str
     const missed = /missed|miss|raté|manqué/.test(q);
 
     if (missed) {
-      const first = pickup.firstMissedPickupFeeCents ?? 0;
-      const second = pickup.secondMissedPickupFeeCents ?? 0;
-      const suspendAfter = pickup.suspendFreePickupAfterMisses ?? 0;
-      if (/\b(twice|second|2)\b/.test(q)) {
-        return `Under the current policy, the second missed confirmed pickup may result in a ${money(second)} fee. If you dispute whether the pickup was missed or whether the fee is correct, I can send the case to human support.`;
-      }
-      if (/\b(three|third|3)\b/.test(q)) {
-        return suspendAfter > 0
-          ? `Free pickup eligibility can be suspended after ${suspendAfter} missed pickups. If your pickup history is incorrect, a human support agent should review it.`
-          : null;
-      }
-      if (/\b(first|once|1)\b/.test(q)) {
-        return `The first missed confirmed pickup has a ${money(first)} missed-pickup fee under the current policy.`;
-      }
-      return `The first missed confirmed pickup fee is ${money(first)}, the second may result in a ${money(second)} fee, and free pickup eligibility can be suspended after ${suspendAfter} missed pickups.`;
+      return "The first missed confirmed pickup has no fee and receives a reminder. From the second missed confirmed pickup, pickup access is temporarily suspended for review. No missed-pickup amount is deducted from seller earnings. A deposit option is not currently active. A disputed missed pickup requires human support.";
     }
 
     if (isBag && amount !== null) {

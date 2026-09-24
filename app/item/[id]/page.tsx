@@ -1,3 +1,4 @@
+import {ProductQuestion} from '@/components/product-question';
 import {
   fieldLabel,
   galleryOrder,
@@ -357,6 +358,6 @@ export default async function ProductPage({ params }: Props) {
           </section>
         </aside>
       </div>
-    </main>
+    <ProductQuestion itemId={id}/></main>
   );
 }

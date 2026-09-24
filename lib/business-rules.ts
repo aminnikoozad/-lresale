@@ -46,8 +46,8 @@ export const DEFAULT_SELLING_RULES: SellingRules = {
   pickupRules: {
     confirmationRequired: true,
     firstMissedPickupFeeCents: 0,
-    secondMissedPickupFeeCents: 1_000,
-    suspendFreePickupAfterMisses: 3,
+    secondMissedPickupFeeCents: 0,
+    suspendFreePickupAfterMisses: 2,
     freePickupThresholdCents: 10_000,
     lowValuePickupItemFeeCents: 500,
     bagMinimumEstimatedValueCents: 10_000,

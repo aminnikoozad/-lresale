@@ -156,11 +156,11 @@ export default async function SellingRulesPage({ searchParams }: Props) {
                 <label>Return period (days, optional)
                   <input name="return_period_days" type="number" min="1" max="3650" step="1" defaultValue={rules.returnPeriodDays ?? ""} />
                 </label>
-                <label>Second missed pickup fee (CAD)
-                  <input name="second_missed_pickup_fee" type="number" min="0" step="0.01" defaultValue={dollars(rules.pickupRules.secondMissedPickupFeeCents)} required />
+                <label>Missed pickup earnings fee (disabled by policy)
+                  <input name="second_missed_pickup_fee" type="number" min="0" step="0.01" value="0" readOnly required />
                 </label>
                 <label>Suspend free pickup after missed pickups
-                  <input name="suspend_after_misses" type="number" min="1" max="99" step="1" defaultValue={rules.pickupRules.suspendFreePickupAfterMisses} required />
+                  <input name="suspend_after_misses" type="number" min="1" max="99" step="1" value="2" readOnly required />
                 </label>
                 <label>Store credit bonus (%)
                   <input name="store_credit_bonus_percent" type="number" min="0" max="100" step="0.01" defaultValue={percent(rules.storeCreditBonusBps)} required />

@@ -7,6 +7,8 @@ import {
 
 export async function CommissionSection() {
   const supabase = await createClient();
+  const {data:{user}}=await supabase.auth.getUser();
+  if(!user)return <p>Sellers receive up to 65% of the sale price. Sign in to see commission details.</p>;
   const rules = await loadSellingRules(supabase);
 
   return (
