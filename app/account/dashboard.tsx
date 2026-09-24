@@ -2,7 +2,7 @@
 
 import { HomeIntake } from "@/components/home-intake";
 import {
-  ACTIVE_CATALOG_CATEGORIES,
+  CATALOG_CATEGORIES,
   FASHION_CATEGORIES,
   categoryLabel,
   subcategoriesFor,
@@ -75,6 +75,9 @@ type Props = {
   requests: Request[];
   serviceAreas: ServiceArea[];
   pickupSlots: PickupSlot[];
+  activeCategories?: CatalogCategory[];
+  pilotEnabled?: boolean;
+  pickupDayText?: string;
 };
 
 export function Dashboard({
@@ -89,7 +92,11 @@ export function Dashboard({
   requests,
   serviceAreas,
   pickupSlots,
+  activeCategories = ["women"],
+  pilotEnabled = true,
+  pickupDayText = "Saturdays",
 }: Props) {
+  const activeCategoryLabels = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value)).map((entry) => entry.label).join(", ");
   return (
     <div className="dashboard">
       <section className="welcome">
@@ -112,6 +119,9 @@ export function Dashboard({
             icon={<Package />}
             serviceAreas={serviceAreas}
             pickupSlots={pickupSlots}
+            activeCategories={activeCategories}
+            pilotEnabled={pilotEnabled}
+            pickupDayText={pickupDayText}
           />
           <RequestDialog
             type="pickup"
@@ -119,6 +129,9 @@ export function Dashboard({
             icon={<Truck />}
             serviceAreas={serviceAreas}
             pickupSlots={pickupSlots}
+            activeCategories={activeCategories}
+            pilotEnabled={pilotEnabled}
+            pickupDayText={pickupDayText}
           />
         </div>
       </section>
@@ -146,7 +159,7 @@ export function Dashboard({
             <span>Items with us</span>
           </div>
           <strong>{items.length}</strong>
-          <small>Women’s clothing during the pilot</small>
+          <small>{pilotEnabled ? `${activeCategoryLabels || "Selected categories"} during the pilot` : "Accepted Rewear inventory"}</small>
         </article>
         <article>
           <div>
@@ -179,6 +192,9 @@ export function Dashboard({
                 icon={<Truck />}
                 serviceAreas={serviceAreas}
                 pickupSlots={pickupSlots}
+                activeCategories={activeCategories}
+                pilotEnabled={pilotEnabled}
+                pickupDayText={pickupDayText}
               />
             </div>
             {items.length ? (
@@ -201,30 +217,12 @@ export function Dashboard({
                       {item.requiresApproval ? <b>Approval needed</b> : null}
                     </header>
                     <dl>
-                      <div>
-                        <dt>Initial approved price</dt>
-                        <dd>{item.initialPrice}</dd>
-                      </div>
-                      <div>
-                        <dt>Current selling price</dt>
-                        <dd>{item.currentPrice}</dd>
-                      </div>
-                      <div>
-                        <dt>Your share</dt>
-                        <dd>{item.sellerRate}</dd>
-                      </div>
-                      <div>
-                        <dt>Platform commission</dt>
-                        <dd>{item.platformRate}</dd>
-                      </div>
-                      <div>
-                        <dt>Estimated earnings</dt>
-                        <dd>{item.estimatedEarnings}</dd>
-                      </div>
-                      <div>
-                        <dt>Final earnings after sale</dt>
-                        <dd>{item.finalEarnings}</dd>
-                      </div>
+                      <div><dt>Initial approved price</dt><dd>{item.initialPrice}</dd></div>
+                      <div><dt>Current selling price</dt><dd>{item.currentPrice}</dd></div>
+                      <div><dt>Your share</dt><dd>{item.sellerRate}</dd></div>
+                      <div><dt>Platform commission</dt><dd>{item.platformRate}</dd></div>
+                      <div><dt>Estimated earnings</dt><dd>{item.estimatedEarnings}</dd></div>
+                      <div><dt>Final earnings after sale</dt><dd>{item.finalEarnings}</dd></div>
                     </dl>
                     {item.requiresApproval ? (
                       <div className="pricing-approval">
@@ -236,9 +234,7 @@ export function Dashboard({
                         <form action={approveItemPricing}>
                           <input type="hidden" name="item_id" value={item.id} />
                           <input type="hidden" name="expected_price" value={item.initialPriceCents} />
-                          <Button type="submit">
-                            Approve price &amp; commission
-                          </Button>
+                          <Button type="submit">Approve price &amp; commission</Button>
                         </form>
                       </div>
                     ) : null}
@@ -249,10 +245,7 @@ export function Dashboard({
               <div className="empty-box">
                 <Shirt />
                 <h2>No items yet</h2>
-                <p>
-                  Your accepted items will appear here after collection and
-                  inspection.
-                </p>
+                <p>Your accepted items will appear here after collection and inspection.</p>
               </div>
             )}
           </TabsContent>
@@ -263,9 +256,7 @@ export function Dashboard({
                   <article key={request.id}>
                     <div>
                       <b>{request.type}</b>
-                      <span>
-                        {categoryLabel(request.category)} · {request.createdAt}
-                      </span>
+                      <span>{categoryLabel(request.category)} · {request.createdAt}</span>
                     </div>
                     <div>
                       <strong>{request.status}</strong>
@@ -278,10 +269,7 @@ export function Dashboard({
               <div className="empty-box">
                 <Package />
                 <h2>No requests yet</h2>
-                <p>
-                  Request a Bag for eligible $100+ collections, or choose pickup
-                  for smaller collections subject to the current per-item fee.
-                </p>
+                <p>Request a Bag for eligible $100+ collections, or choose pickup for smaller collections subject to the current per-item fee.</p>
               </div>
             )}
           </TabsContent>
@@ -290,10 +278,7 @@ export function Dashboard({
               <Wallet />
               <div>
                 <h2>{balance} available</h2>
-                <p>
-                  Payout setup will become available after payment verification
-                  is connected.
-                </p>
+                <p>Payout setup will become available after payment verification is connected.</p>
               </div>
               <Button disabled>Set up payout</Button>
             </div>
@@ -303,12 +288,8 @@ export function Dashboard({
       <section className="consignment-status">
         <div className="end-choice">
           <b>Unsold item preference</b>
-          <button disabled>
-            <HeartHandshake /> Donate
-          </button>
-          <button disabled>
-            <RotateCcw /> Return to me
-          </button>
+          <button disabled><HeartHandshake /> Donate</button>
+          <button disabled><RotateCcw /> Return to me</button>
           <small>These options are not active yet.</small>
         </div>
       </section>
@@ -330,39 +311,40 @@ function RequestDialog({
   type,
   serviceAreas,
   pickupSlots,
+  activeCategories,
+  pilotEnabled,
+  pickupDayText,
 }: {
   label: string;
   icon: React.ReactNode;
   type: "bag" | "pickup";
   serviceAreas: ServiceArea[];
   pickupSlots: PickupSlot[];
+  activeCategories: CatalogCategory[];
+  pilotEnabled: boolean;
+  pickupDayText: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [category, setCategory] = useState<CatalogCategory>("women");
+  const [category, setCategory] = useState<CatalogCategory>(activeCategories[0] ?? "women");
   const [subcategory, setSubcategory] = useState("");
   const [serviceAreaId, setServiceAreaId] = useState(serviceAreas[0]?.id ?? "");
   const [estimatedValue, setEstimatedValue] = useState(100);
-  const availableSlots = pickupSlots.filter(
-    (slot) => slot.serviceAreaId === serviceAreaId,
-  );
+  const availableSlots = pickupSlots.filter((slot) => slot.serviceAreaId === serviceAreaId);
   const paidPickup = type === "pickup" && estimatedValue > 0 && estimatedValue < 100;
   const fashionCategory = FASHION_CATEGORIES.includes(category);
   const subcategoryOptions = subcategoriesFor(category);
+  const categoryOptions = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value));
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant={type === "bag" ? "default" : "outline"}>
-          {icon}
-          {label}
-        </Button>
+        <Button variant={type === "bag" ? "default" : "outline"}>{icon}{label}</Button>
       </DialogTrigger>
       <DialogContent className="request-dialog">
         <DialogHeader>
           <DialogTitle>{label}</DialogTitle>
           <DialogDescription>
-            Tell us what you want collected. We’ll review the request and
-            contact you to confirm the next step.
+            Tell us what you want collected. We’ll review the request and contact you to confirm the next step.
           </DialogDescription>
         </DialogHeader>
         <form className="request-form" action={createCollectionRequest}>
@@ -378,10 +360,8 @@ function RequestDialog({
                   setSubcategory("");
                 }}
               >
-                {ACTIVE_CATALOG_CATEGORIES.map((entry) => (
-                  <option value={entry.value} key={entry.value}>
-                    {entry.label}
-                  </option>
+                {categoryOptions.map((entry) => (
+                  <option value={entry.value} key={entry.value}>{entry.label}</option>
                 ))}
               </select>
             </label>
@@ -396,14 +376,8 @@ function RequestDialog({
                   value={subcategory}
                   onChange={(event) => setSubcategory(event.target.value)}
                 >
-                  <option value="" disabled>
-                    Choose a subcategory
-                  </option>
-                  {subcategoryOptions.map((option) => (
-                    <option value={option} key={option}>
-                      {option}
-                    </option>
-                  ))}
+                  <option value="" disabled>Choose a subcategory</option>
+                  {subcategoryOptions.map((option) => <option value={option} key={option}>{option}</option>)}
                 </select>
               </label>
             )}
@@ -415,15 +389,10 @@ function RequestDialog({
                 onChange={(event) => setServiceAreaId(event.target.value)}
                 required
               >
-                <option value="" disabled>
-                  Select a city
-                </option>
+                <option value="" disabled>Select a city</option>
                 {serviceAreas.map((area) => (
                   <option key={area.id} value={area.id}>
-                    {area.city}
-                    {area.pickupMode === "free"
-                      ? " — Pickup available"
-                      : " — Subject to review"}
+                    {area.city}{area.pickupMode === "free" ? " — Pickup available" : " — Subject to review"}
                   </option>
                 ))}
               </select>
@@ -431,22 +400,13 @@ function RequestDialog({
             <label>
               Available pickup time
               <select name="pickup_slot_id" required defaultValue="">
-                <option value="" disabled>
-                  Select an available time
-                </option>
+                <option value="" disabled>Select an available time</option>
                 {availableSlots.map((slot) => (
-                  <option key={slot.id} value={slot.id}>
-                    {slot.label} · {slot.remaining} spots left
-                  </option>
+                  <option key={slot.id} value={slot.id}>{slot.label} · {slot.remaining} spots left</option>
                 ))}
               </select>
             </label>
-            {!availableSlots.length ? (
-              <p className="slot-note">
-                No pickup times are currently open for this city. Please check
-                again after new times are added.
-              </p>
-            ) : null}
+            {!availableSlots.length ? <p className="slot-note">No pickup times are currently open for this city. Please check again after new times are added.</p> : null}
             <div className="hold-card">
               <Truck />
               <div>
@@ -462,35 +422,15 @@ function RequestDialog({
             </div>
             <label>
               Collection address
-              <Input
-                name="address"
-                required
-                minLength={10}
-                maxLength={500}
-                autoComplete="street-address"
-                placeholder="Street address, city, postal code"
-              />
+              <Input name="address" required minLength={10} maxLength={500} autoComplete="street-address" placeholder="Street address, city, postal code" />
             </label>
             <label>
               Approximate number of items
-              <Input
-                name="item_count"
-                required
-                type="number"
-                min="1"
-                max="500"
-                step="1"
-                inputMode="numeric"
-                placeholder="For example: 12"
-              />
+              <Input name="item_count" required type="number" min="1" max="500" step="1" inputMode="numeric" placeholder="For example: 12" />
             </label>
             <label>
               Brands (optional)
-              <Input
-                name="brands"
-                maxLength={500}
-                placeholder="For example: Aritzia, Nike, Levi’s"
-              />
+              <Input name="brands" maxLength={500} placeholder="For example: Aritzia, Nike, Levi’s" />
             </label>
             <label>
               Estimated total resale value
@@ -509,12 +449,7 @@ function RequestDialog({
             </label>
             {paidPickup ? (
               <label className="check pickup-fee-check">
-                <input
-                  name="pickup_fee_accepted"
-                  value="accepted"
-                  required
-                  type="checkbox"
-                />{" "}
+                <input name="pickup_fee_accepted" value="accepted" required type="checkbox" />{" "}
                 I understand that pickups below $100 currently cost $5 per item.
               </label>
             ) : null}
@@ -528,90 +463,38 @@ function RequestDialog({
                 </>
               ) : fashionCategory ? (
                 <>
-                  <p>
-                    • Individual listings normally require an approved value of
-                    at least $20. Lower-value items may be combined into a
-                    bundle.
-                  </p>
-                  <p>
-                    • Items must be washed or cleaned as appropriate and free of
-                    undisclosed stains, tears, holes or missing parts.
-                  </p>
-                  <p>
-                    • Accepted fashion items are listed for up to 90 days. Unsold
-                    item options are shown when the applicable account feature is available.
-                  </p>
+                  <p>• Individual listings normally require an approved value of at least $20. Lower-value items may be combined into a bundle.</p>
+                  <p>• Items must be washed or cleaned as appropriate and free of undisclosed stains, tears, holes or missing parts.</p>
+                  <p>• Accepted fashion items are listed for up to 90 days. Unsold item options are shown when the applicable account feature is available.</p>
                 </>
               ) : (
                 <>
-                  <p>
-                    • Devices must power on, function properly and be free of
-                    serious physical damage unless disclosed for review.
-                  </p>
-                  <p>
-                    • You must verify ownership. We may check identification,
-                    serial numbers or IMEI.
-                  </p>
-                  <p>
-                    • Passwords, user accounts and activation locks must be
-                    removed before collection.
-                  </p>
-                  <p>
-                    • Our technicians test the device and REWEAR determines its
-                    resale value.
-                  </p>
+                  <p>• Devices must power on, function properly and be free of serious physical damage unless disclosed for review.</p>
+                  <p>• You must verify ownership. We may check identification, serial numbers or IMEI.</p>
+                  <p>• Passwords, user accounts and activation locks must be removed before collection.</p>
+                  <p>• Our technicians test the device and REWEAR determines its resale value.</p>
                 </>
               )}
-              <p>• During the pilot, pickup appointments are offered on Saturdays only and confirmed by REWEAR.</p>
-              <p>
-                • Your commission is locked from the initial approved item
-                price: you receive 45% at $20–$99.99, 50% at $100–$249.99, 55%
-                at $250–$499.99 and 65% at $500+.
-              </p>
+              <p>{pilotEnabled ? `• During the pilot, pickup appointments are offered on ${pickupDayText} only and confirmed by REWEAR.` : "• Pickup appointments depend on current service-area and scheduling availability."}</p>
+              <p>• Your commission is locked from the initial approved item price: you receive 45% at $20–$99.99, 50% at $100–$249.99, 55% at $250–$499.99 and 65% at $500+.</p>
               <p>• Category and subcategory details are intake information; REWEAR confirms final listing taxonomy after physical inspection.</p>
             </div>
             <label className="check">
-              <input
-                name="condition_confirmed"
-                value="accepted"
-                required
-                type="checkbox"
-              />{" "}
-              I confirm my {categoryLabel(category)} items meet the condition, ownership and
-              minimum-value requirements.
+              <input name="condition_confirmed" value="accepted" required type="checkbox" />{" "}
+              I confirm my {categoryLabel(category)} items meet the condition, ownership and minimum-value requirements.
             </label>
             <label className="check">
-              <input
-                name="policy_accepted"
-                value="accepted"
-                required
-                type="checkbox"
-              />{" "}
+              <input name="policy_accepted" value="accepted" required type="checkbox" />{" "}
               I accept the selling period and commission rates.
             </label>
             <label className="check">
-              <input
-                name="pickup_policy_accepted"
-                value="accepted"
-                required
-                type="checkbox"
-              />{" "}
-              <span>
-                I accept the{" "}
-                <Link href="/pickup-policy" target="_blank">
-                  Pickup &amp; Missed Pickup Policy
-                </Link>
-                .
-              </span>
+              <input name="pickup_policy_accepted" value="accepted" required type="checkbox" />{" "}
+              <span>I accept the <Link href="/pickup-policy" target="_blank">Pickup &amp; Missed Pickup Policy</Link>.</span>
             </label>
           </div>
           <div className="request-form-footer">
-            <Button type="submit" disabled={!availableSlots.length}>
-              Submit collection request
-            </Button>
-            <small className="payment-note">
-              Submitting a request does not guarantee pickup approval. The applicable pickup fee is confirmed by the current rules when you submit.
-            </small>
+            <Button type="submit" disabled={!availableSlots.length}>Submit collection request</Button>
+            <small className="payment-note">Submitting a request does not guarantee pickup approval. The applicable pickup fee is confirmed by the current rules when you submit.</small>
           </div>
         </form>
       </DialogContent>
