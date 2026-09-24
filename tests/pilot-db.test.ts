@@ -22,7 +22,7 @@ test('pilot gates are reversible, private, MFA protected and enforce no-show pol
  create table public.knowledge_base(status text,approved_answer text,updated_at timestamptz,title text,question_examples text[],category_code text,tags text[],source_kind text,source_ref text,approved_at timestamptz);
  create table public.business_setting_versions(setting_key text,version integer,value jsonb,effective_at timestamptz,reason text);
  `);
- await db.exec(readFileSync(new URL('../supabase/migrations/20260924040457_reversible_pilot.sql',import.meta.url),'utf8'));
+ await db.exec(readFileSync(new URL('../supabase/migrations/20260924041425_reversible_pilot.sql',import.meta.url),'utf8'));
  await db.exec('set role anon');assert.equal((await db.query('select * from public.pilot_settings')).rows.length,1);await assert.rejects(db.exec("update public.pilot_settings set enabled=false"));await assert.rejects(db.query('select * from public.product_questions'));await assert.rejects(db.query('select * from public.pilot_work_logs'));await assert.rejects(db.query('select public.get_selling_rules()'));
  await db.exec(`reset role;set test.uid='${owner}';set test.aal='aal1';set role authenticated`);await assert.rejects(db.exec("select public.admin_save_pilot(false,array['women'],30,array[6],8,null)"));
  await db.exec(`reset role;set test.aal='aal2';set role authenticated`);await db.exec("select public.admin_save_pilot(true,array['women'],1,array[6],8,null)");
