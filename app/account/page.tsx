@@ -11,7 +11,8 @@ import {
   commissionTierForInitialPrice,
   loadSellingRules,
 } from "@/lib/business-rules";
-import { PILOT_MODE } from "@/lib/catalog-taxonomy";
+import { CATALOG_CATEGORIES } from "@/lib/catalog-taxonomy";
+import { loadPilotSettings, pilotAllowsPickupDate } from "@/lib/pilot-settings";
 import {
   commissionPercent,
   earningsFromSalePrice,
@@ -54,6 +55,11 @@ function pickupWindowLabel(start: string, end: string) {
   return `${date} · ${time.format(new Date(start))}–${time.format(new Date(end))}`;
 }
 
+function pickupDayText(days: number[]) {
+  const names = ["Sundays", "Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays"];
+  return days.map((day) => names[day]).filter(Boolean).join(", ") || "configured days";
+}
+
 function titleCase(value: string) {
   return value
     .replaceAll("_", " ")
@@ -90,6 +96,7 @@ export default async function AccountPage({ searchParams }: Props) {
     serviceAreasResult,
     pickupSlotsResult,
     sellingRules,
+    pilot,
     params,
   ] = await Promise.all([
     supabase
@@ -127,6 +134,7 @@ export default async function AccountPage({ searchParams }: Props) {
       .gt("window_start", new Date().toISOString())
       .order("window_start"),
     loadSellingRules(supabase),
+    loadPilotSettings(supabase),
     searchParams,
   ]);
 
@@ -179,11 +187,12 @@ export default async function AccountPage({ searchParams }: Props) {
     profile?.customer_code || fallbackCustomerCode(user.id);
   const message = typeof params.message === "string" ? params.message : null;
 
-  const pilotPickupSlots = (pickupSlotsResult.data ?? []).filter((slot) => {
-    if (!PILOT_MODE.enabled) return true;
-    const weekday = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: "America/Toronto" }).format(new Date(slot.window_start));
-    return weekday === "Sat";
-  });
+  const availablePickupSlots = (pickupSlotsResult.data ?? []).filter((slot) =>
+    pilotAllowsPickupDate(slot.window_start, pilot),
+  );
+  const activeCategories = pilot.enabled
+    ? pilot.categories
+    : CATALOG_CATEGORIES.map((entry) => entry.value);
 
   return (
     <main className="account-shell">
@@ -210,6 +219,9 @@ export default async function AccountPage({ searchParams }: Props) {
         messageType={params.type === "error" ? "error" : "success"}
         balance={money(balanceCents)}
         totalEarned={money(earnedCents)}
+        activeCategories={activeCategories}
+        pilotEnabled={pilot.enabled}
+        pickupDayText={pickupDayText(pilot.pickupDays)}
         items={(itemsResult.data ?? []).map((item) => {
           let previewTier: { sellerBps: number; platformBps: number } | null = null;
           if (item.initial_approved_price_cents != null) {
@@ -292,7 +304,7 @@ export default async function AccountPage({ searchParams }: Props) {
           city: area.city,
           pickupMode: area.pickup_mode,
         }))}
-        pickupSlots={pilotPickupSlots
+        pickupSlots={availablePickupSlots
           .filter((slot) => slot.booked_count < slot.capacity)
           .map((slot) => ({
             id: slot.id,
