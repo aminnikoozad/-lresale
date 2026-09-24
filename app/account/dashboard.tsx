@@ -2,7 +2,7 @@
 
 import { HomeIntake } from "@/components/home-intake";
 import {
-  CATALOG_CATEGORIES,
+  ACTIVE_CATALOG_CATEGORIES,
   FASHION_CATEGORIES,
   categoryLabel,
   subcategoriesFor,
@@ -146,7 +146,7 @@ export function Dashboard({
             <span>Items with us</span>
           </div>
           <strong>{items.length}</strong>
-          <small>Fashion, electronics and Home &amp; Decor</small>
+          <small>Women’s clothing during the pilot</small>
         </article>
         <article>
           <div>
@@ -378,7 +378,7 @@ function RequestDialog({
                   setSubcategory("");
                 }}
               >
-                {CATALOG_CATEGORIES.map((entry) => (
+                {ACTIVE_CATALOG_CATEGORIES.map((entry) => (
                   <option value={entry.value} key={entry.value}>
                     {entry.label}
                   </option>
@@ -562,7 +562,7 @@ function RequestDialog({
                   </p>
                 </>
               )}
-              <p>• Pickup dates are determined and confirmed by REWEAR.</p>
+              <p>• During the pilot, pickup appointments are offered on Saturdays only and confirmed by REWEAR.</p>
               <p>
                 • Your commission is locked from the initial approved item
                 price: you receive 45% at $20–$99.99, 50% at $100–$249.99, 55%
