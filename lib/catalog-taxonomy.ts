@@ -142,3 +142,25 @@ export function isCatalogSubcategory(category: string, subcategory: string) {
 export function categoryLabel(category: string) {
   return CATALOG_CATEGORIES.find((entry) => entry.value === category)?.label ?? category;
 }
+
+
+/**
+ * Pilot configuration is intentionally centralized so the full taxonomy can be
+ * restored without rewriting category code after the Montreal pilot.
+ */
+export const PILOT_MODE = {
+  enabled: true,
+  activeCategories: ["women"] as const,
+  maxActiveItems: 30,
+  pickupWeekday: 6, // Saturday (JS getDay / America/Toronto)
+  durationWeeks: { min: 6, max: 8 },
+} as const;
+
+export function isPilotCategory(category: string) {
+  return !PILOT_MODE.enabled ||
+    (PILOT_MODE.activeCategories as readonly string[]).includes(category);
+}
+
+export const ACTIVE_CATALOG_CATEGORIES = PILOT_MODE.enabled
+  ? CATALOG_CATEGORIES.filter((entry) => isPilotCategory(entry.value))
+  : CATALOG_CATEGORIES;
