@@ -1,0 +1,315 @@
+/* Sellpy-inspired REWEAR visual theme.
+   Appearance only: semantic color tokens, typography and presentation.
+   Loaded last so existing flows and component markup stay untouched. */
+:root{
+  --sellpy-blue:#0400D2;
+  --sellpy-blue-soft:#DBF4FF;
+  --sellpy-ink:#262626;
+  --sellpy-text:#424242;
+  --sellpy-page:#FFFFFF;
+  --sellpy-line:#E6E6E6;
+  --sellpy-muted:#F6F6F6;
+  --sellpy-discount:#D14124;
+  --sellpy-discount-soft:#F9E9E8;
+  --sellpy-success:#057F37;
+  --sellpy-success-soft:#DCF4E5;
+  --sellpy-eco:#145B55;
+
+  /* REWEAR semantic aliases */
+  --brand:var(--sellpy-blue);
+  --brand-dark:#03009F;
+  --brand-soft:var(--sellpy-blue-soft);
+  --page:var(--sellpy-page);
+  --surface:#FFFFFF;
+  --ink:var(--sellpy-ink);
+  --text-secondary:var(--sellpy-text);
+  --text-muted:#6B6B6B;
+  --line:var(--sellpy-line);
+  --line-soft:#F0F0F0;
+  --coral:var(--sellpy-discount);
+  --coral-soft:var(--sellpy-discount-soft);
+  --success:var(--sellpy-success);
+  --success-soft:var(--sellpy-success-soft);
+  --warning:#A45A00;
+  --warning-soft:#FFF2D9;
+  --danger:var(--sellpy-discount);
+  --danger-soft:var(--sellpy-discount-soft);
+  --shadow-xs:0 1px 2px rgba(38,38,38,.04);
+  --shadow-sm:0 4px 16px rgba(38,38,38,.06);
+  --shadow-md:0 10px 30px rgba(38,38,38,.08);
+  --radius-control:4px;
+  --radius-button:4px;
+  --radius-card:6px;
+  --radius-panel:8px;
+
+  /* shadcn / Tailwind semantic aliases */
+  --background:#FFFFFF;
+  --foreground:var(--sellpy-ink);
+  --card:#FFFFFF;
+  --card-foreground:var(--sellpy-ink);
+  --popover:#FFFFFF;
+  --popover-foreground:var(--sellpy-ink);
+  --primary:var(--sellpy-ink);
+  --primary-foreground:#FFFFFF;
+  --secondary:#FFFFFF;
+  --secondary-foreground:var(--sellpy-ink);
+  --muted:var(--sellpy-muted);
+  --muted-foreground:var(--sellpy-text);
+  --accent:var(--sellpy-blue-soft);
+  --accent-foreground:var(--sellpy-blue);
+  --destructive:var(--sellpy-discount);
+  --border:var(--sellpy-line);
+  --input:var(--sellpy-line);
+  --ring:var(--sellpy-blue);
+  --radius:4px;
+}
+
+html,body{background:#FFFFFF!important;color:var(--sellpy-ink)!important}
+body{font-family:var(--font-inter),Inter,Arial,sans-serif!important}
+h1,h2,h3,h4,h5,h6,
+.section-heading h2,.process-intro h2,.commission-heading h2,.quality-promise-heading h2{
+  font-family:var(--font-space-grotesk),"Space Grotesk",Inter,Arial,sans-serif!important;
+  color:var(--sellpy-ink)!important;
+}
+body,p,li,dt,dd,label,input,select,textarea,button{color:var(--sellpy-ink)}
+.eyebrow,.eyebrow.dark{color:var(--sellpy-blue)!important}
+::selection{background:var(--sellpy-blue-soft)!important;color:var(--sellpy-ink)!important}
+:focus-visible{outline:2px solid var(--sellpy-blue)!important;outline-offset:2px!important}
+
+/* Primary controls: dark, compact, slightly rounded like Sellpy. */
+[data-slot="button"]{border-radius:4px!important;box-shadow:none!important}
+[data-slot="button"][data-variant="default"],
+.site-header .account-button,
+.hero-actions a:first-child,
+.process-intro [data-slot="button"],
+button[type="submit"]:not([data-variant="outline"]):not([data-variant="ghost"]),
+input[type="submit"]{
+  background:var(--sellpy-ink)!important;
+  border-color:var(--sellpy-ink)!important;
+  color:#FFFFFF!important;
+  border-radius:4px!important;
+  box-shadow:none!important;
+}
+[data-slot="button"][data-variant="default"]:hover,
+.site-header .account-button:hover,
+.hero-actions a:first-child:hover,
+.process-intro [data-slot="button"]:hover,
+button[type="submit"]:not([data-variant="outline"]):not([data-variant="ghost"]):hover,
+input[type="submit"]:hover{background:#000000!important;border-color:#000000!important;color:#FFFFFF!important;transform:none!important}
+
+[data-slot="button"][data-variant="secondary"],
+[data-slot="button"][data-variant="outline"],
+.hero-actions a:last-child{
+  background:#FFFFFF!important;
+  color:var(--sellpy-ink)!important;
+  border:1px solid var(--sellpy-ink)!important;
+  border-radius:4px!important;
+}
+[data-slot="button"][data-variant="secondary"]:hover,
+[data-slot="button"][data-variant="outline"]:hover,
+.hero-actions a:last-child:hover{background:#F6F6F6!important;color:#000!important;border-color:#000!important}
+[data-slot="button"][data-variant="ghost"]{color:var(--sellpy-ink)!important}
+[data-slot="button"][data-variant="ghost"]:hover{background:#F6F6F6!important;color:#000!important}
+
+/* Inputs and dialogs stay structurally identical, only presentation changes. */
+[data-slot="input"],
+.auth-form input,
+.request-form input,.request-form select,.request-form textarea,
+.slot-form input,.slot-form select,.settings-form input,.settings-form select,
+.admin-item-form input,.admin-item-form select,.admin-item-form textarea,
+.bundle-form input,.bundle-form select,.review-form input,.review-form select,
+.support-search-row input,.support-search-row select,.support-control-select,.support-control-input,.support-note-input,.support-reply-box textarea,.support-trainer-composer textarea,
+.home-intake input:not([type=checkbox]),.home-intake textarea{
+  background:#FFFFFF!important;
+  border-color:var(--sellpy-line)!important;
+  border-radius:4px!important;
+  color:var(--sellpy-ink)!important;
+}
+[data-slot="dialog-content"]{background:#FFFFFF!important;border-color:var(--sellpy-line)!important;border-radius:8px!important}
+
+/* Header / navigation */
+.site-header{
+  background:#FFFFFF!important;
+  border-bottom:1px solid var(--sellpy-line)!important;
+  backdrop-filter:none!important;
+}
+.brand,.support-brand{color:var(--sellpy-ink)!important;font-family:var(--font-space-grotesk),"Space Grotesk",sans-serif!important}
+.brand span,.support-brand span{color:var(--sellpy-blue)!important}
+.site-header nav a,.site-header>a{color:var(--sellpy-ink)!important}
+.site-header nav a:hover,.site-header>a:hover{color:var(--sellpy-blue)!important}
+
+/* Hero: keep layout/image; remove cream/green treatment. */
+.hero{background:#FFFFFF!important}
+.hero-inner{
+  background:#FFFFFF!important;
+  border:1px solid var(--sellpy-line)!important;
+  border-radius:8px!important;
+}
+.hero-copy{color:var(--sellpy-ink)!important}
+.hero-copy .eyebrow,.hero-copy>.hero-positioning{color:var(--sellpy-blue)!important}
+.hero h1{color:var(--sellpy-ink)!important}
+.hero-copy>p:not(.eyebrow){color:var(--sellpy-text)!important}
+.hero-media{background:#F4F4F4!important}
+.hero-media::after{display:none!important}
+.hero-trust span{color:var(--sellpy-text)!important}
+.hero-trust span::before{background:var(--sellpy-success)!important}
+
+/* Informational surfaces */
+.shipping-strip,
+.payment-pending,
+.checkout-login-note,
+.pilot-info-banner,
+.info-banner{
+  background:var(--sellpy-blue-soft)!important;
+  border-color:#BEE8FA!important;
+  color:var(--sellpy-ink)!important;
+  border-radius:4px!important;
+  box-shadow:none!important;
+}
+.shipping-strip>svg,.shipping-strip a{color:var(--sellpy-blue)!important}
+.shipping-strip strong,.shipping-strip span{color:var(--sellpy-ink)!important}
+
+/* Links / accent text */
+.shipping-strip a,
+.filter-title>button,
+.product-topbar a,
+.cart-header>a,
+.back-home,
+footer a,
+.support-shell a:not([data-slot="button"]),
+.policy-page a,
+.account-shell a:not([data-slot="button"]):not(.brand),
+.checkout-page a:not([data-slot="button"]),
+.product-page a:not([data-slot="button"]){color:var(--sellpy-blue)!important}
+
+/* Homepage cards and sections: white, flat, bright. */
+.section-wrap{background:#FFFFFF!important}
+.category-card{
+  background:#FFFFFF!important;
+  color:var(--sellpy-ink)!important;
+  border:1px solid var(--sellpy-line)!important;
+  border-radius:8px!important;
+  box-shadow:none!important;
+}
+.category-card h3,.category-card p{color:var(--sellpy-ink)!important}
+.category-card p{opacity:.78!important}
+.category-card>svg{color:var(--sellpy-blue)!important}
+
+.process-section{
+  background:#FFFFFF!important;
+  color:var(--sellpy-ink)!important;
+  border:1px solid var(--sellpy-line)!important;
+  border-radius:8px!important;
+}
+.process-intro h2,.steps h3{color:var(--sellpy-ink)!important}
+.process-intro>.eyebrow,.steps b{color:var(--sellpy-blue)!important}
+.process-intro>p:not(.eyebrow),.steps p{color:var(--sellpy-text)!important}
+.steps li{border-color:var(--sellpy-line)!important}
+.sell-positioning-block>p{color:var(--sellpy-text)!important}
+.sell-positioning-block .sell-commission-teaser{
+  background:var(--sellpy-blue-soft)!important;
+  border:1px solid #BEE8FA!important;
+  color:var(--sellpy-blue)!important;
+  border-radius:4px!important;
+}
+
+.rules-card,.quality-promise-section{
+  background:#FFFFFF!important;
+  border:1px solid var(--sellpy-line)!important;
+  border-radius:8px!important;
+  box-shadow:none!important;
+}
+.rule-grid{background:var(--sellpy-line)!important}
+.rule-grid>div{background:#FFFFFF!important}
+.rule-grid strong{color:var(--sellpy-blue)!important}
+.rule-grid p,.rule-note,.brands-note{color:var(--sellpy-text)!important}
+.quality-promise-steps li{
+  background:#FFFFFF!important;
+  border-color:var(--sellpy-line)!important;
+  border-radius:6px!important;
+}
+.quality-promise-steps b,.quality-promise-rule{color:var(--sellpy-blue)!important}
+.quality-promise-steps p{color:var(--sellpy-text)!important}
+.brand-cloud{border-color:var(--sellpy-line)!important}
+.brand-cloud span{background:#FFFFFF!important;border-color:var(--sellpy-line)!important;color:var(--sellpy-ink)!important}
+
+/* Catalog / product */
+.shop-catalog,.product-page,.cart-page,.checkout-page,.account-shell,.ops-shell{background:#FFFFFF!important}
+.catalog-shortcuts button{
+  background:#FFFFFF!important;
+  border-color:var(--sellpy-line)!important;
+  color:var(--sellpy-text)!important;
+  border-radius:4px!important;
+}
+.catalog-shortcuts button:hover{border-color:var(--sellpy-blue)!important;color:var(--sellpy-blue)!important}
+.catalog-shortcuts button[data-state="active"],
+.catalog-shortcuts button[aria-pressed="true"]{
+  background:var(--sellpy-blue-soft)!important;
+  color:var(--sellpy-blue)!important;
+  border-color:var(--sellpy-blue)!important;
+}
+.catalog-filter,.buyer-panel,.cart-summary,.checkout-summary,.checkout-form{
+  background:#FFFFFF!important;
+  border-color:var(--sellpy-line)!important;
+  border-radius:6px!important;
+  box-shadow:none!important;
+}
+.catalog-photo{background:#F4F4F4!important;border-color:#EEEEEE!important;border-radius:6px!important}
+.shop-card:hover{transform:none!important}
+.catalog-photo>button{background:#FFFFFF!important;border-color:var(--sellpy-line)!important;color:var(--sellpy-ink)!important;box-shadow:none!important}
+.shop-card-copy small,.shop-card-copy h3,.shop-card-copy b{color:var(--sellpy-ink)!important}
+.shop-card-copy>span,.catalog-result-count{color:var(--sellpy-text)!important}
+.shop-card-copy [data-slot="button"]{background:var(--sellpy-ink)!important;border-radius:4px!important}
+.condition-badge,
+.inspection-report .inspection-grade strong{
+  background:var(--sellpy-blue-soft)!important;
+  color:var(--sellpy-blue)!important;
+  border:1px solid #BEE8FA!important;
+  border-radius:4px!important;
+}
+.inspection-report{
+  background:#FFFFFF!important;
+  border-color:var(--sellpy-line)!important;
+  border-radius:6px!important;
+}
+.inspection-report>svg{color:var(--sellpy-blue)!important}
+.inspection-report .inspection-grade span{color:var(--sellpy-text)!important}
+
+/* Status colors */
+.success-banner,.ops-message.success,[data-state="success"],.status-success{
+  background:var(--sellpy-success-soft)!important;
+  color:var(--sellpy-success)!important;
+  border-color:#BCE5CA!important;
+}
+.discount-badge,.sale-badge,.price-discount,[data-discount="true"]{
+  background:var(--sellpy-discount-soft)!important;
+  color:var(--sellpy-discount)!important;
+  border-color:#EBCAC4!important;
+}
+.error,.checkout-error,[data-state="error"]{
+  background:var(--sellpy-discount-soft)!important;
+  color:var(--sellpy-discount)!important;
+}
+
+/* Forest green is intentionally reserved for sustainability/eco labels only. */
+.eco-badge,.sustainability-badge,[data-eco="true"],[class*="eco-label"]{
+  background:#E8F1EF!important;
+  color:var(--sellpy-eco)!important;
+  border-color:#CFE0DD!important;
+}
+
+/* Footer */
+footer{
+  background:#FFFFFF!important;
+  color:var(--sellpy-ink)!important;
+  border-top:1px solid var(--sellpy-line)!important;
+}
+footer p{color:var(--sellpy-text)!important}
+footer a{color:var(--sellpy-ink)!important}
+footer a:hover{color:var(--sellpy-blue)!important}
+
+/* Keep mobile structure intact; only flatten Sellpy-inspired radii. */
+@media(max-width:700px){
+  .hero-inner,.process-section,.rules-card,.quality-promise-section{border-radius:6px!important}
+  .sell-positioning-block .sell-commission-teaser{border-radius:4px!important}
+}
