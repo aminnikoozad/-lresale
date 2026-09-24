@@ -4,6 +4,7 @@ import { HOME_SUBCATEGORIES } from "@/lib/home-decor";
 import {
   isCatalogCategory,
   isCatalogSubcategory,
+  isPilotCategory,
 } from "@/lib/catalog-taxonomy";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -54,6 +55,7 @@ export async function createCollectionRequest(formData: FormData) {
   if (
     !["bag", "pickup"].includes(requestType) ||
     !isCatalogCategory(category) ||
+    !isPilotCategory(category) ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(serviceAreaId) ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(pickupSlotId) ||
     address.length < 10 ||
