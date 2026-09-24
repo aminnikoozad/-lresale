@@ -319,6 +319,11 @@ export default async function AccountPage({ searchParams }: Props) {
       <div className="dashboard" style={{ paddingTop: 0, paddingBottom: 24 }}>
         <CustomerBundles />
       </div>
+      <div className="dashboard" style={{ paddingTop: 0, paddingBottom: 16 }}>
+        <Link className="back-home" href="/account/operations">
+          Track item timeline, review & unsold preferences →
+        </Link>
+      </div>
       <Link className="back-home" href="/">
         <ArrowLeft /> Back to marketplace
       </Link>

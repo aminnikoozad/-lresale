@@ -14,9 +14,7 @@ import {
   AlertCircle,
   CheckCircle2,
   CircleDollarSign,
-  HeartHandshake,
   Package,
-  RotateCcw,
   Shirt,
   ShoppingBag,
   Truck,
@@ -287,10 +285,9 @@ export function Dashboard({
       </section>
       <section className="consignment-status">
         <div className="end-choice">
-          <b>Unsold item preference</b>
-          <button disabled><HeartHandshake /> Donate</button>
-          <button disabled><RotateCcw /> Return to me</button>
-          <small>These options are not active yet.</small>
+          <b>Item timeline &amp; unsold preferences</b>
+          <Link href="/account/operations">Manage item operations →</Link>
+          <small>Track processing, review deadlines, automatic publishing, Last Chance and choose Return or Donate / Reuse for unsold items.</small>
         </div>
       </section>
       <section className="mini-rules">
@@ -465,7 +462,7 @@ function RequestDialog({
                 <>
                   <p>• Individual listings normally require an approved value of at least $20. Lower-value items may be combined into a bundle.</p>
                   <p>• Items must be washed or cleaned as appropriate and free of undisclosed stains, tears, holes or missing parts.</p>
-                  <p>• Accepted fashion items are listed for up to 90 days. Unsold item options are shown when the applicable account feature is available.</p>
+                  <p>• Accepted fashion items are listed for up to 90 days. Unsold item choices can be managed from your item operations page.</p>
                 </>
               ) : (
                 <>
