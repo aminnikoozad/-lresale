@@ -14,7 +14,7 @@ export const DEFAULT_PILOT_SETTINGS: PilotSettings = {
   enabled: true,
   categories: ["women"],
   itemCap: null,
-  pickupDays: [6],
+  pickupDays: [0, 6],
   durationWeeks: 8,
   startedAt: "2026-09-24T00:00:00-04:00",
 };
