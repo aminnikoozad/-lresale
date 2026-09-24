@@ -98,6 +98,8 @@ export default async function ProductPage({ params }: Props) {
     weightKg: typeof home?.weight_kg === "number" ? home.weight_kg : null,
   };
   const inspectedOn = inspectionDate(product.inspected_at);
+  const inspectionGrade = product.item_condition?.trim() || null;
+  const inspectionSummary = product.condition_notes?.trim() || null;
 
   return (
     <main className="product-page section-wrap">
@@ -308,12 +310,14 @@ export default async function ProductPage({ params }: Props) {
               </details>
             </section>
           ) : null}
-          {product.condition_notes ? (
-            <section className="condition-panel">
+
+          {inspectionGrade && inspectionSummary ? (
+            <section className="condition-panel inspection-report" aria-label="Inspection report">
               <BadgeCheck />
               <div>
-                <h2>Condition notes</h2>
-                <p>{product.condition_notes}</p>
+                <h2>Inspection report</h2>
+                <p className="inspection-grade"><span>Quality grade</span><strong>{inspectionGrade}</strong></p>
+                <p>{inspectionSummary}</p>
               </div>
             </section>
           ) : null}
