@@ -1,0 +1,82 @@
+name: Curated Preview Check
+
+on:
+  push:
+    branches: [curated-quality-message]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VERCEL_ORG_ID: team_k8fzsEuneKf66SV8EN9MNb8J
+      VERCEL_PROJECT_ID: prj_ZL4WpVk1zTTI3q8FFY6G163NDcmK
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Require preview deployment token
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: test -n "$VERCEL_TOKEN" || (echo "VERCEL_TOKEN secret is not configured" && exit 2)
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Pull preview environment
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: npx --yes vercel@latest pull --yes --environment=preview --token="$VERCEL_TOKEN"
+      - name: Build preview artifact
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: npx --yes vercel@latest build --token="$VERCEL_TOKEN"
+      - name: Deploy preview
+        id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          URL=$(npx --yes vercel@latest deploy --prebuilt --token="$VERCEL_TOKEN" | tail -n 1)
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "$URL" | tee preview-url.txt
+      - name: Install browser for 390px verification
+        run: npx --yes playwright@1.55.0 install --with-deps chromium
+      - name: Smoke test preview routes
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          curl --fail --silent --show-error --location "$PREVIEW_URL" > home.html
+          curl --fail --silent --show-error --location "$PREVIEW_URL/cart" > /dev/null
+          ITEM_PATH=$(grep -oE 'href="/item/[0-9a-f-]{36}"' home.html | head -n 1 | cut -d'"' -f2 || true)
+          echo "item_path=$ITEM_PATH" | tee item-path.txt
+          if [ -n "$ITEM_PATH" ]; then
+            curl --fail --silent --show-error --location "$PREVIEW_URL$ITEM_PATH" > /dev/null
+          fi
+      - name: Capture 390px homepage
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
+        run: npx --yes playwright@1.55.0 screenshot --browser=chromium --viewport-size="390,844" --full-page "$PREVIEW_URL" home-390.png
+      - name: Capture 390px product page when available
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          ITEM_PATH=$(cut -d= -f2- item-path.txt)
+          if [ -n "$ITEM_PATH" ]; then
+            npx --yes playwright@1.55.0 screenshot --browser=chromium --viewport-size="390,844" --full-page "$PREVIEW_URL$ITEM_PATH" product-390.png
+          else
+            echo "No listed item found; PDP screenshot skipped."
+          fi
+      - name: Upload verification artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: curated-preview-verification
+          path: |
+            preview-url.txt
+            item-path.txt
+            home-390.png
+            product-390.png
+          if-no-files-found: warn
