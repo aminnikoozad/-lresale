@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import { PickupTierUi } from "@/components/pickup-tier-ui";
 import { PickupConfirmationUi } from "@/components/pickup-confirmation-ui";
 import { SupportChat } from "@/components/support-chat";
@@ -21,8 +21,10 @@ import "./premium-flows.css";
 import "./premium-route-overrides.css";
 import "./storefront.css";
 import "./checkout-readiness.css";
+import "./sellpy-theme.css";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Rewear Market | Secondhand fashion, electronics & home decor",
@@ -32,7 +34,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={geist.variable}>
+    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <body><CartProvider>{children}<PickupTierUi /><PickupConfirmationUi /><SupportChat /></CartProvider></body>
     </html>
   );
