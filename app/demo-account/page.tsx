@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { ArrowLeft, Eye } from "lucide-react";
 import { Dashboard } from "../account/dashboard";
 import "../account/account.css";
@@ -14,6 +15,10 @@ export const metadata: Metadata = {
 };
 
 export default function DemoAccountPage(){
+  // Demo data is useful for preview/testing but should never be exposed from
+  // the production Vercel environment.
+  if (process.env.VERCEL_ENV === "production") notFound();
+
   return <main className="account-shell">
     <header className="account-top">
       <Link href="/" className="brand">REWEAR<span>.</span></Link>
