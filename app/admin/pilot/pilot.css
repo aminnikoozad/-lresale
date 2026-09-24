@@ -1,0 +1,48 @@
+.pilot-wrap { padding-bottom: 4rem; }
+.pilot-period,
+.pilot-kpi-grid,
+.pilot-money-grid { display: grid; gap: 1rem; }
+.pilot-period { grid-template-columns: repeat(4,minmax(0,1fr)); margin: 1rem 0 1.5rem; }
+.pilot-period > div,
+.pilot-kpi-grid article,
+.pilot-money-grid > div { background: #fff; border: 1px solid rgba(17,24,39,.1); border-radius: 16px; padding: 1rem; display: flex; flex-direction: column; gap: .35rem; }
+.pilot-period span,
+.pilot-kpi-grid span,
+.pilot-money-grid span { color: #667085; font-size: .82rem; }
+.pilot-period b { font-size: 1rem; }
+.pilot-kpi-grid { grid-template-columns: repeat(3,minmax(0,1fr)); margin-bottom: 1.5rem; }
+.pilot-kpi-grid article { border-top-width: 4px; }
+.pilot-kpi-grid strong { font-size: 1.8rem; }
+.pilot-kpi-grid small { color: #667085; }
+.pilot-met { border-top-color: #16803d !important; }
+.pilot-watch { border-top-color: #b7791f !important; }
+.pilot-not-yet { border-top-color: #98a2b3 !important; }
+.pilot-money-grid { grid-template-columns: repeat(4,minmax(0,1fr)); margin-top: 1rem; }
+.pilot-cost-form { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1rem; align-items: end; }
+.pilot-cost-form label { display: flex; flex-direction: column; gap: .4rem; font-weight: 600; }
+.pilot-cost-form input,
+.pilot-cost-form select { min-height: 42px; border: 1px solid #d0d5dd; border-radius: 10px; padding: .65rem .75rem; background: #fff; }
+.pilot-cost-form .pilot-note { grid-column: span 2; }
+.pilot-cost-form button { min-height: 42px; border: 0; border-radius: 10px; padding: .7rem 1rem; font-weight: 700; cursor: pointer; }
+.pilot-cost-form button:disabled { opacity: .45; cursor: not-allowed; }
+.pilot-cost-list { display: grid; gap: .75rem; }
+.pilot-cost-list article { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid rgba(17,24,39,.08); padding: .75rem 0; }
+.pilot-cost-list article > div { display: flex; flex-direction: column; gap: .2rem; }
+.pilot-cost-list article > div:last-child { text-align: right; }
+.pilot-cost-list span { color: #667085; font-size: .85rem; }
+@media (max-width: 900px) {
+  .pilot-period,
+  .pilot-kpi-grid,
+  .pilot-money-grid,
+  .pilot-cost-form { grid-template-columns: 1fr 1fr; }
+  .pilot-cost-form .pilot-note { grid-column: span 2; }
+}
+@media (max-width: 620px) {
+  .pilot-period,
+  .pilot-kpi-grid,
+  .pilot-money-grid,
+  .pilot-cost-form { grid-template-columns: 1fr; }
+  .pilot-cost-form .pilot-note { grid-column: span 1; }
+  .pilot-cost-list article { flex-direction: column; }
+  .pilot-cost-list article > div:last-child { text-align: left; }
+}
