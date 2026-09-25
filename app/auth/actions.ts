@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isPhoneVerificationRequired, normalizeCanadianPhone } from "@/lib/canadian-phone";
 import { checkPasswordCompromise } from "@/lib/password-security";
+import { passwordPolicyError } from "@/lib/password-policy";
 
 function text(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -23,17 +24,25 @@ function messageUrl(path: string, message: string, type: "error" | "success") {
   return `${path}?${params.toString()}`;
 }
 
-async function enforcePasswordSafety(password: string, path: "/signup" | "/update-password") {
-  let compromised = false;
+async function passwordSafetyMessage(password: string) {
+  const policyMessage = passwordPolicyError(password);
+  if (policyMessage) return policyMessage;
+
   try {
-    ({ compromised } = await checkPasswordCompromise(password));
+    const { compromised } = await checkPasswordCompromise(password);
+    if (compromised) {
+      return "This password has appeared in known data breaches. Choose a different password.";
+    }
   } catch {
-    redirect(messageUrl(path, "Password safety check is temporarily unavailable. Please try again shortly.", "error"));
+    return "Password safety check is temporarily unavailable. Please try again shortly.";
   }
 
-  if (compromised) {
-    redirect(messageUrl(path, "This password has appeared in known data breaches. Choose a different password.", "error"));
-  }
+  return null;
+}
+
+async function enforcePasswordSafety(password: string, path: "/signup" | "/update-password") {
+  const message = await passwordSafetyMessage(password);
+  if (message) redirect(messageUrl(path, message, "error"));
 }
 
 async function requestOrigin() {
@@ -76,8 +85,8 @@ export async function signup(formData: FormData) {
   if (fullName.length < 2 || fullName.length > 100) {
     redirect(messageUrl("/signup", "Enter your full name.", "error"));
   }
-  if (!email || password.length < 8) {
-    redirect(messageUrl("/signup", "Use a valid email and at least 8 password characters.", "error"));
+  if (!email) {
+    redirect(messageUrl("/signup", "Enter a valid email address.", "error"));
   }
   if (isPhoneVerificationRequired() && !phone) {
     redirect(messageUrl("/signup", "Enter a valid Canadian phone number.", "error"));
@@ -108,7 +117,42 @@ export async function signup(formData: FormData) {
   }
   if (data.session) redirect(next);
 
-  redirect(messageUrl("/login", isPhoneVerificationRequired() ? "Check your email first. After signing in, we’ll verify your Canadian phone number." : "Check your email to verify your account, then sign in.", "success"));
+  redirect(messageUrl(
+    "/login",
+    "If this is a new account, check your email to verify it. If this address already has an account, sign in or reset the password. You can also resend verification below.",
+    "success",
+  ));
+}
+
+export async function resendSignupVerification(formData: FormData) {
+  const email = text(formData, "email").toLowerCase();
+  if (!email) {
+    redirect(messageUrl("/resend-verification", "Enter your email address.", "error"));
+  }
+
+  const supabase = await createClient();
+  const origin = await requestOrigin();
+  const next = isPhoneVerificationRequired() ? "/verify-phone" : "/account";
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: { emailRedirectTo: `${origin}/auth/callback?next=${next}` },
+  });
+
+  if (error?.status === 429) {
+    redirect(messageUrl("/resend-verification", "Please wait a moment before requesting another verification email.", "error"));
+  }
+  if (error?.status && error.status >= 500) {
+    redirect(messageUrl("/resend-verification", "Verification email could not be sent right now. Please try again shortly.", "error"));
+  }
+
+  // Keep this response non-enumerating: a confirmed/nonexistent account should not
+  // disclose whether the email address is registered.
+  redirect(messageUrl(
+    "/resend-verification",
+    "If an unverified account exists for this email, a new verification message has been sent. Check your inbox and spam folder.",
+    "success",
+  ));
 }
 
 export async function sendPhoneVerification(formData: FormData) {
@@ -159,7 +203,8 @@ export async function requestPasswordReset(formData: FormData) {
   }
 
   const { url, publishableKey } = getSupabaseConfig();
-  // Recovery emails can be opened in a different browser from the request.
+  // Recovery emails can be opened in a different browser from the request. Keep
+  // recovery implicit and let /update-password establish the session from the URL fragment.
   const supabase = createAuthClient(url, publishableKey, { auth: { flowType: "implicit", persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
   const origin = await requestOrigin();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -174,18 +219,28 @@ export async function requestPasswordReset(formData: FormData) {
 export async function updatePassword(formData: FormData) {
   const password = rawText(formData, "password");
   const confirmation = rawText(formData, "password_confirmation");
-  if (password.length < 8 || password !== confirmation) {
-    redirect(messageUrl("/update-password", "Use matching passwords with at least 8 characters.", "error"));
+  if (password !== confirmation) {
+    redirect(messageUrl("/update-password", "The passwords do not match.", "error"));
   }
 
   await enforcePasswordSafety(password, "/update-password");
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.updateUser({ password });
-  if (error) {
-    redirect(messageUrl("/update-password", "This reset link is invalid or expired.", "error"));
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    redirect(messageUrl("/update-password", "The recovery session is no longer valid. Request a new reset link.", "error"));
   }
 
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    const code = typeof error.code === "string" ? error.code : "";
+    const message = code === "insufficient_aal"
+      ? "Two-step verification is required before this password can be changed. Reopen the latest reset link and verify your authenticator code."
+      : "The password could not be updated. Request a new reset link if the recovery session has expired.";
+    redirect(messageUrl("/update-password", message, "error"));
+  }
+
+  await supabase.auth.signOut();
   redirect(messageUrl("/login", "Password updated. You can now sign in.", "success"));
 }
 

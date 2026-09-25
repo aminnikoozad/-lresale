@@ -25,3 +25,12 @@ jobs:
           languages: javascript-typescript
           queries: security-extended
       - uses: github/codeql-action/analyze@v3
+        with:
+          output: sarif-results
+      - name: Print safe finding diagnostics
+        if: always()
+        shell: bash
+        run: |
+          find sarif-results -type f -name '*.sarif' -print0 | while IFS= read -r -d '' file; do
+            jq -r '.runs[]?.results[]? | "RULE=" + (.ruleId // "unknown") + "\nMESSAGE=" + (.message.text // "") + "\nPRIMARY=" + ((.locations[0].physicalLocation.artifactLocation.uri // "unknown") + ":" + ((.locations[0].physicalLocation.region.startLine // 0)|tostring)) + "\nFLOW=" + ([.codeFlows[]?.threadFlows[]?.locations[]?.location.physicalLocation | ((.artifactLocation.uri // "unknown") + ":" + ((.region.startLine // 0)|tostring))] | unique | join(" -> ")) + "\n---"' "$file"
+          done
