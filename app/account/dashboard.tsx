@@ -115,7 +115,6 @@ function cad(cents: number) {
 export function Dashboard({
   name,
   username,
-  customerCode,
   message,
   messageType,
   balance,
@@ -140,7 +139,7 @@ export function Dashboard({
           <h1>Welcome, {name}.</h1>
           <div className="customer-identifiers" aria-label="Customer identifiers">
             <span>@{username}</span>
-            <span>Customer ID: <strong>{customerCode}</strong></span>
+            <Link href="/account/profile">Profile &amp; messages</Link>
           </div>
           <p>
             See your balance, follow every item and arrange your next

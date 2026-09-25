@@ -1,3 +1,4 @@
+import {AuthCaptcha} from "@/components/auth-captcha";
 import Link from "next/link";
 import { requestPasswordReset } from "../auth/actions";
 import "../auth.css";
@@ -16,7 +17,7 @@ export default async function ForgotPasswordPage({ searchParams }: Props) {
     {message && <div className={`auth-message ${type}`}>{message}</div>}
     <form className="auth-form" action={requestPasswordReset}>
       <label htmlFor="email">Email address<input id="email" name="email" type="email" autoComplete="email" required /></label>
-      <button className="auth-submit" type="submit">Send reset link</button>
+      <AuthCaptcha/><button className="auth-submit" type="submit">Send reset link</button>
     </form>
     <Link className="auth-back" href="/login">← Back to sign in</Link>
   </section></main>;

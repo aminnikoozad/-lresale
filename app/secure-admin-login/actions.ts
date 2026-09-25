@@ -1,5 +1,6 @@
 "use server";
 
+import {protectAuthForm} from "@/lib/auth-form-protection";
 import { createHmac } from "node:crypto";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -33,6 +34,7 @@ async function rateKey(email: string) {
 }
 
 export async function adminLogin(formData: FormData) {
+  const captchaToken=await protectAuthForm(formData,"/secure-admin-login");
   const email = text(formData, "email").toLowerCase();
   const password = raw(formData, "password");
   if (!email || email.length > 254 || !password || password.length > 1024) redirect(message("Enter your credentials."));
@@ -48,7 +50,7 @@ export async function adminLogin(formData: FormData) {
     redirect(message(`Too many attempts. Try again in about ${minutes} minute${minutes === 1 ? "" : "s"}.`));
   }
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({ email, password, options:{captchaToken} });
   if (error) {
     await supabase.rpc("record_admin_login_failure", { p_rate_key: key });
     redirect(message("Access denied."));

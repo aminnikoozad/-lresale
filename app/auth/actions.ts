@@ -2,6 +2,7 @@
 
 import { createClient as createAuthClient } from "@supabase/supabase-js";
 import { getSupabaseConfig } from "@/lib/supabase/config";
+import {protectAuthForm} from "@/lib/auth-form-protection";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -51,6 +52,7 @@ async function requestOrigin() {
 }
 
 export async function login(formData: FormData) {
+  const captchaToken=await protectAuthForm(formData,"/login");
   const email = text(formData, "email").toLowerCase();
   const password = rawText(formData, "password");
   if (!email || !password) {
@@ -58,7 +60,7 @@ export async function login(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password, options:{captchaToken} });
   if (error) {
     redirect(messageUrl("/login", "Email or password is incorrect.", "error"));
   }
@@ -67,7 +69,10 @@ export async function login(formData: FormData) {
 }
 
 export async function signup(formData: FormData) {
+  const captchaToken=await protectAuthForm(formData,"/signup");
   const fullName = text(formData, "full_name");
+  const username = text(formData,"username").toLowerCase();
+  if(!/^[a-z0-9][a-z0-9._]{2,29}$/.test(username)) redirect(messageUrl("/signup","Choose a valid username.","error"));
   const email = text(formData, "email").toLowerCase();
   const phone = normalizeCanadianPhone(text(formData, "phone"));
   const password = rawText(formData, "password");
@@ -98,7 +103,8 @@ export async function signup(formData: FormData) {
     email,
     password,
     options: {
-      data: { full_name: fullName, phone_e164: phone },
+      captchaToken,
+      data: { full_name: fullName, phone_e164: phone, username },
       emailRedirectTo: `${origin}/auth/callback?next=${next}`,
     },
   });
@@ -153,6 +159,7 @@ export async function verifyPhone(formData: FormData) {
 }
 
 export async function requestPasswordReset(formData: FormData) {
+  const captchaToken=await protectAuthForm(formData,"/forgot-password");
   const email = text(formData, "email").toLowerCase();
   if (!email) {
     redirect(messageUrl("/forgot-password", "Enter your email address.", "error"));
@@ -163,6 +170,7 @@ export async function requestPasswordReset(formData: FormData) {
   const supabase = createAuthClient(url, publishableKey, { auth: { flowType: "implicit", persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
   const origin = await requestOrigin();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    captchaToken,
     redirectTo: `${origin}/auth/callback?next=/update-password`,
   });
 

@@ -1,0 +1,42 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {PGlite} from '@electric-sql/pglite';
+const migration=readFileSync(new URL('../supabase/migrations/20260925082519_customer_admin_workflow.sql',import.meta.url),'utf8');
+const admin='00000000-0000-4000-8000-000000000001', seller='00000000-0000-4000-8000-000000000002', stranger='00000000-0000-4000-8000-000000000003', item='00000000-0000-4000-8000-000000000004';
+test('Customer ownership, MFA, private notes and idempotent locked commission ledger',async()=>{
+ const db=new PGlite();try{
+ await db.exec(`create role anon;create role authenticated;create schema auth;create schema private;
+ create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('test.uid',true),'')::uuid$$;
+ create function auth.jwt() returns jsonb language sql stable as $$select jsonb_build_object('aal',current_setting('test.aal',true))$$;
+ grant usage on schema auth,public to authenticated,anon;grant execute on all functions in schema auth to authenticated,anon;
+ create table auth.users(id uuid primary key,email text);insert into auth.users values('${admin}','admin@example.test'),('${seller}','seller@example.test'),('${stranger}','stranger@example.test');
+ create table public.profiles(id uuid primary key,username text unique,full_name text);insert into public.profiles values('${admin}','owner','Owner'),('${seller}','seller','Seller'),('${stranger}','other','Other');
+ create table public.admin_roles(user_id uuid,role text);insert into public.admin_roles values('${admin}','owner');
+ create function public.can_manage_items() returns boolean language sql stable security definer as $$select auth.uid()='${admin}'::uuid$$;
+ create table public.items(id uuid primary key,owner_id uuid,name text,status text,initial_approved_price_cents int,listed_price_cents int,sold_price_cents int,locked_seller_commission_bps int,locked_platform_commission_bps int,seller_pricing_approved_at timestamptz,created_at timestamptz default now());
+ insert into public.items values('${item}','${seller}','Coat','listed',27500,22000,null,5500,4500,now(),now());
+ create table public.item_operations(item_id uuid,item_code text);
+ create table public.bundle_items(item_id uuid);
+ create table public.inventory_reservations(item_id uuid,status text,expires_at timestamptz);
+ create table public.wallet_transactions(id uuid primary key default gen_random_uuid(),user_id uuid,item_id uuid,amount_cents int,status text,transaction_type text,description text,created_at timestamptz default now());
+ create table public.audit_logs(admin_user_id uuid,action text,entity_type text,entity_id text,new_value jsonb);
+ `);
+ await db.exec(migration);
+ const identity=async(id:string,aal='aal2')=>{await db.exec(`reset role;select set_config('test.uid','${id}',false);select set_config('test.aal','${aal}',false);set role authenticated;`);};
+ await identity(stranger);
+ await assert.rejects(db.query(`select public.admin_customer_workspace('${seller}')`));
+ await assert.rejects(db.query(`select public.admin_record_item_sale('${item}',22000,'receipt-1')`));
+ await identity(admin,'aal1');await assert.rejects(db.query(`select public.admin_customer_workspace('${seller}')`));await assert.rejects(db.query(`select public.admin_record_item_sale('${item}',22000,'receipt-1')`));
+ await identity(admin);await db.exec(`select public.admin_add_customer_update('${seller}','Private note',false);select public.admin_add_customer_update('${seller}','Your coat was inspected',true);`);
+ await assert.rejects(db.query(`select public.admin_record_item_sale('${item}',10000,'receipt-1')`));
+ const first=await db.query(`select public.admin_record_item_sale('${item}',22000,'receipt-1') as id`);
+ const again=await db.query(`select public.admin_record_item_sale('${item}',22000,'receipt-1') as id`);assert.deepEqual(first.rows,again.rows);
+ await assert.rejects(db.query(`select public.admin_record_item_sale('${item}',22000,'receipt-2')`));
+ await db.exec('reset role');const credits=await db.query<{amount_cents:number;status:string;user_id:string}>(`select amount_cents,status,user_id from public.wallet_transactions`);assert.equal(credits.rows.length,1);assert.equal(credits.rows[0].amount_cents,12100);assert.equal(credits.rows[0].status,'pending');assert.equal(credits.rows[0].user_id,seller);
+ await identity(seller);const notes=await db.query<{body:string}>(`select body from public.customer_account_updates`);assert.deepEqual(notes.rows,[{body:'Your coat was inspected'}]);await assert.rejects(db.exec(`insert into public.customer_account_updates(customer_id,author_id,body) values('${seller}','${seller}','fake')`));
+ await db.exec(`select public.set_my_username('new.seller')`);await assert.rejects(db.exec(`select public.set_my_username('other')`));
+ await identity(stranger);assert.equal((await db.query(`select * from public.customer_account_updates`)).rows.length,0);
+ await db.exec(`reset role;set role anon`);await assert.rejects(db.exec(`select public.admin_customer_workspace('${seller}')`));
+ }finally{await db.close();}
+});

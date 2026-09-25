@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {CustomerPicker} from "@/components/customer-picker";
 import { redirect } from "next/navigation";
 import { AdminItemTaxonomyFields } from "@/components/admin-item-taxonomy-fields";
 import { createClient } from "@/lib/supabase/server";
@@ -86,7 +87,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
           <span className="admin-pill">Admin</span>
         </div>
         <nav>
-          <Link href="/admin">Dashboard</Link>
+          <Link href="/admin">Dashboard</Link><Link href="/admin/customers">Customers</Link>
           <Link href="/admin/operations#pickup-requests">Pickup requests</Link>
           <Link href="/admin/items">Items</Link><Link href="/admin/home-decor">Home &amp; Decor inspection</Link>
           <Link href="/admin/settings">Selling Rules</Link>
@@ -135,16 +136,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
           </div>
           <form className="admin-item-form" action={createAdminItem} encType="multipart/form-data">
             {collectionRequestId ? <input type="hidden" name="collection_request_id" value={collectionRequestId} /> : null}
-            <label>Customer
-              <select name="owner_id" required defaultValue={ownerDefault}>
-                <option value="" disabled>Select customer</option>
-                {customers.map((customer) => (
-                  <option value={customer.user_id} key={customer.user_id}>
-                    {customer.full_name || customer.email || "Customer"} · @{customer.username || "user"} · {customer.customer_code || customer.user_id.slice(0, 8)}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <CustomerPicker customers={customers} initial={ownerDefault}/>
             <label>Item name
               <input name="name" minLength={2} maxLength={160} required placeholder="Example: Aritzia wool coat" />
             </label>
@@ -233,7 +225,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
             <strong>{items.length} records</strong>
           </div>
           <div className="admin-item-list">
-            {items.length ? items.map((item) => (
+            {items.length ? items.filter(item=>!ownerDefault||item.owner_id===ownerDefault).map((item) => (
               <article className="admin-item-row" key={item.item_id}>
                 <div className="item-summary">
                   <div>

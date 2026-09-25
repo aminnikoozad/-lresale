@@ -1,3 +1,4 @@
+import {AuthCaptcha} from "@/components/auth-captcha";
 import Link from "next/link";
 import { login } from "../auth/actions";
 import "../auth.css";
@@ -17,7 +18,7 @@ export default async function LoginPage({searchParams}:Props){
       <label htmlFor="email">Email address<input id="email" name="email" type="email" autoComplete="email" required /></label>
       <label htmlFor="password">Password<input id="password" name="password" type="password" autoComplete="current-password" required /></label>
       <div className="auth-row"><Link href="/forgot-password">Forgot password?</Link></div>
-      <button className="auth-submit" type="submit">Sign in</button>
+      <AuthCaptcha/><button className="auth-submit" type="submit">Sign in</button>
     </form>
     <p className="auth-switch">New to Rewear? <Link href="/signup">Create an account</Link></p>
     <Link className="auth-back" href="/">← Back to marketplace</Link>

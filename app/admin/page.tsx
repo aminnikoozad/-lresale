@@ -22,7 +22,7 @@ export default async function AdminPage() {
       <header className="ops-top">
         <div><span className="brand">REWEAR<span>.</span></span><b>Admin</b></div>
         <nav>
-          <Link href="/admin">Dashboard</Link>
+          <Link href="/admin">Dashboard</Link><Link href="/admin/customers">Customers</Link>
           <Link href="/admin/pilot">Pilot</Link>
           <Link href="/admin/ai-trainer">Chat with Bot</Link>
           <Link href="/admin/support">Support{supportStats?.waiting ? ` (${supportStats.waiting})` : ""}</Link>
