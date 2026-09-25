@@ -12,6 +12,7 @@ import {
   loadSellingRules,
 } from "@/lib/business-rules";
 import { CATALOG_CATEGORIES } from "@/lib/catalog-taxonomy";
+import { loadLaunchSellerOffer } from "@/lib/launch-offer";
 import { loadPilotSettings, pilotAllowsPickupDate } from "@/lib/pilot-settings";
 import {
   commissionPercent,
@@ -119,6 +120,7 @@ export default async function AccountPage({ searchParams }: Props) {
     serviceAreasResult,
     pickupSlotsResult,
     sellingRules,
+    launchOffer,
     pilot,
     params,
   ] = await Promise.all([
@@ -136,7 +138,7 @@ export default async function AccountPage({ searchParams }: Props) {
       .order("created_at", { ascending: false }),
     supabase
       .from("collection_requests")
-      .select("id,batch_code,request_type,category,status,confirmation_status,created_at,item_count,pickup_fee_cents,pickup_pricing_mode,priority_pickup,processing_fee_cents,bag_fee_cents")
+      .select("id,batch_code,request_type,category,status,confirmation_status,created_at,item_count,pickup_fee_cents,pickup_pricing_mode,priority_pickup,processing_fee_cents,bag_fee_cents,promotion_claim_number,service_fee_waived_cents")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
     supabase
@@ -157,6 +159,7 @@ export default async function AccountPage({ searchParams }: Props) {
       .gt("window_start", new Date().toISOString())
       .order("window_start"),
     loadSellingRules(supabase),
+    loadLaunchSellerOffer(supabase),
     loadPilotSettings(supabase),
     searchParams,
   ]);
@@ -217,6 +220,8 @@ export default async function AccountPage({ searchParams }: Props) {
     ? pilot.categories
     : CATALOG_CATEGORIES.map((entry) => entry.value);
   const rawItems = itemsResult.data ?? [];
+  const rawRequests = requestsResult.data ?? [];
+  const launchOfferEligible = launchOffer.active && rawRequests.length === 0;
 
   return (
     <main className="account-shell">
@@ -246,6 +251,13 @@ export default async function AccountPage({ searchParams }: Props) {
         activeCategories={activeCategories}
         pilotEnabled={pilot.enabled}
         pickupDayText={pickupDayText(pilot.pickupDays)}
+        launchOffer={{
+          active: launchOffer.active,
+          eligible: launchOfferEligible,
+          maxClaims: launchOffer.maxClaims,
+          remaining: launchOffer.remaining,
+          waivedServiceFeeCents: launchOffer.waivedServiceFeeCents,
+        }}
         feeRules={{
           processingFeeCents: sellingRules.pickupRules.processingFeeCents,
           rewearBagFeeCents: sellingRules.pickupRules.rewearBagFeeCents,
@@ -317,10 +329,11 @@ export default async function AccountPage({ searchParams }: Props) {
               ["accepted", "waiting_for_seller_approval"].includes(item.status),
           };
         })}
-        requests={(requestsResult.data ?? []).map((request) => {
+        requests={rawRequests.map((request) => {
           const batchItems = rawItems.filter((item) => item.collection_request_id === request.id);
           const acceptedCount = batchItems.filter((item) => ACCEPTED_BATCH_STATUSES.has(item.status)).length;
           const rejectedCount = batchItems.filter((item) => item.status === "rejected").length;
+          const waivedServiceFeeCents = request.service_fee_waived_cents ?? 0;
           return {
             id: request.id,
             batchCode: request.batch_code,
@@ -339,6 +352,10 @@ export default async function AccountPage({ searchParams }: Props) {
             processingFee: money(request.processing_fee_cents ?? 0),
             bagFee: money(request.bag_fee_cents ?? 0),
             pickupFee: money(request.pickup_fee_cents ?? 0),
+            promotionLabel:
+              waivedServiceFeeCents > 0
+                ? `Launch offer #${request.promotion_claim_number ?? "—"}: ${money(waivedServiceFeeCents)} service fee waived`
+                : null,
           };
         })}
         serviceAreas={(serviceAreasResult.data ?? []).map((area) => ({
