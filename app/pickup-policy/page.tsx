@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default async function PickupPolicyPage() {
   const rules = await loadSellingRules(createPublicClient());
   const threshold = formatCadFromCents(rules.pickupRules.freePickupThresholdCents);
-  const perItem = formatCadFromCents(rules.pickupRules.lowValuePickupItemFeeCents);
+  const lowValuePickupFee = formatCadFromCents(rules.pickupRules.lowValuePickupItemFeeCents);
   const bagMinimum = formatCadFromCents(rules.pickupRules.bagMinimumEstimatedValueCents);
   const serviceFee = formatCadFromCents(rules.pickupRules.processingFeeCents);
   const missLimit = rules.pickupRules.suspendFreePickupAfterMisses;
@@ -26,7 +26,7 @@ export default async function PickupPolicyPage() {
 
       <section className="policy-highlight"><Truck/><div><h2>{threshold}+ Free Priority Pickup</h2><p>When the estimated combined resale value of your pickup is <strong>{threshold} CAD or more</strong>, the transportation portion of pickup is free and the request receives priority handling.</p><p>A <strong>{serviceFee} batch service fee</strong> still applies once per new batch. It covers processing and includes a REWEAR Bag if you request one.</p></div></section>
 
-      <section><h2>Pickups Below {threshold}</h2><p>Pickup requests below {threshold} in estimated combined resale value are allowed, but a transportation fee of <strong>{perItem} CAD per item</strong> applies in addition to the {serviceFee} batch service fee.</p><p>The applicable pickup fee is calculated from the number of items included in the request and is shown before submission.</p></section>
+      <section><h2>Pickups Below {threshold}</h2><p>Pickup requests below {threshold} in estimated combined resale value are allowed, but one flat transportation fee of <strong>{lowValuePickupFee} CAD per pickup</strong> applies in addition to the {serviceFee} batch service fee.</p><p>The {lowValuePickupFee} pickup fee is charged once for the whole pickup, regardless of how many items are included, and is shown before submission.</p></section>
 
       <section className="policy-highlight"><BadgeCheck/><div><h2>REWEAR Bag vs. Your Own Bag / Box</h2><p>A REWEAR Bag request is available when the submitted items have an estimated combined resale value of at least <strong>{bagMinimum}</strong>.</p><p>The REWEAR Bag is <strong>included in the same {serviceFee} batch service fee</strong>. There is no separate Bag charge. You may also use your own suitable bag or box; the batch service fee remains {serviceFee}.</p></div></section>
 
