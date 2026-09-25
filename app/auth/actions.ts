@@ -37,6 +37,24 @@ async function enforcePasswordSafety(password: string, path: "/signup" | "/updat
   }
 }
 
+export async function validateRecoveryPassword(password: string, confirmation: string) {
+  if (typeof password !== "string" || typeof confirmation !== "string" || password.length < 8 || password !== confirmation) {
+    return { ok: false as const, message: "Use matching passwords with at least 8 characters." };
+  }
+  if (password.length > 1024) {
+    return { ok: false as const, message: "Choose a shorter password." };
+  }
+  try {
+    const { compromised } = await checkPasswordCompromise(password);
+    if (compromised) {
+      return { ok: false as const, message: "This password has appeared in known data breaches. Choose a different password." };
+    }
+  } catch {
+    return { ok: false as const, message: "Password safety check is temporarily unavailable. Please try again shortly." };
+  }
+  return { ok: true as const };
+}
+
 async function requestOrigin() {
   const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL;
   if (configuredUrl?.startsWith("https://")) {
@@ -179,6 +197,8 @@ export async function requestPasswordReset(formData: FormData) {
   redirect(messageUrl("/forgot-password", "If the account exists, a reset link has been sent.", "success"));
 }
 
+// Retained for compatibility with older deployments. The current recovery form
+// updates the password with the browser recovery session that came from the email link.
 export async function updatePassword(formData: FormData) {
   const password = rawText(formData, "password");
   const confirmation = rawText(formData, "password_confirmation");
