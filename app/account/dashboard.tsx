@@ -48,11 +48,19 @@ type Item = {
 };
 type Request = {
   id: string;
+  batchCode: string;
   type: string;
   category: string;
   status: string;
   confirmationStatus: string;
   createdAt: string;
+  expectedItemCount: number;
+  receivedCount: number;
+  acceptedCount: number;
+  rejectedCount: number;
+  processingFee: string;
+  bagFee: string;
+  pickupFee: string;
 };
 type ServiceArea = { id: string; city: string; pickupMode: string };
 type PickupSlot = {
@@ -60,6 +68,13 @@ type PickupSlot = {
   serviceAreaId: string;
   label: string;
   remaining: number;
+};
+type FeeRules = {
+  processingFeeCents: number;
+  rewearBagFeeCents: number;
+  freePickupThresholdCents: number;
+  lowValuePickupItemFeeCents: number;
+  bagMinimumEstimatedValueCents: number;
 };
 type Props = {
   name: string;
@@ -73,10 +88,19 @@ type Props = {
   requests: Request[];
   serviceAreas: ServiceArea[];
   pickupSlots: PickupSlot[];
+  feeRules: FeeRules;
   activeCategories?: CatalogCategory[];
   pilotEnabled?: boolean;
   pickupDayText?: string;
 };
+
+function cad(cents: number) {
+  return new Intl.NumberFormat("en-CA", {
+    style: "currency",
+    currency: "CAD",
+    minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
+  }).format(cents / 100);
+}
 
 export function Dashboard({
   name,
@@ -90,6 +114,7 @@ export function Dashboard({
   requests,
   serviceAreas,
   pickupSlots,
+  feeRules,
   activeCategories = ["women"],
   pilotEnabled = true,
   pickupDayText = "Saturdays",
@@ -113,23 +138,25 @@ export function Dashboard({
         <div className="dash-actions">
           <RequestDialog
             type="bag"
-            label="Request a Bag"
+            label="Request a REWEAR Bag"
             icon={<Package />}
             serviceAreas={serviceAreas}
             pickupSlots={pickupSlots}
             activeCategories={activeCategories}
             pilotEnabled={pilotEnabled}
             pickupDayText={pickupDayText}
+            feeRules={feeRules}
           />
           <RequestDialog
             type="pickup"
-            label="Request pickup"
+            label="Use my own bag / box"
             icon={<Truck />}
             serviceAreas={serviceAreas}
             pickupSlots={pickupSlots}
             activeCategories={activeCategories}
             pilotEnabled={pilotEnabled}
             pickupDayText={pickupDayText}
+            feeRules={feeRules}
           />
         </div>
       </section>
@@ -172,7 +199,7 @@ export function Dashboard({
         <Tabs defaultValue="items">
           <TabsList>
             <TabsTrigger value="items">My items</TabsTrigger>
-            <TabsTrigger value="requests">My requests</TabsTrigger>
+            <TabsTrigger value="requests">My batches</TabsTrigger>
             <TabsTrigger value="payout">Payout</TabsTrigger>
           </TabsList>
           <TabsContent value="items">
@@ -193,6 +220,7 @@ export function Dashboard({
                 activeCategories={activeCategories}
                 pilotEnabled={pilotEnabled}
                 pickupDayText={pickupDayText}
+                feeRules={feeRules}
               />
             </div>
             {items.length ? (
@@ -253,12 +281,14 @@ export function Dashboard({
                 {requests.map((request) => (
                   <article key={request.id}>
                     <div>
-                      <b>{request.type}</b>
-                      <span>{categoryLabel(request.category)} · {request.createdAt}</span>
+                      <b>{request.batchCode}</b>
+                      <span>{request.type} · {request.category} · {request.createdAt}</span>
+                      <small>{request.status} · Confirmation: {request.confirmationStatus}</small>
                     </div>
-                    <div>
-                      <strong>{request.status}</strong>
-                      <small>Confirmation: {request.confirmationStatus}</small>
+                    <div className="batch-progress">
+                      <strong>{request.receivedCount}/{request.expectedItemCount || "?"} received</strong>
+                      <small>{request.acceptedCount} accepted · {request.rejectedCount} rejected</small>
+                      <small>Fees: {request.processingFee} processing{request.bagFee !== "$0" && request.bagFee !== "$0.00" ? ` · ${request.bagFee} Bag` : ""}{request.pickupFee !== "$0" && request.pickupFee !== "$0.00" ? ` · ${request.pickupFee} pickup` : ""}</small>
                     </div>
                   </article>
                 ))}
@@ -266,8 +296,8 @@ export function Dashboard({
             ) : (
               <div className="empty-box">
                 <Package />
-                <h2>No requests yet</h2>
-                <p>Request a Bag for eligible $100+ collections, or choose pickup for smaller collections subject to the current per-item fee.</p>
+                <h2>No batches yet</h2>
+                <p>Start with a REWEAR Bag or use your own bag/box. Every new batch receives a trackable batch code.</p>
               </div>
             )}
           </TabsContent>
@@ -293,10 +323,11 @@ export function Dashboard({
       <section className="mini-rules">
         <b>Quick check before sending</b>
         <span>✓ Individual listing value is normally $20+</span>
-        <span>✓ $100+ estimated collections qualify for free priority pickup</span>
-        <span>✓ Smaller pickup requests may carry a per-item pickup fee</span>
+        <span>✓ {cad(feeRules.freePickupThresholdCents)}+ estimated collections qualify for free priority pickup</span>
+        <span>✓ Processing is {cad(feeRules.processingFeeCents)} once per new batch</span>
+        <span>✓ A REWEAR Bag is {cad(feeRules.rewearBagFeeCents)}; your own bag/box has no Bag fee</span>
         <span>✓ Clothing should be washed and neatly folded</span>
-        <span>✓ All items should be clean and accurately described</span>
+        <Link href="/sell-with-rewear">Read the full seller guide →</Link>
       </section>
     </div>
   );
@@ -311,6 +342,7 @@ function RequestDialog({
   activeCategories,
   pilotEnabled,
   pickupDayText,
+  feeRules,
 }: {
   label: string;
   icon: React.ReactNode;
@@ -320,17 +352,23 @@ function RequestDialog({
   activeCategories: CatalogCategory[];
   pilotEnabled: boolean;
   pickupDayText: string;
+  feeRules: FeeRules;
 }) {
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<CatalogCategory>(activeCategories[0] ?? "women");
   const [subcategory, setSubcategory] = useState("");
   const [serviceAreaId, setServiceAreaId] = useState(serviceAreas[0]?.id ?? "");
-  const [estimatedValue, setEstimatedValue] = useState(100);
+  const [estimatedValue, setEstimatedValue] = useState(feeRules.freePickupThresholdCents / 100);
   const availableSlots = pickupSlots.filter((slot) => slot.serviceAreaId === serviceAreaId);
-  const paidPickup = type === "pickup" && estimatedValue > 0 && estimatedValue < 100;
+  const paidPickup = type === "pickup" && estimatedValue > 0 && estimatedValue * 100 < feeRules.freePickupThresholdCents;
   const fashionCategory = FASHION_CATEGORIES.includes(category);
   const subcategoryOptions = subcategoriesFor(category);
   const categoryOptions = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value));
+  const threshold = cad(feeRules.freePickupThresholdCents);
+  const perItemFee = cad(feeRules.lowValuePickupItemFeeCents);
+  const bagMinimum = cad(feeRules.bagMinimumEstimatedValueCents);
+  const processingFee = cad(feeRules.processingFeeCents);
+  const bagFee = cad(feeRules.rewearBagFeeCents);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -341,7 +379,7 @@ function RequestDialog({
         <DialogHeader>
           <DialogTitle>{label}</DialogTitle>
           <DialogDescription>
-            Tell us what you want collected. We’ll review the request and contact you to confirm the next step.
+            Tell us what you want collected. All applicable fees are shown before you submit.
           </DialogDescription>
         </DialogHeader>
         <form className="request-form" action={createCollectionRequest}>
@@ -407,13 +445,13 @@ function RequestDialog({
             <div className="hold-card">
               <Truck />
               <div>
-                <b>{type === "bag" ? "Bag requests require $100+ estimated resale value" : paidPickup ? "Paid pickup for smaller collections" : "Free priority pickup at $100+"}</b>
+                <b>{type === "bag" ? `REWEAR Bag · ${bagFee}` : paidPickup ? "Own bag / box · smaller pickup" : "Own bag / box · free priority pickup"}</b>
                 <p>
                   {type === "bag"
-                    ? "Bag or Box requests require at least $100 in estimated resale value and still depend on scheduling availability."
+                    ? `REWEAR Bag requests require at least ${bagMinimum} estimated resale value. A ${bagFee} Bag fee and ${processingFee} batch processing fee are recorded on the new batch.`
                     : paidPickup
-                      ? "For estimated resale value below $100, the current pickup fee is $5 per item. The database confirms the final fee when you submit."
-                      : "Estimated resale value of $100 or more qualifies for free priority pickup under the current rules. No deposit or card hold is required."}
+                      ? `Your own bag/box has no Bag fee. This batch records ${processingFee} processing plus ${perItemFee} per item because the estimated resale value is below ${threshold}.`
+                      : `Your own bag/box has no Bag fee. This batch records ${processingFee} processing; ${threshold} or more qualifies for free priority pickup.`}
                 </p>
               </div>
             </div>
@@ -435,21 +473,25 @@ function RequestDialog({
                 name="estimated_value"
                 required
                 type="number"
-                min={type === "bag" ? "100" : "0.01"}
+                min={type === "bag" ? String(feeRules.bagMinimumEstimatedValueCents / 100) : "0.01"}
                 max="1000000"
                 step="0.01"
                 inputMode="decimal"
                 value={estimatedValue}
                 onChange={(event) => setEstimatedValue(Number(event.target.value))}
-                placeholder={type === "bag" ? "$100 minimum for Bag or Box" : "Enter your estimated total"}
+                placeholder={type === "bag" ? `${bagMinimum} minimum for a REWEAR Bag` : "Enter your estimated total"}
               />
             </label>
             {paidPickup ? (
               <label className="check pickup-fee-check">
                 <input name="pickup_fee_accepted" value="accepted" required type="checkbox" />{" "}
-                I understand that pickups below $100 currently cost $5 per item.
+                I understand that pickups below {threshold} currently cost {perItemFee} per item.
               </label>
             ) : null}
+            <label className="check">
+              <input name="service_fee_accepted" value="accepted" required type="checkbox" />{" "}
+              I understand this new batch records a {processingFee} processing fee{type === "bag" ? ` plus a ${bagFee} REWEAR Bag fee` : "; my own bag/box has no Bag fee"}. These fees are intended to be deducted from seller earnings when settlement is available, not charged to my card upfront.
+            </label>
             <div className="terms-box">
               <b>Required terms for {categoryLabel(category)}</b>
               {category === "home_decor" ? (
@@ -475,6 +517,7 @@ function RequestDialog({
               <p>{pilotEnabled ? `• During the pilot, pickup appointments are offered on ${pickupDayText} only and confirmed by REWEAR.` : "• Pickup appointments depend on current service-area and scheduling availability."}</p>
               <p>• Your commission is locked from the initial approved item price: you receive 45% at $20–$99.99, 50% at $100–$249.99, 55% at $250–$499.99 and 65% at $500+.</p>
               <p>• Category and subcategory details are intake information; REWEAR confirms final listing taxonomy after physical inspection.</p>
+              <p>• <Link href="/sell-with-rewear" target="_blank">Read acceptance, pricing, fees and earnings in the Seller Guide.</Link></p>
             </div>
             <label className="check">
               <input name="condition_confirmed" value="accepted" required type="checkbox" />{" "}
@@ -491,7 +534,7 @@ function RequestDialog({
           </div>
           <div className="request-form-footer">
             <Button type="submit" disabled={!availableSlots.length}>Submit collection request</Button>
-            <small className="payment-note">Submitting a request does not guarantee pickup approval. The applicable pickup fee is confirmed by the current rules when you submit.</small>
+            <small className="payment-note">A new batch code and fee snapshot are created when you submit. Pickup still requires confirmation before dispatch.</small>
           </div>
         </form>
       </DialogContent>

@@ -79,6 +79,29 @@ function fallbackCustomerCode(userId: string) {
   return `RW-${userId.replaceAll("-", "").slice(0, 16).toUpperCase()}`;
 }
 
+const ACCEPTED_BATCH_STATUSES = new Set([
+  "accepted",
+  "bundled",
+  "pricing_pending",
+  "waiting_for_seller_approval",
+  "approved",
+  "photography_pending",
+  "listing_preparation",
+  "listed",
+  "reserved",
+  "sold",
+  "return_requested",
+  "return_pending",
+  "returned",
+  "relisted",
+  "selling_period_expired",
+  "return_to_seller",
+  "donation_pending",
+  "donated",
+  "auctioned",
+  "archived",
+]);
+
 export default async function AccountPage({ searchParams }: Props) {
   const supabase = await createClient();
   const {
@@ -107,13 +130,13 @@ export default async function AccountPage({ searchParams }: Props) {
     supabase
       .from("items")
       .select(
-        "id,name,status,initial_approved_price_cents,listed_price_cents,sold_price_cents,locked_seller_commission_bps,locked_platform_commission_bps,seller_pricing_approved_at,estimated_seller_earnings_cents,final_seller_earnings_cents",
+        "id,collection_request_id,name,status,initial_approved_price_cents,listed_price_cents,sold_price_cents,locked_seller_commission_bps,locked_platform_commission_bps,seller_pricing_approved_at,estimated_seller_earnings_cents,final_seller_earnings_cents",
       )
       .eq("owner_id", user.id)
       .order("created_at", { ascending: false }),
     supabase
       .from("collection_requests")
-      .select("id,request_type,category,status,confirmation_status,created_at,pickup_fee_cents,pickup_pricing_mode,priority_pickup")
+      .select("id,batch_code,request_type,category,status,confirmation_status,created_at,item_count,pickup_fee_cents,pickup_pricing_mode,priority_pickup,processing_fee_cents,bag_fee_cents")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
     supabase
@@ -193,6 +216,7 @@ export default async function AccountPage({ searchParams }: Props) {
   const activeCategories = pilot.enabled
     ? pilot.categories
     : CATALOG_CATEGORIES.map((entry) => entry.value);
+  const rawItems = itemsResult.data ?? [];
 
   return (
     <main className="account-shell">
@@ -222,7 +246,14 @@ export default async function AccountPage({ searchParams }: Props) {
         activeCategories={activeCategories}
         pilotEnabled={pilot.enabled}
         pickupDayText={pickupDayText(pilot.pickupDays)}
-        items={(itemsResult.data ?? []).map((item) => {
+        feeRules={{
+          processingFeeCents: sellingRules.pickupRules.processingFeeCents,
+          rewearBagFeeCents: sellingRules.pickupRules.rewearBagFeeCents,
+          freePickupThresholdCents: sellingRules.pickupRules.freePickupThresholdCents,
+          lowValuePickupItemFeeCents: sellingRules.pickupRules.lowValuePickupItemFeeCents,
+          bagMinimumEstimatedValueCents: sellingRules.pickupRules.bagMinimumEstimatedValueCents,
+        }}
+        items={rawItems.map((item) => {
           let previewTier: { sellerBps: number; platformBps: number } | null = null;
           if (item.initial_approved_price_cents != null) {
             try {
@@ -286,19 +317,30 @@ export default async function AccountPage({ searchParams }: Props) {
               ["accepted", "waiting_for_seller_approval"].includes(item.status),
           };
         })}
-        requests={(requestsResult.data ?? []).map((request) => ({
-          id: request.id,
-          type:
-            request.request_type === "bag" ? "Bag request" : "Pickup request",
-          category: titleCase(request.category),
-          status: request.priority_pickup
-            ? `${titleCase(request.status)} · Priority`
-            : titleCase(request.status),
-          confirmationStatus: request.pickup_fee_cents > 0
-            ? `${titleCase(request.confirmation_status)} · Pickup fee ${money(request.pickup_fee_cents)}`
-            : `${titleCase(request.confirmation_status)} · Free pickup`,
-          createdAt: dateLabel(request.created_at),
-        }))}
+        requests={(requestsResult.data ?? []).map((request) => {
+          const batchItems = rawItems.filter((item) => item.collection_request_id === request.id);
+          const acceptedCount = batchItems.filter((item) => ACCEPTED_BATCH_STATUSES.has(item.status)).length;
+          const rejectedCount = batchItems.filter((item) => item.status === "rejected").length;
+          return {
+            id: request.id,
+            batchCode: request.batch_code,
+            type:
+              request.request_type === "bag" ? "REWEAR Bag request" : "Own bag / box pickup",
+            category: titleCase(request.category),
+            status: request.priority_pickup
+              ? `${titleCase(request.status)} · Priority`
+              : titleCase(request.status),
+            confirmationStatus: titleCase(request.confirmation_status),
+            createdAt: dateLabel(request.created_at),
+            expectedItemCount: request.item_count ?? 0,
+            receivedCount: batchItems.length,
+            acceptedCount,
+            rejectedCount,
+            processingFee: money(request.processing_fee_cents ?? 0),
+            bagFee: money(request.bag_fee_cents ?? 0),
+            pickupFee: money(request.pickup_fee_cents ?? 0),
+          };
+        })}
         serviceAreas={(serviceAreasResult.data ?? []).map((area) => ({
           id: area.id,
           city: area.city,

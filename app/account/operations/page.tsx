@@ -12,8 +12,6 @@ type TimelineEvent = {
   type: string;
   label: string;
   at: string;
-  reason?: string | null;
-  details?: Record<string, unknown>;
 };
 
 type SellerItem = {
@@ -31,6 +29,8 @@ type SellerItem = {
   listedPriceCents: number | null;
   initialPriceCents: number | null;
   dispositionPreference: string | null;
+  rejectionReason: string | null;
+  rejectionPhotoUrl: string | null;
   timeline: TimelineEvent[];
 };
 
@@ -72,7 +72,7 @@ export default async function SellerOperationsPage({ searchParams }: Props) {
     <main className="seller-ops-shell">
       <header className="seller-ops-top">
         <Link href="/" className="brand">REWEAR<span>.</span></Link>
-        <nav><Link href="/account">Selling dashboard</Link><Link href="/account/purchases">Purchases</Link></nav>
+        <nav><Link href="/account">Selling dashboard</Link><Link href="/sell-with-rewear">Seller guide</Link><Link href="/account/purchases">Purchases</Link></nav>
       </header>
       <section className="seller-ops-wrap">
         <div className="seller-ops-heading">
@@ -98,6 +98,21 @@ export default async function SellerOperationsPage({ searchParams }: Props) {
                 <div><span>Last Chance</span><b>{when(item.lastChanceAt)}</b></div>
                 <div><span>Selling period ends</span><b>{when(item.sellingExpiresAt)}</b></div>
               </div>
+
+              {item.status === "rejected" && item.rejectionReason ? (
+                <section className="rejection-box">
+                  <div>
+                    <h3>Why this item was not accepted</h3>
+                    <p>{item.rejectionReason}</p>
+                  </div>
+                  {item.rejectionPhotoUrl ? (
+                    <a href={item.rejectionPhotoUrl} target="_blank" rel="noreferrer" className="rejection-photo-link">
+                      <img src={item.rejectionPhotoUrl} alt={`Inspection evidence for ${item.name}`} />
+                      <span>View inspection photo</span>
+                    </a>
+                  ) : null}
+                </section>
+              ) : null}
 
               {needsReview ? (
                 <section className="seller-review-box">
@@ -133,7 +148,7 @@ export default async function SellerOperationsPage({ searchParams }: Props) {
                 {item.timeline.length ? <ol>{item.timeline.map((event, index) => (
                   <li key={`${event.at}-${index}`}>
                     <span />
-                    <div><b>{label(event.label)}</b><small>{when(event.at)}{event.reason ? ` · ${event.reason}` : ""}</small></div>
+                    <div><b>{label(event.label)}</b><small>{when(event.at)}</small></div>
                   </li>
                 ))}</ol> : <p>No processing events yet.</p>}
               </section>
