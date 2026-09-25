@@ -6,7 +6,7 @@ import { createBrowserClient } from "@supabase/ssr";
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "@/lib/supabase/config";
 import { verifyRecoverySession } from "@/lib/recovery-session";
 import { PASSWORD_HTML_PATTERN, PASSWORD_MIN_LENGTH, PASSWORD_REQUIREMENT_TEXT } from "@/lib/password-policy";
-import { validateRecoveryPassword } from "../auth/actions";
+import { updatePassword } from "../auth/actions";
 
 type RecoveryState = "checking" | "mfa" | "ready" | "invalid";
 type BrowserClient = ReturnType<typeof createBrowserClient>;
@@ -95,63 +95,8 @@ export function RecoveryForm() {
     }
 
     setMfaCode("");
-    setState("ready");
-  }
-
-  async function submitPassword(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
     setError("");
-
-    const formData = new FormData(event.currentTarget);
-    const password = String(formData.get("password") ?? "");
-    const confirmation = String(formData.get("password_confirmation") ?? "");
-
-    if (password !== confirmation) {
-      setError("The passwords do not match.");
-      return;
-    }
-
-    setBusy(true);
-    const validation = await validateRecoveryPassword(password);
-    if (!validation.ok) {
-      setBusy(false);
-      setError(validation.message);
-      return;
-    }
-
-    const client = clientRef.current;
-    if (!client) {
-      setBusy(false);
-      setState("invalid");
-      return;
-    }
-
-    const { error: updateError } = await client.auth.updateUser({ password });
-    if (updateError) {
-      setBusy(false);
-      if (updateError.code === "insufficient_aal") {
-        const { data: factors } = await client.auth.mfa.listFactors();
-        const verifiedTotp = (factors?.totp ?? []).find((factor: MfaFactor) => factor.status === "verified");
-        if (verifiedTotp) {
-          setFactorId(verifiedTotp.id);
-          setState("mfa");
-          setError("Verify your authenticator code before changing the password.");
-          return;
-        }
-        setError("Two-step verification is required before this password can be changed.");
-        return;
-      }
-
-      setError("The password could not be updated. Request a new reset link if the recovery session has expired.");
-      return;
-    }
-
-    await client.auth.signOut();
-    const params = new URLSearchParams({
-      message: "Password updated. You can now sign in.",
-      type: "success",
-    });
-    window.location.replace(`/login?${params.toString()}`);
+    setState("ready");
   }
 
   if (state === "checking") return <p role="status">Verifying your reset link…</p>;
@@ -171,13 +116,10 @@ export function RecoveryForm() {
     </form>
   </div>;
 
-  return <>
-    {error ? <div className="auth-message error">{error}</div> : null}
-    <form className="auth-form" onSubmit={submitPassword}>
-      <label htmlFor="password">New password<input id="password" name="password" type="password" minLength={PASSWORD_MIN_LENGTH} maxLength={128} pattern={PASSWORD_HTML_PATTERN} title={PASSWORD_REQUIREMENT_TEXT} autoComplete="new-password" required /></label>
-      <small className="auth-note">{PASSWORD_REQUIREMENT_TEXT}</small>
-      <label htmlFor="password_confirmation">Confirm password<input id="password_confirmation" name="password_confirmation" type="password" minLength={PASSWORD_MIN_LENGTH} maxLength={128} pattern={PASSWORD_HTML_PATTERN} title={PASSWORD_REQUIREMENT_TEXT} autoComplete="new-password" required /></label>
-      <button className="auth-submit" type="submit" disabled={busy}>{busy ? "Updating…" : "Update password"}</button>
-    </form>
-  </>;
+  return <form className="auth-form" action={updatePassword}>
+    <label htmlFor="password">New password<input id="password" name="password" type="password" minLength={PASSWORD_MIN_LENGTH} maxLength={128} pattern={PASSWORD_HTML_PATTERN} title={PASSWORD_REQUIREMENT_TEXT} autoComplete="new-password" required /></label>
+    <small className="auth-note">{PASSWORD_REQUIREMENT_TEXT}</small>
+    <label htmlFor="password_confirmation">Confirm password<input id="password_confirmation" name="password_confirmation" type="password" minLength={PASSWORD_MIN_LENGTH} maxLength={128} pattern={PASSWORD_HTML_PATTERN} title={PASSWORD_REQUIREMENT_TEXT} autoComplete="new-password" required /></label>
+    <button className="auth-submit" type="submit">Update password</button>
+  </form>;
 }
