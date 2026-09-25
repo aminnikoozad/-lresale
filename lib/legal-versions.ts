@@ -1,0 +1,3 @@
+export const BUYER_TERMS_VERSION = "2026-09-25";
+export const RETURN_POLICY_VERSION = "2026-09-25";
+export const PRIVACY_NOTICE_VERSION = "2026-09-25";
