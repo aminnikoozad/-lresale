@@ -45,11 +45,6 @@ async function enforcePasswordSafety(password: string, path: "/signup" | "/updat
   if (message) redirect(messageUrl(path, message, "error"));
 }
 
-export async function validateRecoveryPassword(password: string) {
-  const message = await passwordSafetyMessage(password);
-  return message ? { ok: false as const, message } : { ok: true as const, message: "" };
-}
-
 async function requestOrigin() {
   const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL;
   if (configuredUrl?.startsWith("https://")) {
@@ -231,15 +226,21 @@ export async function updatePassword(formData: FormData) {
   await enforcePasswordSafety(password, "/update-password");
 
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    redirect(messageUrl("/update-password", "The recovery session is no longer valid. Request a new reset link.", "error"));
+  }
+
   const { error } = await supabase.auth.updateUser({ password });
   if (error) {
     const code = typeof error.code === "string" ? error.code : "";
     const message = code === "insufficient_aal"
-      ? "Two-step verification is required before this password can be changed."
-      : "The recovery session is no longer valid. Request a new reset link.";
+      ? "Two-step verification is required before this password can be changed. Reopen the latest reset link and verify your authenticator code."
+      : "The password could not be updated. Request a new reset link if the recovery session has expired.";
     redirect(messageUrl("/update-password", message, "error"));
   }
 
+  await supabase.auth.signOut();
   redirect(messageUrl("/login", "Password updated. You can now sign in.", "success"));
 }
 
