@@ -67,11 +67,11 @@ export default async function SellWithRewearPage() {
       </section>
 
       <section className="guide-section guide-fees" id="fees">
-        <div className="guide-heading"><p className="eyebrow dark">Fees & earnings</p><h2>No surprise charges.</h2><p>The regular batch service fee is shown before you submit a new collection request and is snapshotted on that request. When an active promotion applies, the waiver is also snapshotted on the successful request.</p></div>
+        <div className="guide-heading"><p className="eyebrow dark">Fees & earnings</p><h2>No surprise charges.</h2><p>The regular batch service fee is shown before you submit a new collection request and is snapshotted on that request.{launchOffer.active ? " When the active launch offer applies, the waiver is also snapshotted on the successful request." : ""}</p></div>
         <div className="fee-cards">
-          <article><span>Regular batch service fee</span><strong>{serviceFee}</strong><p>Once per new batch/pickup. This single fee covers processing and includes a REWEAR Bag if you request one. There is no separate Bag charge. An eligible launch offer may waive this fee on the seller’s first collection.</p></article>
-          <article><span>Use your own bag / box</span><strong>No extra charge</strong><p>You still have the same regular {serviceFee} batch service fee; using your own suitable bag or box does not add another fee. If your first collection qualifies for the active launch offer, that regular service fee is waived.</p></article>
-          <article><span>Pickup</span><strong>{freePickupThreshold}+ = free</strong><p>Below {freePickupThreshold}, one flat {lowValueFee} pickup transportation fee applies to the whole pickup, regardless of item count. This transportation fee is separate from the batch service fee and is not covered by the launch waiver.</p></article>
+          <article><span>Regular batch service fee</span><strong>{serviceFee}</strong><p>Once per new batch/pickup. This single fee covers processing and includes a REWEAR Bag if you request one. There is no separate Bag charge.{launchOffer.active ? " An eligible first collection can receive the active launch waiver." : ""}</p></article>
+          <article><span>Use your own bag / box</span><strong>No extra charge</strong><p>You still have the same regular {serviceFee} batch service fee; using your own suitable bag or box does not add another fee.{launchOffer.active ? " If your first collection successfully claims the active launch offer, that regular service fee is waived." : ""}</p></article>
+          <article><span>Pickup</span><strong>{freePickupThreshold}+ = free</strong><p>Below {freePickupThreshold}, one flat {lowValueFee} pickup transportation fee applies to the whole pickup, regardless of item count. This transportation fee is separate from the batch service fee{launchOffer.active ? " and is not covered by the launch waiver" : ""}.</p></article>
         </div>
 
         <div className="commission-wrap">
@@ -83,7 +83,7 @@ export default async function SellWithRewearPage() {
         </div>
 
         <div className="calculator-wrap">
-          <div><h3>Estimate your earnings</h3><p>This is an estimate, not a payout promise. The calculator shows the regular {serviceFee} batch service fee. If your first collection qualifies for the active launch offer, that service fee is waived on the actual batch.</p></div>
+          <div><h3>Estimate your earnings</h3><p>This is an estimate, not a payout promise. The calculator shows the regular {serviceFee} batch service fee.{launchOffer.active ? " If your first collection successfully claims the active launch offer, that service fee is waived on the actual batch." : ""}</p></div>
           <SellerEarningsCalculator tiers={rules.commissionTiers} processingFeeCents={rules.pickupRules.processingFeeCents} minimumItemValueCents={rules.minimumIndividualItemValueCents} />
         </div>
       </section>
@@ -102,7 +102,7 @@ export default async function SellWithRewearPage() {
         <div className="send-checklist"><h3>What should I send?</h3><p><b>Best candidates:</b> clean, current, easy-to-identify pieces in strong condition with realistic resale demand.</p><p><b>Think twice:</b> heavily worn basics, damaged pieces, missing components or anything you would be uncomfortable receiving as a buyer.</p><p><b>Before pickup:</b> wash or clean items as appropriate, fold them neatly and describe known flaws honestly.</p></div>
       </section>
 
-      <section className="guide-cta"><div><p className="eyebrow">Ready?</p><h2>Know the rules before the pickup.</h2><p>Your account shows the regular {serviceFee} batch service fee and any separate flat low-value pickup transportation fee before you submit. If the launch waiver is successfully claimed, the service fee on that batch becomes $0 automatically.</p></div><Link href="/account">Arrange collection <ArrowRight /></Link></section>
+      <section className="guide-cta"><div><p className="eyebrow">Ready?</p><h2>Know the rules before the pickup.</h2><p>Your account shows the regular {serviceFee} batch service fee and any separate flat low-value pickup transportation fee before you submit.{launchOffer.active ? " If the launch waiver is successfully claimed, the service fee on that batch becomes $0 automatically." : ""}</p></div><Link href="/account">Arrange collection <ArrowRight /></Link></section>
 
       <footer className="seller-guide-footer"><Link href="/" className="brand">REWEAR<span>.</span></Link><div><Link href="/pickup-policy">Pickup policy</Link><Link href="/shipping-policy">Shipping policy</Link><Link href="/account">Customer account</Link></div></footer>
     </main>
