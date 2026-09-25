@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { PostalEstimator, type PostalSelection } from "@/components/postal-estimator";
 import { postalCode } from "@/lib/postal";
 import { useCart } from "@/components/cart-store";
+import { BUYER_TERMS_VERSION, PRIVACY_NOTICE_VERSION, RETURN_POLICY_VERSION } from "@/lib/legal-versions";
 
 export type CheckoutDeliveryDefaults = {
   recipientName: string;
@@ -62,6 +63,10 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
         return;
       }
 
+      if (formData.get("buyer_terms_accepted") !== "accepted") {
+        throw new Error("Buyer terms were not accepted");
+      }
+
       if (postalSelection && (postalSelection.postalCode !== postalCode(String(formData.get("postal_code") || "")) || Date.parse(postalSelection.expiresAt) <= Date.now())) throw new Error("Postal quote expired");
       const { data, error: rpcError } = await supabase.rpc(postalSelection ? "create_postal_checkout" : "create_checkout_order", {
         ...(postalSelection ? { p_quote: postalSelection.quoteId, p_service: postalSelection.serviceCode } : { item_ids: itemIds }),
@@ -73,11 +78,23 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
         postal_code: String(formData.get("postal_code") || ""),
       });
       if (rpcError) throw rpcError;
+
+      const preparedOrderId = String(data || "");
+      if (!/^[0-9a-f-]{36}$/i.test(preparedOrderId)) throw new Error("Invalid prepared order");
+
+      const { error: acceptanceError } = await supabase.rpc("accept_checkout_terms", {
+        p_order: preparedOrderId,
+        p_terms_version: BUYER_TERMS_VERSION,
+        p_return_policy_version: RETURN_POLICY_VERSION,
+        p_privacy_notice_version: PRIVACY_NOTICE_VERSION,
+      });
+      if (acceptanceError) throw acceptanceError;
+
       setSavedShipping(postalSelection);
-      setOrderId(String(data));
+      setOrderId(preparedOrderId);
     } catch (cause) {
-      console.error("[checkout] order creation failed", cause);
-      setError("We couldn’t prepare this order. An item or shipping quote may have changed. Recalculate shipping and try again.");
+      console.error("[checkout] order preparation failed", cause);
+      setError("We couldn’t prepare this order. Review the required policies and delivery details, recalculate shipping if needed, and try again.");
     } finally {
       setSubmitting(false);
     }
@@ -115,7 +132,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
         </div>
         <div className="checkout-readiness-card">
           <ShieldCheck />
-          <div><b>What is already ready</b><span>Buyer identity, selected inventory, server-verified prices and delivery details are attached to this order.</span></div>
+          <div><b>What is already ready</b><span>Buyer identity, selected inventory, server-verified prices, delivery details and the accepted policy versions are attached to this order.</span></div>
         </div>
         <Button asChild><Link href="/account/purchases">View My Purchases</Link></Button>
       </section>
@@ -161,6 +178,16 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
 
           <PostalEstimator itemIds={itemIds} destination={destination} onSelect={setPostalSelection}/>
           {!postalSelection ? <p>Without a selected postal service, delivery details are saved for review only; shipping remains unconfirmed.</p> : null}
+
+          <div className="checkout-field-section">
+            <h2>Policies</h2>
+            <label className="checkout-policy-consent">
+              <input type="checkbox" name="buyer_terms_accepted" value="accepted" required />
+              <span>I have reviewed and agree to the <Link href="/terms" target="_blank">Terms of Use</Link> and <Link href="/returns" target="_blank">Returns & Refunds Policy</Link>, and I acknowledge the <Link href="/privacy" target="_blank">Privacy Policy</Link>.</span>
+            </label>
+            <small>The policy versions and acceptance time are recorded with this prepared order. You will review the final price, tax and delivery total again before any payment is charged.</small>
+          </div>
+
           <div className="checkout-next-step-preview">
             <CreditCard />
             <div><b>Next: Payment</b><span>Card or wallet fields will appear here after the payment provider is connected. They are intentionally disabled today.</span></div>

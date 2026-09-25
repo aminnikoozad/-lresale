@@ -4,7 +4,22 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 const URL = Deno.env.get("SUPABASE_URL")!;
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ALLOWED_ORIGINS = new Set(["https://lresale.vercel.app"]);
+const DEFAULT_ORIGIN = "https://lresale.vercel.app";
+const ALLOWED_ORIGINS = new Set(
+  (Deno.env.get("ALLOWED_APP_ORIGINS") || DEFAULT_ORIGIN)
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => {
+      try {
+        const url = new URL(value);
+        return url.protocol === "https:" ? url.origin : "";
+      } catch {
+        return "";
+      }
+    })
+    .filter(Boolean),
+);
 const base = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",

@@ -1,7 +1,22 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-const ALLOWED_ORIGINS = new Set(["https://lresale.vercel.app"]);
+const DEFAULT_ORIGIN = "https://lresale.vercel.app";
+const ALLOWED_ORIGINS = new Set(
+  (Deno.env.get("ALLOWED_APP_ORIGINS") || DEFAULT_ORIGIN)
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => {
+      try {
+        const url = new URL(value);
+        return url.protocol === "https:" ? url.origin : "";
+      } catch {
+        return "";
+      }
+    })
+    .filter(Boolean),
+);
 const baseHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
