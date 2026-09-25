@@ -2,12 +2,13 @@
 
 import { createClient as createAuthClient } from "@supabase/supabase-js";
 import { getSupabaseConfig } from "@/lib/supabase/config";
-import {protectAuthForm} from "@/lib/auth-form-protection";
+import { protectAuthForm } from "@/lib/auth-form-protection";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isPhoneVerificationRequired, normalizeCanadianPhone } from "@/lib/canadian-phone";
 import { checkPasswordCompromise } from "@/lib/password-security";
+import { PASSWORD_REQUIREMENTS_TEXT, passwordMeetsPolicy } from "@/lib/password-policy";
 
 function text(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -38,8 +39,11 @@ async function enforcePasswordSafety(password: string, path: "/signup" | "/updat
 }
 
 export async function validateRecoveryPassword(password: string, confirmation: string) {
-  if (typeof password !== "string" || typeof confirmation !== "string" || password.length < 8 || password !== confirmation) {
-    return { ok: false as const, message: "Use matching passwords with at least 8 characters." };
+  if (typeof password !== "string" || typeof confirmation !== "string" || password !== confirmation) {
+    return { ok: false as const, message: "The passwords do not match." };
+  }
+  if (!passwordMeetsPolicy(password)) {
+    return { ok: false as const, message: PASSWORD_REQUIREMENTS_TEXT };
   }
   if (password.length > 1024) {
     return { ok: false as const, message: "Choose a shorter password." };
@@ -70,7 +74,7 @@ async function requestOrigin() {
 }
 
 export async function login(formData: FormData) {
-  const captchaToken=await protectAuthForm(formData,"/login");
+  const captchaToken = await protectAuthForm(formData, "/login");
   const email = text(formData, "email").toLowerCase();
   const password = rawText(formData, "password");
   if (!email || !password) {
@@ -78,7 +82,7 @@ export async function login(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password, options:{captchaToken} });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken } });
   if (error) {
     redirect(messageUrl("/login", "Email or password is incorrect.", "error"));
   }
@@ -87,10 +91,10 @@ export async function login(formData: FormData) {
 }
 
 export async function signup(formData: FormData) {
-  const captchaToken=await protectAuthForm(formData,"/signup");
+  const captchaToken = await protectAuthForm(formData, "/signup");
   const fullName = text(formData, "full_name");
-  const username = text(formData,"username").toLowerCase();
-  if(!/^[a-z0-9][a-z0-9._]{2,29}$/.test(username)) redirect(messageUrl("/signup","Choose a valid username.","error"));
+  const username = text(formData, "username").toLowerCase();
+  if (!/^[a-z0-9][a-z0-9._]{2,29}$/.test(username)) redirect(messageUrl("/signup", "Choose a valid username.", "error"));
   const email = text(formData, "email").toLowerCase();
   const phone = normalizeCanadianPhone(text(formData, "phone"));
   const password = rawText(formData, "password");
@@ -99,8 +103,11 @@ export async function signup(formData: FormData) {
   if (fullName.length < 2 || fullName.length > 100) {
     redirect(messageUrl("/signup", "Enter your full name.", "error"));
   }
-  if (!email || password.length < 8) {
-    redirect(messageUrl("/signup", "Use a valid email and at least 8 password characters.", "error"));
+  if (!email) {
+    redirect(messageUrl("/signup", "Enter a valid email address.", "error"));
+  }
+  if (!passwordMeetsPolicy(password)) {
+    redirect(messageUrl("/signup", PASSWORD_REQUIREMENTS_TEXT, "error"));
   }
   if (isPhoneVerificationRequired() && !phone) {
     redirect(messageUrl("/signup", "Enter a valid Canadian phone number.", "error"));
@@ -177,14 +184,13 @@ export async function verifyPhone(formData: FormData) {
 }
 
 export async function requestPasswordReset(formData: FormData) {
-  const captchaToken=await protectAuthForm(formData,"/forgot-password");
+  const captchaToken = await protectAuthForm(formData, "/forgot-password");
   const email = text(formData, "email").toLowerCase();
   if (!email) {
     redirect(messageUrl("/forgot-password", "Enter your email address.", "error"));
   }
 
   const { url, publishableKey } = getSupabaseConfig();
-  // Recovery emails can be opened in a different browser from the request.
   const supabase = createAuthClient(url, publishableKey, { auth: { flowType: "implicit", persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
   const origin = await requestOrigin();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -202,8 +208,11 @@ export async function requestPasswordReset(formData: FormData) {
 export async function updatePassword(formData: FormData) {
   const password = rawText(formData, "password");
   const confirmation = rawText(formData, "password_confirmation");
-  if (password.length < 8 || password !== confirmation) {
-    redirect(messageUrl("/update-password", "Use matching passwords with at least 8 characters.", "error"));
+  if (password !== confirmation) {
+    redirect(messageUrl("/update-password", "The passwords do not match.", "error"));
+  }
+  if (!passwordMeetsPolicy(password)) {
+    redirect(messageUrl("/update-password", PASSWORD_REQUIREMENTS_TEXT, "error"));
   }
 
   await enforcePasswordSafety(password, "/update-password");
