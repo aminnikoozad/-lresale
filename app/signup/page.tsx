@@ -22,9 +22,9 @@ export default async function SignUpPage({ searchParams }: Props) {
       <label htmlFor="username">Username<input id="username" name="username" minLength={3} maxLength={30} pattern="[a-z0-9][a-z0-9._]{2,29}" autoCapitalize="none" autoComplete="username" placeholder="e.g. amin.montreal" required /><small>This is your unique, readable Rewear username. No long account number is shown in your customer account.</small></label>
       <label htmlFor="email">Email address<input id="email" name="email" type="email" autoComplete="email" required /></label>
       {phoneRequired ? <label htmlFor="phone">Canadian phone number<input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="(514) 555-0123" maxLength={24} required /></label> : null}
-      <label htmlFor="password">Password<input id="password" name="password" type="password" minLength={8} autoComplete="new-password" required aria-describedby="password-rules" /><small id="password-rules" className="auth-field-note">{PASSWORD_REQUIREMENTS_TEXT}</small></label>
-      <label htmlFor="password_confirmation">Confirm password<input id="password_confirmation" name="password_confirmation" type="password" minLength={8} autoComplete="new-password" required /></label>
-      <label className="auth-check"><input name="terms" type="checkbox" value="accepted" required /> I agree to the account and privacy terms.</label>
+      <label htmlFor="password">Password<input id="password" name="password" type="password" minLength={8} maxLength={128} autoComplete="new-password" required aria-describedby="password-rules" /><small id="password-rules" className="auth-field-note">{PASSWORD_REQUIREMENTS_TEXT}</small></label>
+      <label htmlFor="password_confirmation">Confirm password<input id="password_confirmation" name="password_confirmation" type="password" minLength={8} maxLength={128} autoComplete="new-password" required /></label>
+      <label className="auth-check"><input name="terms" type="checkbox" value="accepted" required /> <span>I agree to the <Link href="/terms" target="_blank">Terms of Use</Link> and acknowledge the <Link href="/privacy" target="_blank">Privacy Policy</Link>.</span></label>
       <AuthHumanCheck />
       <AuthCaptcha />
       <button className="auth-submit" type="submit">Create account</button>
