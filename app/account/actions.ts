@@ -49,7 +49,7 @@ export async function createCollectionRequest(formData: FormData) {
   const brandNotes = value(formData, "brands");
   const estimatedValue = Number(value(formData, "estimated_value"));
   const estimatedValueCents = Math.round(estimatedValue * 100);
-  const allTermsAccepted = ["condition_confirmed", "policy_accepted", "pickup_policy_accepted"]
+  const allTermsAccepted = ["condition_confirmed", "policy_accepted", "pickup_policy_accepted", "service_fee_accepted"]
     .every((name) => formData.get(name) === "accepted");
 
   const isBagRequest = requestType === "bag";
@@ -72,12 +72,12 @@ export async function createCollectionRequest(formData: FormData) {
     estimatedValueCents > 100_000_000 ||
     !allTermsAccepted
   ) {
-    redirect(accountMessage("Check the request details and accept all required terms.", "error"));
+    redirect(accountMessage("Check the request details and accept all required terms and fees.", "error"));
   }
 
   if (isBagRequest && estimatedValueCents < rules.pickupRules.bagMinimumEstimatedValueCents) {
     redirect(accountMessage(
-      `Bag or Box requests require an estimated resale value of at least ${cad(rules.pickupRules.bagMinimumEstimatedValueCents)}. You can still request a paid pickup instead.`,
+      `REWEAR Bag requests require an estimated resale value of at least ${cad(rules.pickupRules.bagMinimumEstimatedValueCents)}. You can still use your own bag or box and request pickup instead.`,
       "error",
     ));
   }
@@ -125,7 +125,7 @@ export async function createCollectionRequest(formData: FormData) {
       policy_accepted: true,
       pickup_policy_accepted: true,
     })
-    .select("pickup_fee_cents,pickup_pricing_mode,priority_pickup")
+    .select("batch_code,pickup_fee_cents,pickup_pricing_mode,priority_pickup,processing_fee_cents,bag_fee_cents")
     .single();
 
   if (error || !savedRequest) {
@@ -134,17 +134,15 @@ export async function createCollectionRequest(formData: FormData) {
   }
 
   const pickupFeeCents = Number(savedRequest.pickup_fee_cents ?? 0);
-  const isFreePickup = pickupFeeCents === 0 && savedRequest.pickup_pricing_mode === "free_priority";
-
-  if (isFreePickup) {
-    redirect(accountMessage(
-      "Your free priority pickup request was submitted. We’ll contact you to confirm the pickup window.",
-      "success",
-    ));
-  }
+  const processingFeeCents = Number(savedRequest.processing_fee_cents ?? 0);
+  const bagFeeCents = Number(savedRequest.bag_fee_cents ?? 0);
+  const serviceFees = [`${cad(processingFeeCents)} processing`];
+  if (bagFeeCents > 0) serviceFees.push(`${cad(bagFeeCents)} REWEAR Bag`);
+  if (pickupFeeCents > 0) serviceFees.push(`${cad(pickupFeeCents)} pickup`);
+  const batch = typeof savedRequest.batch_code === "string" ? savedRequest.batch_code : "Your batch";
 
   redirect(accountMessage(
-    `Your pickup request was submitted with a ${cad(pickupFeeCents)} pickup fee.`,
+    `${batch} was submitted. Recorded fees: ${serviceFees.join(" + ")}. These are tracked with this batch; no processing or Bag fee is charged to your card upfront.`,
     "success",
   ));
 }
