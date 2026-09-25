@@ -2,11 +2,13 @@ import { connection } from "next/server";
 import type { HomeData } from "@/lib/home-decor";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Truck } from "lucide-react";
+import { ArrowRight, BadgePercent, ShieldCheck, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CartNavLink } from "@/components/cart-store";
 import { createPublicClient } from "@/lib/supabase/public";
 import { CATALOG_CATEGORIES } from "@/lib/catalog-taxonomy";
+import { formatCadFromCents } from "@/lib/business-rules";
+import { loadLaunchSellerOffer } from "@/lib/launch-offer";
 import { loadPilotSettings, pilotAllowsCategory } from "@/lib/pilot-settings";
 import { ShopCatalog, type CatalogCategory, type CatalogProduct } from "./shop-catalog";
 
@@ -40,11 +42,12 @@ export default async function Home() {
   await connection();
   const requestTime = new Date().getTime();
   const supabase = createPublicClient();
-  const [{ data, error }, { data: shippingData, error: shippingError }, { data: homeData, error: homeError }, pilot] = await Promise.all([
+  const [{ data, error }, { data: shippingData, error: shippingError }, { data: homeData, error: homeError }, pilot, launchOffer] = await Promise.all([
     supabase.rpc("catalog_items_v3"),
     supabase.rpc("get_shipping_policy"),
     supabase.rpc("home_catalog_details"),
     loadPilotSettings(supabase),
+    loadLaunchSellerOffer(supabase),
   ]);
 
   if (error) console.error("[home] catalog load failed", { code: error.code, message: error.message });
@@ -92,6 +95,7 @@ export default async function Home() {
     }));
 
   const navCategories = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value));
+  const waivedServiceFee = formatCadFromCents(launchOffer.waivedServiceFeeCents);
 
   return (
     <main>
@@ -104,6 +108,17 @@ export default async function Home() {
         </nav>
         <div className="header-actions"><CartNavLink /><Link href="/account" className="header-account-link">My account</Link><Button asChild className="header-sell-button"><Link href="/sell-with-rewear">Sell with us</Link></Button></div>
       </header>
+
+      {launchOffer.active ? (
+        <section className="shipping-strip" aria-label="Launch seller offer">
+          <BadgePercent />
+          <div>
+            <strong>Launch offer: first {launchOffer.maxClaims} sellers get the {waivedServiceFee} batch service fee waived on their first collection.</strong>
+            <span>{launchOffer.remaining} spots remain. Creating an account does not reserve a spot; the offer is claimed only when a first collection request is successfully submitted. The flat $5 pickup fee still applies when the pickup value is below $100.</span>
+          </div>
+          <Link href="/sell-with-rewear#launch-offer">Offer details</Link>
+        </section>
+      ) : null}
 
       <section className="hero" aria-labelledby="home-hero-title">
         <div className="hero-inner">
