@@ -33,18 +33,27 @@ async function authorizedClient() {
   return supabase;
 }
 
+const allowedPhotoTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+
+function validatePhoto(file: File) {
+  if (!allowedPhotoTypes.has(file.type) || file.size > 8 * 1024 * 1024) {
+    throw new Error("Photos must be JPG, PNG, WEBP or AVIF and no larger than 8 MB each.");
+  }
+  return file;
+}
+
 function itemPhotos(formData: FormData) {
-  const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
   return formData
     .getAll("photos")
     .filter((entry): entry is File => entry instanceof File && entry.size > 0)
     .slice(0, 8)
-    .map((file) => {
-      if (!allowedTypes.has(file.type) || file.size > 8 * 1024 * 1024) {
-        throw new Error("Photos must be JPG, PNG, WEBP or AVIF and no larger than 8 MB each.");
-      }
-      return file;
-    });
+    .map(validatePhoto);
+}
+
+function rejectionPhoto(formData: FormData) {
+  const entry = formData.get("rejection_photo");
+  if (!(entry instanceof File) || entry.size <= 0) return null;
+  return validatePhoto(entry);
 }
 
 async function uploadAdminPhoto(
@@ -79,10 +88,13 @@ export async function createAdminItem(formData: FormData) {
   const priceCents = centsFromDollars(text(formData, "initial_price"));
   const belowMinimumAction = text(formData, "below_minimum_action") || "normal";
   const reason = text(formData, "reason");
+  const sellerRejectionReason = text(formData, "seller_rejection_reason");
 
   let photos: File[] = [];
+  let evidencePhoto: File | null = null;
   try {
     photos = itemPhotos(formData);
+    evidencePhoto = rejectionPhoto(formData);
   } catch (error) {
     redirect(itemsMessage(error instanceof Error ? error.message : "Check the item photos.", "error"));
   }
@@ -96,6 +108,10 @@ export async function createAdminItem(formData: FormData) {
     !isCatalogSubcategory(category, subcategory)
   ) {
     redirect(itemsMessage("Check the customer, item name, category, subcategory and proposed price.", "error"));
+  }
+
+  if (belowMinimumAction === "reject" && (sellerRejectionReason.length < 3 || !evidencePhoto)) {
+    redirect(itemsMessage("Rejected items require a seller-facing reason and a clear evidence photo.", "error"));
   }
 
   const homeRule = category === "home_decor"
@@ -121,7 +137,7 @@ export async function createAdminItem(formData: FormData) {
     item_condition: condition || null,
     proposed_price_cents: priceCents,
     below_minimum_action: belowMinimumAction,
-    action_reason: reason || null,
+    action_reason: reason || sellerRejectionReason || null,
   });
 
   if (createError || typeof itemId !== "string") {
@@ -145,9 +161,25 @@ export async function createAdminItem(formData: FormData) {
     }
   }
 
+  if (belowMinimumAction === "reject" && evidencePhoto) {
+    try {
+      const evidenceUrl = await uploadAdminPhoto(supabase, itemId, evidencePhoto);
+      const { error: evidenceError } = await supabase.rpc("admin_record_rejection_evidence", {
+        target_item_id: itemId,
+        seller_rejection_reason: sellerRejectionReason,
+        seller_rejection_photo_url: evidenceUrl,
+      });
+      if (evidenceError) throw evidenceError;
+    } catch (error) {
+      console.error("[admin/items] rejection evidence failed", error);
+      redirect(itemsMessage("The item was rejected, but seller-facing evidence could not be saved. Add the evidence before closing the intake.", "error"));
+    }
+  }
+
   revalidatePath("/admin/items");
   revalidatePath("/admin/operations");
   revalidatePath("/account");
+  revalidatePath("/account/operations");
   revalidatePath("/");
   if (category === "home_decor") redirect(`/admin/home-decor?item=${itemId}`);
   redirect(itemsMessage("Item added to the customer account successfully.", "success"));
@@ -159,17 +191,50 @@ export async function reviewAdminItem(formData: FormData) {
   const priceCents = centsFromDollars(text(formData, "initial_price"));
   const action = text(formData, "review_action");
   const reason = text(formData, "reason");
+  const sellerRejectionReason = text(formData, "seller_rejection_reason");
+
+  let evidencePhoto: File | null = null;
+  try {
+    evidencePhoto = rejectionPhoto(formData);
+  } catch (error) {
+    redirect(itemsMessage(error instanceof Error ? error.message : "Check the rejection evidence photo.", "error"));
+  }
 
   if (!itemId || !Number.isInteger(priceCents) || priceCents < 1 || !action) {
     redirect(itemsMessage("Check the review values.", "error"));
   }
+  if (action === "reject" && (sellerRejectionReason.length < 3 || !evidencePhoto)) {
+    redirect(itemsMessage("Rejected items require a seller-facing reason and a clear evidence photo.", "error"));
+  }
 
-  const { error } = await supabase.rpc("admin_review_item", {
-    target_item_id: itemId,
-    proposed_price_cents: priceCents,
-    review_action: action,
-    action_reason: reason || null,
-  });
+  let evidenceUrl: string | null = null;
+  if (action === "reject" && evidencePhoto) {
+    try {
+      evidenceUrl = await uploadAdminPhoto(supabase, itemId, evidencePhoto);
+    } catch (error) {
+      console.error("[admin/items] rejection photo upload failed", error);
+      redirect(itemsMessage("The rejection evidence photo could not be uploaded. The item review was not changed.", "error"));
+    }
+  }
+
+  const rpc = action === "reject" ? "admin_review_item_with_evidence" : "admin_review_item";
+  const args = action === "reject"
+    ? {
+        target_item_id: itemId,
+        proposed_price_cents: priceCents,
+        review_action: action,
+        action_reason: reason || sellerRejectionReason,
+        seller_rejection_reason: sellerRejectionReason,
+        seller_rejection_photo_url: evidenceUrl,
+      }
+    : {
+        target_item_id: itemId,
+        proposed_price_cents: priceCents,
+        review_action: action,
+        action_reason: reason || null,
+      };
+
+  const { error } = await supabase.rpc(rpc, args);
 
   if (error) {
     console.error("[admin/items] review failed", { code: error.code, message: error.message });
@@ -178,7 +243,8 @@ export async function reviewAdminItem(formData: FormData) {
 
   revalidatePath("/admin/items");
   revalidatePath("/account");
-  redirect(itemsMessage("Item review saved.", "success"));
+  revalidatePath("/account/operations");
+  redirect(itemsMessage(action === "reject" ? "Item rejected with seller-visible reason and evidence." : "Item review saved.", "success"));
 }
 
 export async function publishAdminItem(formData: FormData) {
