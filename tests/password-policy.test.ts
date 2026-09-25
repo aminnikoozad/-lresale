@@ -4,7 +4,7 @@ import { passwordPolicyError } from "../lib/password-policy.ts";
 
 test("requires uppercase, lowercase, number and symbol with at least eight characters", () => {
   for (const weak of [
-    "short1!A",
+    "sho1!A",
     "alllower1!",
     "ALLUPPER1!",
     "NoNumber!",
