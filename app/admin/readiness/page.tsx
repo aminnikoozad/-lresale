@@ -36,12 +36,13 @@ export default function AdminReadinessPage() {
     {
       label: "Turnstile site key",
       ok: envSet("NEXT_PUBLIC_TURNSTILE_SITE_KEY"),
-      detail: "Browser-side CAPTCHA key for public authentication forms.",
+      detail: "Browser-side CAPTCHA site key for public authentication forms.",
     },
     {
-      label: "Turnstile secret",
-      ok: envSet("TURNSTILE_SECRET_KEY"),
-      detail: "Server-side CAPTCHA verification secret.",
+      label: "Supabase Auth CAPTCHA provider",
+      ok: false,
+      manual: true,
+      detail: "Verify Cloudflare Turnstile is enabled in Supabase Auth and its secret key is configured there. The app forwards the CAPTCHA token to Supabase Auth for server-side verification.",
     },
     {
       label: "Email delivery",
