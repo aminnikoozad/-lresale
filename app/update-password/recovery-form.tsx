@@ -10,6 +10,7 @@ import { validateRecoveryPassword } from "../auth/actions";
 
 type RecoveryState = "checking" | "mfa" | "ready" | "invalid";
 type BrowserClient = ReturnType<typeof createBrowserClient>;
+type MfaFactor = { id: string; status: string };
 
 export function RecoveryForm() {
   const [state, setState] = useState<RecoveryState>("checking");
@@ -46,7 +47,7 @@ export function RecoveryForm() {
 
         const { data: factors, error: factorError } = await client.auth.mfa.listFactors();
         if (factorError) throw factorError;
-        const verifiedTotp = (factors?.totp ?? []).find((factor) => factor.status === "verified");
+        const verifiedTotp = (factors?.totp ?? []).find((factor: MfaFactor) => factor.status === "verified");
 
         if (verifiedTotp) {
           if (active) {
@@ -130,7 +131,7 @@ export function RecoveryForm() {
       setBusy(false);
       if (updateError.code === "insufficient_aal") {
         const { data: factors } = await client.auth.mfa.listFactors();
-        const verifiedTotp = (factors?.totp ?? []).find((factor) => factor.status === "verified");
+        const verifiedTotp = (factors?.totp ?? []).find((factor: MfaFactor) => factor.status === "verified");
         if (verifiedTotp) {
           setFactorId(verifiedTotp.id);
           setState("mfa");
