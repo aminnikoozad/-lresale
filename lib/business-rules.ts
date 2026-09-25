@@ -55,7 +55,7 @@ export const DEFAULT_SELLING_RULES: SellingRules = {
     bagMinimumEstimatedValueCents: 10_000,
     priorityPickupAtOrAboveThreshold: true,
     processingFeeCents: 1_200,
-    rewearBagFeeCents: 1_200,
+    rewearBagFeeCents: 0,
   },
   storeCreditBonusBps: 0,
   returnPeriodDays: null,
