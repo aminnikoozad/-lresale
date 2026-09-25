@@ -1,5 +1,6 @@
 import Link from "next/link";
 import "./batch-tracking.css";
+import "./launch-offer.css";
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   return (
