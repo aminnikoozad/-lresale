@@ -12,6 +12,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   AlertCircle,
+  BadgePercent,
   CheckCircle2,
   CircleDollarSign,
   Package,
@@ -61,6 +62,7 @@ type Request = {
   processingFee: string;
   bagFee: string;
   pickupFee: string;
+  promotionLabel: string | null;
 };
 type ServiceArea = { id: string; city: string; pickupMode: string };
 type PickupSlot = {
@@ -76,6 +78,13 @@ type FeeRules = {
   lowValuePickupItemFeeCents: number;
   bagMinimumEstimatedValueCents: number;
 };
+type LaunchOffer = {
+  active: boolean;
+  eligible: boolean;
+  maxClaims: number;
+  remaining: number;
+  waivedServiceFeeCents: number;
+};
 type Props = {
   name: string;
   username: string;
@@ -89,6 +98,7 @@ type Props = {
   serviceAreas: ServiceArea[];
   pickupSlots: PickupSlot[];
   feeRules: FeeRules;
+  launchOffer: LaunchOffer;
   activeCategories?: CatalogCategory[];
   pilotEnabled?: boolean;
   pickupDayText?: string;
@@ -115,11 +125,13 @@ export function Dashboard({
   serviceAreas,
   pickupSlots,
   feeRules,
+  launchOffer,
   activeCategories = ["women"],
   pilotEnabled = true,
   pickupDayText = "Saturdays",
 }: Props) {
   const activeCategoryLabels = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value)).map((entry) => entry.label).join(", ");
+  const showLaunchOffer = launchOffer.active && launchOffer.eligible;
   return (
     <div className="dashboard">
       <section className="welcome">
@@ -146,6 +158,7 @@ export function Dashboard({
             pilotEnabled={pilotEnabled}
             pickupDayText={pickupDayText}
             feeRules={feeRules}
+            launchOffer={launchOffer}
           />
           <RequestDialog
             type="pickup"
@@ -157,9 +170,19 @@ export function Dashboard({
             pilotEnabled={pilotEnabled}
             pickupDayText={pickupDayText}
             feeRules={feeRules}
+            launchOffer={launchOffer}
           />
         </div>
       </section>
+      {showLaunchOffer ? (
+        <div className="launch-offer-account">
+          <BadgePercent />
+          <div>
+            <b>Your first collection may qualify for the launch offer.</b>
+            <span>{launchOffer.remaining} of {launchOffer.maxClaims} launch spots currently remain. If a spot is still available when your first collection request is successfully submitted, the regular {cad(launchOffer.waivedServiceFeeCents)} batch service fee is waived automatically. Account creation alone does not reserve a spot.</span>
+          </div>
+        </div>
+      ) : null}
       {message && (
         <div className={`success-banner ${messageType}`}>
           {messageType === "success" ? <CheckCircle2 /> : <AlertCircle />}
@@ -221,6 +244,7 @@ export function Dashboard({
                 pilotEnabled={pilotEnabled}
                 pickupDayText={pickupDayText}
                 feeRules={feeRules}
+                launchOffer={launchOffer}
               />
             </div>
             {items.length ? (
@@ -288,6 +312,7 @@ export function Dashboard({
                     <div className="batch-progress">
                       <strong>{request.receivedCount}/{request.expectedItemCount || "?"} received</strong>
                       <small>{request.acceptedCount} accepted · {request.rejectedCount} rejected</small>
+                      {request.promotionLabel ? <small className="batch-promo">{request.promotionLabel}</small> : null}
                       <small>Fees: {request.processingFee} service{request.pickupFee !== "$0" && request.pickupFee !== "$0.00" ? ` · ${request.pickupFee} pickup` : ""}</small>
                     </div>
                   </article>
@@ -325,7 +350,11 @@ export function Dashboard({
         <span>✓ Individual listing value is normally $20+</span>
         <span>✓ {cad(feeRules.freePickupThresholdCents)}+ estimated collections qualify for free priority pickup</span>
         <span>✓ Below {cad(feeRules.freePickupThresholdCents)}, one flat {cad(feeRules.lowValuePickupItemFeeCents)} pickup fee applies to the whole pickup</span>
-        <span>✓ Batch service fee is {cad(feeRules.processingFeeCents)} once per new batch; a REWEAR Bag is included if requested</span>
+        {showLaunchOffer ? (
+          <span>✓ Launch offer: regular {cad(feeRules.processingFeeCents)} first-batch service fee is waived if one of the remaining {launchOffer.remaining} spots is claimed at successful submission</span>
+        ) : (
+          <span>✓ Batch service fee is {cad(feeRules.processingFeeCents)} once per new batch; a REWEAR Bag is included if requested</span>
+        )}
         <span>✓ Clothing should be washed and neatly folded</span>
         <Link href="/sell-with-rewear">Read the full seller guide →</Link>
       </section>
@@ -343,6 +372,7 @@ function RequestDialog({
   pilotEnabled,
   pickupDayText,
   feeRules,
+  launchOffer,
 }: {
   label: string;
   icon: React.ReactNode;
@@ -353,6 +383,7 @@ function RequestDialog({
   pilotEnabled: boolean;
   pickupDayText: string;
   feeRules: FeeRules;
+  launchOffer: LaunchOffer;
 }) {
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<CatalogCategory>(activeCategories[0] ?? "women");
@@ -368,6 +399,7 @@ function RequestDialog({
   const lowValuePickupFee = cad(feeRules.lowValuePickupItemFeeCents);
   const bagMinimum = cad(feeRules.bagMinimumEstimatedValueCents);
   const processingFee = cad(feeRules.processingFeeCents);
+  const launchEligible = launchOffer.active && launchOffer.eligible;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -444,13 +476,17 @@ function RequestDialog({
             <div className="hold-card">
               <Truck />
               <div>
-                <b>{type === "bag" ? `REWEAR Bag · included in ${processingFee}` : paidPickup ? "Own bag / box · smaller pickup" : "Own bag / box · free priority pickup"}</b>
+                <b>{launchEligible ? "Launch offer may apply to this first collection" : type === "bag" ? `REWEAR Bag · included in ${processingFee}` : paidPickup ? "Own bag / box · smaller pickup" : "Own bag / box · free priority pickup"}</b>
                 <p>
-                  {type === "bag"
-                    ? `REWEAR Bag requests require at least ${bagMinimum} estimated resale value. One ${processingFee} batch service fee covers processing and includes the REWEAR Bag; there is no separate Bag fee.`
-                    : paidPickup
-                      ? `This batch records the same ${processingFee} service fee plus one flat ${lowValuePickupFee} pickup fee for the whole pickup because the estimated resale value is below ${threshold}.`
-                      : `This batch records one ${processingFee} service fee; ${threshold} or more qualifies for free priority pickup.`}
+                  {launchEligible
+                    ? paidPickup
+                      ? `The regular ${processingFee} batch service fee will be waived if a launch spot remains when this first collection is successfully submitted. The flat ${lowValuePickupFee} pickup fee below ${threshold} still applies.`
+                      : `The regular ${processingFee} batch service fee will be waived if a launch spot remains when this first collection is successfully submitted. ${type === "bag" ? `The REWEAR Bag is included and requires at least ${bagMinimum} estimated resale value.` : `${threshold} or more also qualifies for free priority pickup.`}`
+                    : type === "bag"
+                      ? `REWEAR Bag requests require at least ${bagMinimum} estimated resale value. One ${processingFee} batch service fee covers processing and includes the REWEAR Bag; there is no separate Bag fee.`
+                      : paidPickup
+                        ? `This batch records the same ${processingFee} service fee plus one flat ${lowValuePickupFee} pickup fee for the whole pickup because the estimated resale value is below ${threshold}.`
+                        : `This batch records one ${processingFee} service fee; ${threshold} or more qualifies for free priority pickup.`}
                 </p>
               </div>
             </div>
@@ -484,12 +520,14 @@ function RequestDialog({
             {paidPickup ? (
               <label className="check pickup-fee-check">
                 <input name="pickup_fee_accepted" value="accepted" required type="checkbox" />{" "}
-                I understand that pickups below {threshold} currently have one flat {lowValuePickupFee} pickup fee for the whole pickup, regardless of item count.
+                I understand that pickups below {threshold} currently have one flat {lowValuePickupFee} pickup fee for the whole pickup, regardless of item count. This pickup fee is not waived by the launch offer.
               </label>
             ) : null}
             <label className="check">
               <input name="service_fee_accepted" value="accepted" required type="checkbox" />{" "}
-              I understand this new batch records one {processingFee} service fee. If I request a REWEAR Bag, it is included in that fee and no separate Bag fee is added. This fee is intended to be deducted from seller earnings when settlement is available, not charged to my card upfront.
+              {launchEligible
+                ? `I understand the regular batch service fee is ${processingFee}. If one of the ${launchOffer.remaining} currently remaining launch spots is still available when this first collection is successfully submitted, that service fee will be waived automatically. A sign-up alone does not reserve a spot.`
+                : `I understand this new batch records one ${processingFee} service fee. If I request a REWEAR Bag, it is included in that fee and no separate Bag fee is added. This fee is intended to be deducted from seller earnings when settlement is available, not charged to my card upfront.`}
             </label>
             <div className="terms-box">
               <b>Required terms for {categoryLabel(category)}</b>
@@ -533,7 +571,7 @@ function RequestDialog({
           </div>
           <div className="request-form-footer">
             <Button type="submit" disabled={!availableSlots.length}>Submit collection request</Button>
-            <small className="payment-note">A new batch code and fee snapshot are created when you submit. Pickup still requires confirmation before dispatch.</small>
+            <small className="payment-note">A new batch code and final fee snapshot are created when you submit. Launch eligibility is finalized atomically at successful submission. Pickup still requires confirmation before dispatch.</small>
           </div>
         </form>
       </DialogContent>
