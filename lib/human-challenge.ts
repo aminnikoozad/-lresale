@@ -19,9 +19,19 @@ function signature(body: string) {
   return createHmac("sha256", challengeSecret()).update(body).digest("base64url");
 }
 
+function shuffledChoices(answer: number) {
+  const values = [answer, Math.max(1, answer - 1), answer + 1];
+  for (let i = values.length - 1; i > 0; i -= 1) {
+    const j = randomInt(0, i + 1);
+    [values[i], values[j]] = [values[j], values[i]];
+  }
+  return values;
+}
+
 export function createHumanChallenge() {
   const a = randomInt(2, 10);
   const b = randomInt(1, 10);
+  const answer = a + b;
   const payload: ChallengePayload = {
     a,
     b,
@@ -29,7 +39,11 @@ export function createHumanChallenge() {
     nonce: randomInt(0, 2 ** 31 - 1).toString(36),
   };
   const body = Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
-  return { question: `${a} + ${b} = ?`, token: `${body}.${signature(body)}` };
+  return {
+    question: `${a} + ${b}`,
+    choices: shuffledChoices(answer),
+    token: `${body}.${signature(body)}`,
+  };
 }
 
 export function verifyHumanChallenge(token: string, rawAnswer: string) {
