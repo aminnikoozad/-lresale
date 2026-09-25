@@ -24,6 +24,8 @@ export type SellingRules = {
     lowValuePickupItemFeeCents: number;
     bagMinimumEstimatedValueCents: number;
     priorityPickupAtOrAboveThreshold: boolean;
+    processingFeeCents: number;
+    rewearBagFeeCents: number;
   };
   storeCreditBonusBps: number;
   returnPeriodDays: number | null;
@@ -46,12 +48,14 @@ export const DEFAULT_SELLING_RULES: SellingRules = {
   pickupRules: {
     confirmationRequired: true,
     firstMissedPickupFeeCents: 0,
-    secondMissedPickupFeeCents: 1_000,
-    suspendFreePickupAfterMisses: 3,
+    secondMissedPickupFeeCents: 0,
+    suspendFreePickupAfterMisses: 2,
     freePickupThresholdCents: 10_000,
     lowValuePickupItemFeeCents: 500,
     bagMinimumEstimatedValueCents: 10_000,
     priorityPickupAtOrAboveThreshold: true,
+    processingFeeCents: 1_200,
+    rewearBagFeeCents: 1_200,
   },
   storeCreditBonusBps: 0,
   returnPeriodDays: null,
@@ -152,6 +156,14 @@ export function normalizeSellingRules(value: unknown): SellingRules {
         typeof pickup.priorityPickupAtOrAboveThreshold === "boolean"
           ? pickup.priorityPickupAtOrAboveThreshold
           : DEFAULT_SELLING_RULES.pickupRules.priorityPickupAtOrAboveThreshold,
+      processingFeeCents: integer(
+        pickup.processingFeeCents,
+        DEFAULT_SELLING_RULES.pickupRules.processingFeeCents,
+      ),
+      rewearBagFeeCents: integer(
+        pickup.rewearBagFeeCents,
+        DEFAULT_SELLING_RULES.pickupRules.rewearBagFeeCents,
+      ),
     },
     storeCreditBonusBps: integer(value.storeCreditBonusBps, DEFAULT_SELLING_RULES.storeCreditBonusBps),
     returnPeriodDays:
