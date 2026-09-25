@@ -1,7 +1,22 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-const ALLOWED_ORIGINS = new Set(["https://lresale.vercel.app"]);
+const DEFAULT_ORIGIN = "https://lresale.vercel.app";
+const ALLOWED_ORIGINS = new Set(
+  (Deno.env.get("ALLOWED_APP_ORIGINS") || DEFAULT_ORIGIN)
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .map((value) => {
+      try {
+        const url = new URL(value);
+        return url.protocol === "https:" ? url.origin : "";
+      } catch {
+        return "";
+      }
+    })
+    .filter(Boolean),
+);
 const baseHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -131,13 +146,6 @@ function extractMoney(text: string, allowBareNumber = false) {
     }
   }
   return null;
-}
-function extractItemCount(text: string) {
-  const q = clean(text);
-  const match = q.match(/\b(\d{1,2})\s*(?:items?|pieces?|articles?)\b/);
-  if (!match) return null;
-  const n = Number(match[1]);
-  return Number.isFinite(n) && n > 0 && n <= 99 ? n : null;
 }
 function money(cents: number) {
   return `$${(cents / 100).toFixed(2).replace(/\.00$/, "")}`;
@@ -379,7 +387,6 @@ async function tryPolicyCalculation(service: any, question: string, context: str
   if (cls.category === "Pickup") {
     const pickup = rules.pickupRules ?? {};
     const amount = extractMoney(question, true) ?? extractMoney(context, true);
-    const itemCount = extractItemCount(question) ?? extractItemCount(context);
     const isBag = /\b(bag|box)\b/.test(q);
     const missed = /missed|miss|raté|manqué/.test(q);
 
@@ -415,24 +422,20 @@ async function tryPolicyCalculation(service: any, question: string, context: str
     if (amount !== null) {
       const cents = Math.round(amount * 100);
       const freeThreshold = pickup.freePickupThresholdCents ?? 0;
-      const perItem = pickup.lowValuePickupItemFeeCents ?? 0;
+      const flatFee = pickup.lowValuePickupItemFeeCents ?? 0;
       if (freeThreshold > 0 && cents >= freeThreshold) {
         return `An estimated resale value of ${money(cents)} meets the current ${money(freeThreshold)} threshold for free priority pickup, subject to an eligible service area, available slot and the other collection requirements.`;
       }
       if (freeThreshold > 0 && cents < freeThreshold) {
-        if (itemCount && perItem > 0) {
-          const fee = itemCount * perItem;
-          return `For ${itemCount} item${itemCount === 1 ? "" : "s"} with an estimated resale value of ${money(cents)}, the current below-threshold pickup fee is ${money(perItem)} per item, so the estimated pickup fee is ${money(fee)}. Free priority pickup starts at ${money(freeThreshold)} estimated resale value.`;
-        }
-        return `Pickup can still be requested below ${money(freeThreshold)}. The current below-threshold pickup fee is ${money(perItem)} per item. Free priority pickup starts at ${money(freeThreshold)} estimated resale value.`;
+        return `Pickup can still be requested below ${money(freeThreshold)}. The current below-threshold pickup fee is one flat ${money(flatFee)} fee for the whole pickup. Free priority pickup starts at ${money(freeThreshold)} estimated resale value.`;
       }
     }
 
     if (/free|gratuit|threshold|minimum/.test(q)) {
       const freeThreshold = pickup.freePickupThresholdCents ?? 0;
-      const perItem = pickup.lowValuePickupItemFeeCents ?? 0;
+      const flatFee = pickup.lowValuePickupItemFeeCents ?? 0;
       if (freeThreshold > 0) {
-        return `Free priority pickup starts at ${money(freeThreshold)} estimated resale value. Below that amount, the current pickup fee is ${money(perItem)} per item.`;
+        return `Free priority pickup starts at ${money(freeThreshold)} estimated resale value. Below that amount, the current pickup fee is one flat ${money(flatFee)} fee for the whole pickup.`;
       }
     }
   }
