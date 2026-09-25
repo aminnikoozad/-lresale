@@ -135,14 +135,12 @@ export async function createCollectionRequest(formData: FormData) {
 
   const pickupFeeCents = Number(savedRequest.pickup_fee_cents ?? 0);
   const processingFeeCents = Number(savedRequest.processing_fee_cents ?? 0);
-  const bagFeeCents = Number(savedRequest.bag_fee_cents ?? 0);
-  const serviceFees = [`${cad(processingFeeCents)} processing`];
-  if (bagFeeCents > 0) serviceFees.push(`${cad(bagFeeCents)} REWEAR Bag`);
+  const serviceFees = [`${cad(processingFeeCents)} service`];
   if (pickupFeeCents > 0) serviceFees.push(`${cad(pickupFeeCents)} pickup`);
   const batch = typeof savedRequest.batch_code === "string" ? savedRequest.batch_code : "Your batch";
 
   redirect(accountMessage(
-    `${batch} was submitted. Recorded fees: ${serviceFees.join(" + ")}. These are tracked with this batch; no processing or Bag fee is charged to your card upfront.`,
+    `${batch} was submitted. Recorded fees: ${serviceFees.join(" + ")}. The batch service fee includes a REWEAR Bag if requested and is intended to be deducted from seller earnings when settlement is available, not charged to your card upfront.`,
     "success",
   ));
 }
