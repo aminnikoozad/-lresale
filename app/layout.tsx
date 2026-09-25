@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
-import { PickupTierUi } from "@/components/pickup-tier-ui";
 import { PickupConfirmationUi } from "@/components/pickup-confirmation-ui";
 import { SupportChat } from "@/components/support-chat";
 import { CartProvider } from "@/components/cart-store";
@@ -35,7 +34,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body><CartProvider>{children}<PickupTierUi /><PickupConfirmationUi /><SupportChat /></CartProvider></body>
+      <body><CartProvider>{children}<PickupConfirmationUi /><SupportChat /></CartProvider></body>
     </html>
   );
 }
