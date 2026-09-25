@@ -33,10 +33,8 @@ export const metadata: Metadata = {
     template: "%s | Rewear",
   },
   description: "Sell and shop quality secondhand clothing, shoes, electronics and selected Home & Decor pieces with managed pickup and Canada-wide shopping.",
-  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
-    url: "/",
     siteName: "Rewear Market",
     title: "Rewear Market | Secondhand fashion, electronics & home decor",
     description: "Sell and shop quality secondhand clothing, shoes, electronics and selected Home & Decor pieces with managed pickup and Canada-wide shopping.",
