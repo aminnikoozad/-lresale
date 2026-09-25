@@ -65,6 +65,12 @@ export default function AdminReadinessPage() {
       detail: "Manual verification required in Supabase Auth settings. Security Advisor currently reports this protection as disabled.",
     },
     {
+      label: "GST/QST and tax configuration",
+      ok: false,
+      manual: true,
+      detail: "Confirm the business registration/tax status with the appropriate tax professional or authority, then configure server-side tax calculation before charging customers. Do not infer tax collection from the checkout UI.",
+    },
+    {
       label: "French customer journey",
       ok: false,
       manual: true,
@@ -110,7 +116,9 @@ export default function AdminReadinessPage() {
           <li>Successful payment and duplicate-webhook idempotency.</li>
           <li>Failed, cancelled and expired payment sessions release inventory reservations.</li>
           <li>Server-calculated amount, tax and shipping match the provider charge.</li>
+          <li>The exact buyer terms, return policy and privacy-notice versions accepted for the order are persisted before payment.</li>
           <li>Refunds reverse order state and seller accounting exactly once.</li>
+          <li>Disputes/chargebacks cannot create a second seller credit or leave refunded inventory/accounting inconsistent.</li>
           <li>Webhook signatures are verified before any order or wallet mutation.</li>
           <li>No card data, provider secrets or full payment payloads are logged.</li>
         </ul>
