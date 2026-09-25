@@ -6,6 +6,21 @@ begin;
 alter table public.collection_requests
   drop constraint if exists collection_pickup_pricing_mode;
 
+-- Correct any already-created low-value requests before tightening the mode constraint.
+-- Production had none at authoring time, but this keeps the migration safe elsewhere.
+update public.collection_requests
+set pickup_fee_cents = greatest(
+      0,
+      coalesce(
+        (public.get_selling_rules() -> 'pickupRules' ->> 'lowValuePickupItemFeeCents')::integer,
+        500
+      )
+    ),
+    pickup_pricing_mode = 'paid_flat',
+    priority_pickup = false,
+    updated_at = now()
+where pickup_pricing_mode = 'paid_per_item';
+
 alter table public.collection_requests
   add constraint collection_pickup_pricing_mode
   check (pickup_pricing_mode in ('free_priority', 'paid_flat'));
@@ -67,20 +82,5 @@ end;
 $$;
 
 revoke all on function private.apply_collection_pickup_pricing() from public, anon, authenticated;
-
--- Correct any already-created low-value requests if this migration is applied
--- to an environment that has them. Production had none at authoring time.
-update public.collection_requests
-set pickup_fee_cents = greatest(
-      0,
-      coalesce(
-        (public.get_selling_rules() -> 'pickupRules' ->> 'lowValuePickupItemFeeCents')::integer,
-        500
-      )
-    ),
-    pickup_pricing_mode = 'paid_flat',
-    priority_pickup = false,
-    updated_at = now()
-where pickup_pricing_mode = 'paid_per_item';
 
 commit;
