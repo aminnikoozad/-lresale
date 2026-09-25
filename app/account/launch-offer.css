@@ -1,0 +1,43 @@
+.launch-offer-account {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 28px;
+  padding: 18px 20px;
+  border: 1px solid #b9dff1;
+  border-radius: 4px;
+  background: #dbf4ff;
+}
+
+.launch-offer-account > svg {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  color: #0400d2;
+}
+
+.launch-offer-account > div {
+  display: grid;
+  gap: 5px;
+}
+
+.launch-offer-account b {
+  color: #0400d2;
+}
+
+.launch-offer-account span {
+  color: #424242;
+  line-height: 1.55;
+  font-size: 0.9rem;
+}
+
+.batch-promo {
+  color: #057f37 !important;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .launch-offer-account {
+    padding: 16px;
+  }
+}
