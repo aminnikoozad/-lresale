@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import { PickupConfirmationUi } from "@/components/pickup-confirmation-ui";
 import { SupportChat } from "@/components/support-chat";
 import { CartProvider } from "@/components/cart-store";
+import { siteConfig } from "@/lib/site-config";
 import "./globals.css";
 import "./additions.css";
 import "./catalog.css";
@@ -26,8 +27,20 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "sw
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Rewear Market | Secondhand fashion, electronics & home decor",
+  metadataBase: new URL(siteConfig.siteUrl),
+  title: {
+    default: "Rewear Market | Secondhand fashion, electronics & home decor",
+    template: "%s | Rewear",
+  },
   description: "Sell and shop quality secondhand clothing, shoes, electronics and selected Home & Decor pieces with managed pickup and Canada-wide shopping.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "Rewear Market",
+    title: "Rewear Market | Secondhand fashion, electronics & home decor",
+    description: "Sell and shop quality secondhand clothing, shoes, electronics and selected Home & Decor pieces with managed pickup and Canada-wide shopping.",
+  },
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };
 
