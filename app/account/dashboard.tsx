@@ -288,7 +288,7 @@ export function Dashboard({
                     <div className="batch-progress">
                       <strong>{request.receivedCount}/{request.expectedItemCount || "?"} received</strong>
                       <small>{request.acceptedCount} accepted · {request.rejectedCount} rejected</small>
-                      <small>Fees: {request.processingFee} processing{request.bagFee !== "$0" && request.bagFee !== "$0.00" ? ` · ${request.bagFee} Bag` : ""}{request.pickupFee !== "$0" && request.pickupFee !== "$0.00" ? ` · ${request.pickupFee} pickup` : ""}</small>
+                      <small>Fees: {request.processingFee} service{request.pickupFee !== "$0" && request.pickupFee !== "$0.00" ? ` · ${request.pickupFee} pickup` : ""}</small>
                     </div>
                   </article>
                 ))}
@@ -324,8 +324,7 @@ export function Dashboard({
         <b>Quick check before sending</b>
         <span>✓ Individual listing value is normally $20+</span>
         <span>✓ {cad(feeRules.freePickupThresholdCents)}+ estimated collections qualify for free priority pickup</span>
-        <span>✓ Processing is {cad(feeRules.processingFeeCents)} once per new batch</span>
-        <span>✓ A REWEAR Bag is {cad(feeRules.rewearBagFeeCents)}; your own bag/box has no Bag fee</span>
+        <span>✓ Batch service fee is {cad(feeRules.processingFeeCents)} once per new batch; a REWEAR Bag is included if requested</span>
         <span>✓ Clothing should be washed and neatly folded</span>
         <Link href="/sell-with-rewear">Read the full seller guide →</Link>
       </section>
@@ -368,7 +367,6 @@ function RequestDialog({
   const perItemFee = cad(feeRules.lowValuePickupItemFeeCents);
   const bagMinimum = cad(feeRules.bagMinimumEstimatedValueCents);
   const processingFee = cad(feeRules.processingFeeCents);
-  const bagFee = cad(feeRules.rewearBagFeeCents);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -445,13 +443,13 @@ function RequestDialog({
             <div className="hold-card">
               <Truck />
               <div>
-                <b>{type === "bag" ? `REWEAR Bag · ${bagFee}` : paidPickup ? "Own bag / box · smaller pickup" : "Own bag / box · free priority pickup"}</b>
+                <b>{type === "bag" ? `REWEAR Bag · included in ${processingFee}` : paidPickup ? "Own bag / box · smaller pickup" : "Own bag / box · free priority pickup"}</b>
                 <p>
                   {type === "bag"
-                    ? `REWEAR Bag requests require at least ${bagMinimum} estimated resale value. A ${bagFee} Bag fee and ${processingFee} batch processing fee are recorded on the new batch.`
+                    ? `REWEAR Bag requests require at least ${bagMinimum} estimated resale value. One ${processingFee} batch service fee covers processing and includes the REWEAR Bag; there is no separate Bag fee.`
                     : paidPickup
-                      ? `Your own bag/box has no Bag fee. This batch records ${processingFee} processing plus ${perItemFee} per item because the estimated resale value is below ${threshold}.`
-                      : `Your own bag/box has no Bag fee. This batch records ${processingFee} processing; ${threshold} or more qualifies for free priority pickup.`}
+                      ? `This batch records the same ${processingFee} service fee plus ${perItemFee} per item because the estimated resale value is below ${threshold}.`
+                      : `This batch records one ${processingFee} service fee; ${threshold} or more qualifies for free priority pickup.`}
                 </p>
               </div>
             </div>
@@ -490,7 +488,7 @@ function RequestDialog({
             ) : null}
             <label className="check">
               <input name="service_fee_accepted" value="accepted" required type="checkbox" />{" "}
-              I understand this new batch records a {processingFee} processing fee{type === "bag" ? ` plus a ${bagFee} REWEAR Bag fee` : "; my own bag/box has no Bag fee"}. These fees are intended to be deducted from seller earnings when settlement is available, not charged to my card upfront.
+              I understand this new batch records one {processingFee} service fee. If I request a REWEAR Bag, it is included in that fee and no separate Bag fee is added. This fee is intended to be deducted from seller earnings when settlement is available, not charged to my card upfront.
             </label>
             <div className="terms-box">
               <b>Required terms for {categoryLabel(category)}</b>
