@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createBrowserClient } from "@supabase/ssr";
 import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "@/lib/supabase/config";
 import { verifyRecoverySession } from "@/lib/recovery-session";
+import { PASSWORD_REQUIREMENTS_TEXT } from "@/lib/password-policy";
 import { validateRecoveryPassword } from "../auth/actions";
 
 const RECOVERY_MARKER = "rewear-password-recovery-verified";
@@ -80,7 +81,7 @@ export function RecoveryForm() {
   if (state === "invalid") return <div role="alert"><p>This reset link could not be verified. Request a new link and open the latest email.</p><Link href="/forgot-password">Send a new reset link</Link></div>;
   return <form className="auth-form" onSubmit={submit}>
     {message ? <div className="auth-message error" role="alert">{message}</div> : null}
-    <label htmlFor="password">New password<input id="password" name="password" type="password" minLength={8} autoComplete="new-password" required disabled={submitting} /></label>
+    <label htmlFor="password">New password<input id="password" name="password" type="password" minLength={8} autoComplete="new-password" required disabled={submitting} aria-describedby="reset-password-rules" /><small id="reset-password-rules" className="auth-field-note">{PASSWORD_REQUIREMENTS_TEXT}</small></label>
     <label htmlFor="password_confirmation">Confirm password<input id="password_confirmation" name="password_confirmation" type="password" minLength={8} autoComplete="new-password" required disabled={submitting} /></label>
     <button className="auth-submit" type="submit" disabled={submitting}>{submitting ? "Updating…" : "Update password"}</button>
   </form>;
