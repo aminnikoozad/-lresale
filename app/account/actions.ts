@@ -125,7 +125,7 @@ export async function createCollectionRequest(formData: FormData) {
       policy_accepted: true,
       pickup_policy_accepted: true,
     })
-    .select("batch_code,pickup_fee_cents,pickup_pricing_mode,priority_pickup,processing_fee_cents,bag_fee_cents")
+    .select("batch_code,pickup_fee_cents,pickup_pricing_mode,priority_pickup,processing_fee_cents,bag_fee_cents,promotion_code,promotion_claim_number,service_fee_waived_cents")
     .single();
 
   if (error || !savedRequest) {
@@ -135,12 +135,18 @@ export async function createCollectionRequest(formData: FormData) {
 
   const pickupFeeCents = Number(savedRequest.pickup_fee_cents ?? 0);
   const processingFeeCents = Number(savedRequest.processing_fee_cents ?? 0);
+  const waivedServiceFeeCents = Number(savedRequest.service_fee_waived_cents ?? 0);
+  const promoApplied = typeof savedRequest.promotion_code === "string" && waivedServiceFeeCents > 0;
+  const promoClaimNumber = Number(savedRequest.promotion_claim_number ?? 0);
   const serviceFees = [`${cad(processingFeeCents)} service`];
   if (pickupFeeCents > 0) serviceFees.push(`${cad(pickupFeeCents)} pickup`);
   const batch = typeof savedRequest.batch_code === "string" ? savedRequest.batch_code : "Your batch";
+  const promoMessage = promoApplied
+    ? ` Launch offer applied: ${cad(waivedServiceFeeCents)} batch service fee waived${Number.isInteger(promoClaimNumber) && promoClaimNumber > 0 ? ` (claim #${promoClaimNumber})` : ""}.`
+    : "";
 
   redirect(accountMessage(
-    `${batch} was submitted. Recorded fees: ${serviceFees.join(" + ")}. The batch service fee includes a REWEAR Bag if requested and is intended to be deducted from seller earnings when settlement is available, not charged to your card upfront.`,
+    `${batch} was submitted.${promoMessage} Recorded fees: ${serviceFees.join(" + ")}. A REWEAR Bag is included in the batch service fee when requested.`,
     "success",
   ));
 }
