@@ -84,7 +84,7 @@ export async function createCollectionRequest(formData: FormData) {
 
   if (!isBagRequest && !isFreePickupPreview && formData.get("pickup_fee_accepted") !== "accepted") {
     redirect(accountMessage(
-      `For pickups below ${cad(rules.pickupRules.freePickupThresholdCents)}, the pickup fee is ${cad(rules.pickupRules.lowValuePickupItemFeeCents)} per item. Please accept the fee before submitting.`,
+      `For pickups below ${cad(rules.pickupRules.freePickupThresholdCents)}, one flat pickup fee of ${cad(rules.pickupRules.lowValuePickupItemFeeCents)} applies to the whole pickup. Please accept the fee before submitting.`,
       "error",
     ));
   }

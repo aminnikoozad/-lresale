@@ -324,6 +324,7 @@ export function Dashboard({
         <b>Quick check before sending</b>
         <span>✓ Individual listing value is normally $20+</span>
         <span>✓ {cad(feeRules.freePickupThresholdCents)}+ estimated collections qualify for free priority pickup</span>
+        <span>✓ Below {cad(feeRules.freePickupThresholdCents)}, one flat {cad(feeRules.lowValuePickupItemFeeCents)} pickup fee applies to the whole pickup</span>
         <span>✓ Batch service fee is {cad(feeRules.processingFeeCents)} once per new batch; a REWEAR Bag is included if requested</span>
         <span>✓ Clothing should be washed and neatly folded</span>
         <Link href="/sell-with-rewear">Read the full seller guide →</Link>
@@ -364,7 +365,7 @@ function RequestDialog({
   const subcategoryOptions = subcategoriesFor(category);
   const categoryOptions = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value));
   const threshold = cad(feeRules.freePickupThresholdCents);
-  const perItemFee = cad(feeRules.lowValuePickupItemFeeCents);
+  const lowValuePickupFee = cad(feeRules.lowValuePickupItemFeeCents);
   const bagMinimum = cad(feeRules.bagMinimumEstimatedValueCents);
   const processingFee = cad(feeRules.processingFeeCents);
 
@@ -448,7 +449,7 @@ function RequestDialog({
                   {type === "bag"
                     ? `REWEAR Bag requests require at least ${bagMinimum} estimated resale value. One ${processingFee} batch service fee covers processing and includes the REWEAR Bag; there is no separate Bag fee.`
                     : paidPickup
-                      ? `This batch records the same ${processingFee} service fee plus ${perItemFee} per item because the estimated resale value is below ${threshold}.`
+                      ? `This batch records the same ${processingFee} service fee plus one flat ${lowValuePickupFee} pickup fee for the whole pickup because the estimated resale value is below ${threshold}.`
                       : `This batch records one ${processingFee} service fee; ${threshold} or more qualifies for free priority pickup.`}
                 </p>
               </div>
@@ -483,7 +484,7 @@ function RequestDialog({
             {paidPickup ? (
               <label className="check pickup-fee-check">
                 <input name="pickup_fee_accepted" value="accepted" required type="checkbox" />{" "}
-                I understand that pickups below {threshold} currently cost {perItemFee} per item.
+                I understand that pickups below {threshold} currently have one flat {lowValuePickupFee} pickup fee for the whole pickup, regardless of item count.
               </label>
             ) : null}
             <label className="check">
