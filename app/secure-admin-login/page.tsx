@@ -1,4 +1,5 @@
-import {AuthCaptcha} from "@/components/auth-captcha";
+import { AuthCaptcha } from "@/components/auth-captcha";
+import { AuthHumanCheck } from "@/components/auth-human-check";
 import type { Metadata } from "next";
 import { adminLogin } from "./actions";
 import "../auth.css";
@@ -28,7 +29,9 @@ export default async function SecureAdminLogin({ searchParams }: Props) {
           <label htmlFor="admin-password">Password
             <input id="admin-password" name="password" type="password" autoComplete="current-password" required />
           </label>
-          <AuthCaptcha/><button className="auth-submit" type="submit">Continue securely</button>
+          <AuthHumanCheck />
+          <AuthCaptcha />
+          <button className="auth-submit" type="submit">Continue securely</button>
         </form>
         <small>Authorized accounts must complete multi-factor authentication before privileged actions are allowed.</small>
       </section>
