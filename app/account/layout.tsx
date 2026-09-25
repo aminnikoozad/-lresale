@@ -1,4 +1,5 @@
 import Link from "next/link";
+import "./batch-tracking.css";
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   return (
