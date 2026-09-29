@@ -33,10 +33,10 @@ export type SellingRules = {
 };
 
 export const DEFAULT_SELLING_RULES: SellingRules = {
-  minimumIndividualItemValueCents: 2_000,
-  minimumPickupEstimatedValueCents: 1,
+  minimumIndividualItemValueCents: 800,
+  minimumPickupEstimatedValueCents: 6_000,
   commissionTiers: [
-    { minCents: 2_000, maxCents: 9_999, sellerBps: 4_500, platformBps: 5_500 },
+    { minCents: 800, maxCents: 9_999, sellerBps: 4_500, platformBps: 5_500 },
     { minCents: 10_000, maxCents: 24_999, sellerBps: 5_000, platformBps: 5_000 },
     { minCents: 25_000, maxCents: 49_999, sellerBps: 5_500, platformBps: 4_500 },
     { minCents: 50_000, maxCents: null, sellerBps: 6_500, platformBps: 3_500 },
@@ -44,7 +44,7 @@ export const DEFAULT_SELLING_RULES: SellingRules = {
   bundleEligibility: true,
   sellingPeriodDays: 90,
   discountSchedule: [],
-  minimumSellingPriceCents: 2_000,
+  minimumSellingPriceCents: 800,
   pickupRules: {
     confirmationRequired: true,
     firstMissedPickupFeeCents: 0,
@@ -52,7 +52,7 @@ export const DEFAULT_SELLING_RULES: SellingRules = {
     suspendFreePickupAfterMisses: 2,
     freePickupThresholdCents: 10_000,
     lowValuePickupItemFeeCents: 500,
-    bagMinimumEstimatedValueCents: 10_000,
+    bagMinimumEstimatedValueCents: 6_000,
     priorityPickupAtOrAboveThreshold: true,
     processingFeeCents: 1_200,
     rewearBagFeeCents: 0,

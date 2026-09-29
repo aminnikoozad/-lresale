@@ -203,6 +203,9 @@ export async function reviewAdminItem(formData: FormData) {
   if (!itemId || !Number.isInteger(priceCents) || priceCents < 1 || !action) {
     redirect(itemsMessage("Check the review values.", "error"));
   }
+  if (action === "accept" && formData.get("inspection_passed") !== "yes") {
+    redirect(itemsMessage("Confirm the item passed physical inspection before accepting it. Clothing must be clean, complete and wearable without stains, tears, holes or significant damage. Otherwise reject it with a reason and evidence photo.", "error"));
+  }
   if (action === "reject" && (sellerRejectionReason.length < 3 || !evidencePhoto)) {
     redirect(itemsMessage("Rejected items require a seller-facing reason and a clear evidence photo.", "error"));
   }

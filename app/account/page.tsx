@@ -259,6 +259,9 @@ export default async function AccountPage({ searchParams }: Props) {
           waivedServiceFeeCents: launchOffer.waivedServiceFeeCents,
         }}
         feeRules={{
+          minimumItemValueCents: sellingRules.minimumIndividualItemValueCents,
+          minimumPickupEstimatedValueCents: sellingRules.minimumPickupEstimatedValueCents,
+          commissionTiers: sellingRules.commissionTiers,
           processingFeeCents: sellingRules.pickupRules.processingFeeCents,
           rewearBagFeeCents: sellingRules.pickupRules.rewearBagFeeCents,
           freePickupThresholdCents: sellingRules.pickupRules.freePickupThresholdCents,

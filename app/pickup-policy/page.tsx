@@ -21,6 +21,7 @@ export default async function PickupPolicyPage() {
   const threshold = formatCadFromCents(rules.pickupRules.freePickupThresholdCents);
   const lowValuePickupFee = formatCadFromCents(rules.pickupRules.lowValuePickupItemFeeCents);
   const bagMinimum = formatCadFromCents(rules.pickupRules.bagMinimumEstimatedValueCents);
+  const collectionMinimum = formatCadFromCents(rules.minimumPickupEstimatedValueCents);
   const serviceFee = formatCadFromCents(rules.pickupRules.processingFeeCents);
   const waivedServiceFee = formatCadFromCents(launchOffer.waivedServiceFeeCents);
   const missLimit = rules.pickupRules.suspendFreePickupAfterMisses;
@@ -50,7 +51,7 @@ export default async function PickupPolicyPage() {
 
       <section><h2>Repeated Confirmed No-Shows</h2><p>REWEAR currently does not charge a first- or second-missed-pickup cash fee under the active rules. After <strong>{missLimit} confirmed missed pickups</strong>, free-pickup access may be suspended. Other options may remain available.</p><p>This rule is intended to protect route capacity and driver time, not to punish customers who cancel early.</p></section>
 
-      <section><h2>Pickup Eligibility</h2><p>Before approval, we may request the approximate number of items, categories, brands, estimated resale value and photos. Submitting a pickup request does not guarantee acceptance of the items themselves; final acceptance happens after physical inspection.</p></section>
+      <section><h2>Pickup Eligibility</h2><p>A collection request requires an estimated combined resale value of at least <strong>{collectionMinimum}</strong>. This is the seller’s estimate, not a guarantee of final pricing. Before approval, we may request the approximate number of items, categories, brands, estimated resale value and photos. Clothing must be clean, hygienic, complete and in good wearable condition. Stained, torn, holed or significantly damaged items may be rejected after physical inspection, even when the estimated batch minimum was met.</p></section>
 
       <section><h2>Why These Thresholds Exist</h2><p>Pickup, inspection, photography and listing preparation create real work even when an item has a low resale value. The threshold and service-fee structure help keep free pickup sustainable while making the cost visible before you commit.</p><p>For a full explanation of acceptance, pricing and seller earnings, see the <Link href="/sell-with-rewear">Seller Guide</Link>.</p></section>
 

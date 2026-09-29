@@ -23,6 +23,7 @@ export default async function SellWithRewearPage() {
   const serviceFee = formatCadFromCents(rules.pickupRules.processingFeeCents);
   const freePickupThreshold = formatCadFromCents(rules.pickupRules.freePickupThresholdCents);
   const lowValueFee = formatCadFromCents(rules.pickupRules.lowValuePickupItemFeeCents);
+  const collectionMinimum = formatCadFromCents(rules.minimumPickupEstimatedValueCents);
   const waivedServiceFee = formatCadFromCents(launchOffer.waivedServiceFeeCents);
 
   return (
@@ -91,7 +92,7 @@ export default async function SellWithRewearPage() {
       <section className="guide-section" id="acceptance">
         <div className="guide-heading"><p className="eyebrow dark">What we accept</p><h2>Send items that have a realistic second life.</h2></div>
         <div className="accept-grid">
-          <article className="good"><h3>Good to send</h3><ul><li>Clean women’s clothing in the categories currently enabled during the pilot.</li><li>Items in good resale condition with no undisclosed stains, tears, holes or missing parts.</li><li>Pieces with a likely individual resale value of at least {formatCadFromCents(rules.minimumIndividualItemValueCents)}.</li><li>Lower-value compatible pieces that may make sense as a bundle.</li><li>Items with clear brand, size and care labels when available.</li></ul></article>
+          <article className="good"><h3>Good to send</h3><ul><li>Clean women’s clothing in the categories currently enabled during the pilot.</li><li>Items in good wearable condition, without stains, tears, holes, significant damage or missing parts.</li><li>Pieces with a likely individual resale value of at least {formatCadFromCents(rules.minimumIndividualItemValueCents)}.</li><li>Lower-value compatible pieces that may make sense as a bundle.</li><li>Items with clear brand, size and care labels when available.</li></ul></article>
           <article className="avoid"><h3>Usually not a fit</h3><ul><li>Heavily stained, damaged, incomplete or unhygienic items.</li><li>Items whose condition cannot be verified safely.</li><li>Pieces with very low resale demand or value unless they can be bundled.</li><li>Items that do not match the categories currently enabled in the pilot.</li></ul></article>
         </div>
         <p className="guide-note">Submitting an item does not guarantee acceptance. Final acceptance happens after physical inspection.</p>
@@ -99,7 +100,7 @@ export default async function SellWithRewearPage() {
 
       <section className="guide-section split-section" id="pricing">
         <div><p className="eyebrow dark">How we price</p><h2>Pricing is reviewed item by item.</h2><p>REWEAR considers the brand, category, condition, current resale demand, comparable market pricing and the item’s overall sellability. You see the initial approved price and your commission before publishing.</p><p>If an item is rejected, the seller-facing reason and evidence photo are kept separate from internal notes so you can understand the decision.</p></div>
-        <div className="send-checklist"><h3>What should I send?</h3><p><b>Best candidates:</b> clean, current, easy-to-identify pieces in strong condition with realistic resale demand.</p><p><b>Think twice:</b> heavily worn basics, damaged pieces, missing components or anything you would be uncomfortable receiving as a buyer.</p><p><b>Before pickup:</b> wash or clean items as appropriate, fold them neatly and describe known flaws honestly.</p></div>
+        <div className="send-checklist"><h3>What should I send?</h3><p><b>Batch minimum:</b> {collectionMinimum} estimated combined resale value for collection. This is an estimate, not a promise of acceptance or final pricing.</p><p><b>Best candidates:</b> clean, current, easy-to-identify pieces in strong condition with realistic resale demand.</p><p><b>Rejected after inspection:</b> unhygienic, stained, torn, incomplete or significantly damaged items, or items unsuitable for resale.</p><p><b>Before pickup:</b> wash or clean items as appropriate, fold them neatly and describe known flaws honestly.</p></div>
       </section>
 
       <section className="guide-cta"><div><p className="eyebrow">Ready?</p><h2>Know the rules before the pickup.</h2><p>Your account shows the regular {serviceFee} batch service fee and any separate flat low-value pickup transportation fee before you submit.{launchOffer.active ? " If the launch waiver is successfully claimed, the service fee on that batch becomes $0 automatically." : ""}</p></div><Link href="/account">Arrange collection <ArrowRight /></Link></section>
