@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { CheckCircle2, CircleAlert, ExternalLink, ShieldCheck } from "lucide-react";
+import { requireAdmin } from "@/lib/admin-auth";
+import { postalReadiness } from "@/lib/postal-server";
 import { publicLaunchReadiness, siteConfig } from "@/lib/site-config";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +17,15 @@ type Check = {
   manual?: boolean;
 };
 
-export default function AdminReadinessPage() {
+export default async function AdminReadinessPage() {
+  const { supabase, access } = await requireAdmin();
+  const carrier = postalReadiness();
+  const postalState = access.can_manage_shipping && access.has_aal2
+    ? await supabase.rpc("admin_postal_state")
+    : null;
+  const postalConfig = postalState && !postalState.error
+    ? (postalState.data as { config?: { enabled?: boolean; origin_postal?: string } } | null)?.config
+    : null;
   const publicConfig = publicLaunchReadiness();
   const checks: Check[] = [
     {
@@ -51,8 +61,8 @@ export default function AdminReadinessPage() {
     },
     {
       label: "Canada Post production configuration",
-      ok: envSet("CANADA_POST_CLIENT_ID") && envSet("CANADA_POST_CLIENT_SECRET") && envSet("CANADA_POST_ORIGIN_POSTAL_CODE"),
-      detail: "Carrier credentials and origin must be configured before shipping can be confirmed at payment.",
+      ok: carrier.carrier && carrier.production && carrier.storage && Boolean(postalConfig?.enabled && postalConfig.origin_postal),
+      detail: "Production carrier credentials, secure quote storage, and an enabled origin in Postal Shipping are required. Credential presence does not prove a live rate works.",
     },
     {
       label: "AI support credentials",
@@ -100,7 +110,8 @@ export default function AdminReadinessPage() {
 
       <section className="admin-panel">
         <h2>{automaticReady ? "Automatic checks are ready" : "Payment must remain disabled"}</h2>
-        <p>{automaticReady ? "Environment-backed checks are configured. Complete the manual checks before adding a live payment provider." : "One or more required launch settings are still missing or require manual verification."}</p>
+        <p>{automaticReady ? "Configuration checks passed. Complete the manual checks before adding a live payment provider." : "One or more required launch settings are still missing or require manual verification."}</p>
+        {!access.can_manage_shipping ? <p>Shipping configuration can be verified by an admin with shipping permission and MFA in <Link href="/admin/postal">Postal Shipping</Link>.</p> : null}
         <div className="admin-readiness-list">
           {checks.map((check) => (
             <div key={check.label} className="admin-readiness-row">
