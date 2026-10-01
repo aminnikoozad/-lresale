@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type Favorite = { item_id: string; notify_price_drop: boolean; created_at: string };
 type Alert = { id: string; item_id: string; old_price_cents: number; new_price_cents: number; created_at: string; read_at: string | null };
-type Order = { id: string; status: string; payment_status: string; subtotal_cents: number; shipping_cents: number | null; total_cents: number | null; tracking_number: string | null; created_at: string };
+type Order = { id: string; status: string; payment_status: string; subtotal_cents: number; shipping_cents: number | null; total_cents: number | null; tracking_number: string | null; reservation_expires_at: string | null; created_at: string };
 type OrderItem = { id: string; order_id: string; item_id: string; item_name: string; brand: string; size: string | null; item_condition: string | null; unit_price_cents: number };
 type ReturnRequest = { id: string; order_id: string; order_item_id: string; reason: string; status: string; created_at: string };
 type CatalogItem = { item_id: string; name: string; brand: string; photo_url: string | null; price_cents: number };
@@ -51,7 +51,7 @@ export function BuyerAccountTools() {
     const [favResult, alertResult, orderResult, catalogResult] = await Promise.all([
       supabase.from("favorites").select("item_id,notify_price_drop,created_at").order("created_at", { ascending: false }),
       supabase.from("price_drop_alerts").select("id,item_id,old_price_cents,new_price_cents,created_at,read_at").order("created_at", { ascending: false }).limit(20),
-      supabase.from("orders").select("id,status,payment_status,subtotal_cents,shipping_cents,total_cents,tracking_number,created_at").order("created_at", { ascending: false }).limit(50),
+      supabase.from("orders").select("id,status,payment_status,subtotal_cents,shipping_cents,total_cents,tracking_number,reservation_expires_at,created_at").order("created_at", { ascending: false }).limit(50),
       supabase.rpc("catalog_items"),
     ]);
     const nextOrders = (orderResult.data ?? []) as Order[];
@@ -118,6 +118,18 @@ export function BuyerAccountTools() {
     await load();
   };
 
+  const cancelPreparedOrder = async (orderId: string) => {
+    setMessage(null);
+    const supabase = createClient();
+    const { error } = await supabase.rpc("cancel_prepared_checkout", { p_order: orderId });
+    if (error) {
+      setMessage("This prepared checkout could not be cancelled. Contact support if a payment has started.");
+      return;
+    }
+    setMessage("Prepared checkout cancelled. Its item reservation was released.");
+    await load(false);
+  };
+
   return (
     <section className="buyer-tools dashboard">
       <div className="buyer-tools-heading">
@@ -167,6 +179,10 @@ export function BuyerAccountTools() {
 
                   {order.payment_status === "not_configured" ? (
                     <div className="order-payment-note">Payment processing is not active yet. No charge has been made for this prepared order.</div>
+                  ) : null}
+                  {order.status === "awaiting_payment" && order.reservation_expires_at ? <div className="order-payment-note">Reservation ends {date(order.reservation_expires_at)} at {new Intl.DateTimeFormat("en-CA", { timeStyle: "short", timeZoneName: "short" }).format(new Date(order.reservation_expires_at))}. Return to your bag to check availability afterward.</div> : null}
+                  {order.status === "awaiting_payment" && order.payment_status === "not_configured" ? (
+                    <Button type="button" size="sm" variant="outline" onClick={() => void cancelPreparedOrder(order.id)}>Cancel prepared checkout</Button>
                   ) : null}
 
                   {items.map((item) => {

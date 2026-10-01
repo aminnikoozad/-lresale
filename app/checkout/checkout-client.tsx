@@ -68,27 +68,24 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
       }
 
       if (postalSelection && (postalSelection.postalCode !== postalCode(String(formData.get("postal_code") || "")) || Date.parse(postalSelection.expiresAt) <= Date.now())) throw new Error("Postal quote expired");
-      const { data, error: rpcError } = await supabase.rpc(postalSelection ? "create_postal_checkout" : "create_checkout_order", {
-        ...(postalSelection ? { p_quote: postalSelection.quoteId, p_service: postalSelection.serviceCode } : { item_ids: itemIds }),
-        recipient_name: String(formData.get("recipient_name") || ""),
-        address_line1: String(formData.get("address_line1") || ""),
-        address_line2: String(formData.get("address_line2") || ""),
-        city: String(formData.get("city") || ""),
-        province: String(formData.get("province") || "QC"),
-        postal_code: String(formData.get("postal_code") || ""),
+      const { data, error: rpcError } = await supabase.rpc("prepare_checkout_with_terms", {
+        p_items: postalSelection ? null : itemIds,
+        p_quote: postalSelection?.quoteId ?? null,
+        p_service: postalSelection?.serviceCode ?? null,
+        p_recipient_name: String(formData.get("recipient_name") || ""),
+        p_address_line1: String(formData.get("address_line1") || ""),
+        p_address_line2: String(formData.get("address_line2") || ""),
+        p_city: String(formData.get("city") || ""),
+        p_province: String(formData.get("province") || "QC"),
+        p_postal_code: String(formData.get("postal_code") || ""),
+        p_terms_version: BUYER_TERMS_VERSION,
+        p_return_policy_version: RETURN_POLICY_VERSION,
+        p_privacy_notice_version: PRIVACY_NOTICE_VERSION,
       });
       if (rpcError) throw rpcError;
 
       const preparedOrderId = String(data || "");
       if (!/^[0-9a-f-]{36}$/i.test(preparedOrderId)) throw new Error("Invalid prepared order");
-
-      const { error: acceptanceError } = await supabase.rpc("accept_checkout_terms", {
-        p_order: preparedOrderId,
-        p_terms_version: BUYER_TERMS_VERSION,
-        p_return_policy_version: RETURN_POLICY_VERSION,
-        p_privacy_notice_version: PRIVACY_NOTICE_VERSION,
-      });
-      if (acceptanceError) throw acceptanceError;
 
       setSavedShipping(postalSelection);
       setOrderId(preparedOrderId);

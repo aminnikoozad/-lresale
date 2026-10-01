@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { CheckCircle2, CircleAlert, ExternalLink, ShieldCheck } from "lucide-react";
+import { requireAdmin } from "@/lib/admin-auth";
+import { postalReadiness } from "@/lib/postal-server";
 import { publicLaunchReadiness, siteConfig } from "@/lib/site-config";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +17,15 @@ type Check = {
   manual?: boolean;
 };
 
-export default function AdminReadinessPage() {
+export default async function AdminReadinessPage() {
+  const { supabase, access } = await requireAdmin();
+  const carrier = postalReadiness();
+  const postalState = access.can_manage_shipping && access.has_aal2
+    ? await supabase.rpc("admin_postal_state")
+    : null;
+  const postalConfig = postalState && !postalState.error
+    ? (postalState.data as { config?: { enabled?: boolean; origin_postal?: string } } | null)?.config
+    : null;
   const publicConfig = publicLaunchReadiness();
   const checks: Check[] = [
     {
@@ -50,9 +60,20 @@ export default function AdminReadinessPage() {
       detail: "Required for reliable account and transactional email delivery.",
     },
     {
+      label: "Checkout reservation cleanup",
+      ok: (process.env.CRON_SECRET?.length ?? 0) >= 32 && (envSet("SUPABASE_SECRET_KEY") || envSet("SUPABASE_SERVICE_ROLE_KEY")),
+      detail: "Set a 32+ character CRON_SECRET and the server-only Supabase service key. The daily production job expires prepared orders; verify its first run in deployment logs.",
+    },
+    {
+      label: "Production database migrations",
+      ok: false,
+      manual: true,
+      detail: "Apply pending Supabase migrations in order and verify checkout, cancellation, cleanup, staff fulfilment and return-review RPCs against the production project.",
+    },
+    {
       label: "Canada Post production configuration",
-      ok: envSet("CANADA_POST_CLIENT_ID") && envSet("CANADA_POST_CLIENT_SECRET") && envSet("CANADA_POST_ORIGIN_POSTAL_CODE"),
-      detail: "Carrier credentials and origin must be configured before shipping can be confirmed at payment.",
+      ok: carrier.carrier && carrier.production && carrier.storage && Boolean(postalConfig?.enabled && postalConfig.origin_postal),
+      detail: "Production carrier credentials, secure quote storage, and an enabled origin in Postal Shipping are required. Credential presence does not prove a live rate works.",
     },
     {
       label: "AI support credentials",
@@ -70,6 +91,12 @@ export default function AdminReadinessPage() {
       ok: false,
       manual: true,
       detail: "Confirm the business registration/tax status with the appropriate tax professional or authority, then configure server-side tax calculation before charging customers. Do not infer tax collection from the checkout UI.",
+    },
+    {
+      label: "Seller settlement and refund procedure",
+      ok: false,
+      manual: true,
+      detail: "Confirm return windows, payout holds, reconciliation and who authorizes refunds. Seller wallet credits stay pending; review approval alone never refunds a customer.",
     },
     {
       label: "French customer journey",
@@ -100,7 +127,8 @@ export default function AdminReadinessPage() {
 
       <section className="admin-panel">
         <h2>{automaticReady ? "Automatic checks are ready" : "Payment must remain disabled"}</h2>
-        <p>{automaticReady ? "Environment-backed checks are configured. Complete the manual checks before adding a live payment provider." : "One or more required launch settings are still missing or require manual verification."}</p>
+        <p>{automaticReady ? "Configuration checks passed. Complete the manual checks before adding a live payment provider." : "One or more required launch settings are still missing or require manual verification."}</p>
+        {!access.can_manage_shipping ? <p>Shipping configuration can be verified by an admin with shipping permission and MFA in <Link href="/admin/postal">Postal Shipping</Link>.</p> : null}
         <div className="admin-readiness-list">
           {checks.map((check) => (
             <div key={check.label} className="admin-readiness-row">
