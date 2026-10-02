@@ -14,7 +14,8 @@ test("prepared checkout records versioned policy acceptance server-side", () => 
   assert.match(legalSql, /reservation_expires_at <= now\(\)/i);
   assert.match(legalSql, /revoke all on function public\.accept_checkout_terms[\s\S]*from public, anon/i);
   assert.match(checkoutClient, /buyer_terms_accepted/);
-  assert.match(checkoutClient, /accept_checkout_terms/);
+  assert.match(checkoutClient, /prepare_checkout_with_terms/);
+  assert.doesNotMatch(checkoutClient, /supabase\.rpc\("accept_checkout_terms"/);
   assert.match(checkoutClient, /BUYER_TERMS_VERSION/);
   assert.match(checkoutClient, /RETURN_POLICY_VERSION/);
 });

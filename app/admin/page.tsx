@@ -28,6 +28,7 @@ export default async function AdminPage() {
           <Link href="/admin/support">Support{supportStats?.waiting ? ` (${supportStats.waiting})` : ""}</Link>
           <Link href="/admin/operations#pickup-requests">Pickup Inbox{newRequests.count ? ` (${newRequests.count})` : ""}</Link>
           <Link href="/admin/items">Items</Link>
+          {access.can_manage_shipping ? <Link href="/admin/orders">Orders</Link> : null}
           <Link href="/admin/operations">Operations</Link>
           <Link href="/admin/settings">Selling Rules</Link>
           {access.can_manage_shipping ? <Link href="/admin/postal">Postal Shipping</Link> : null}

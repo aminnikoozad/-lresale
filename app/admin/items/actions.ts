@@ -33,6 +33,23 @@ async function authorizedClient() {
   return supabase;
 }
 
+async function attestInspection(supabase: Awaited<ReturnType<typeof createClient>>, itemId: string) {
+  const { error } = await supabase.rpc("admin_attest_item_inspection", {
+    p_item: itemId,
+    p_checks: {
+      clean: true,
+      intact: true,
+      suitable_for_resale: true,
+      no_significant_damage: true,
+      wearable_without_stains_tears_holes: true,
+    },
+  });
+  if (error) {
+    console.error("[admin/items] inspection attestation failed", { code: error.code, message: error.message });
+    redirect(itemsMessage("Physical inspection could not be recorded. Confirm MFA and the item's current status.", "error"));
+  }
+}
+
 const allowedPhotoTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
 
 function validatePhoto(file: File) {
@@ -203,7 +220,7 @@ export async function reviewAdminItem(formData: FormData) {
   if (!itemId || !Number.isInteger(priceCents) || priceCents < 1 || !action) {
     redirect(itemsMessage("Check the review values.", "error"));
   }
-  if (action === "accept" && formData.get("inspection_passed") !== "yes") {
+  if (["accept", "override"].includes(action) && formData.get("inspection_passed") !== "yes") {
     redirect(itemsMessage("Confirm the item passed physical inspection before accepting it. Clothing must be clean, complete and wearable without stains, tears, holes or significant damage. Otherwise reject it with a reason and evidence photo.", "error"));
   }
   if (action === "reject" && (sellerRejectionReason.length < 3 || !evidencePhoto)) {
@@ -219,6 +236,8 @@ export async function reviewAdminItem(formData: FormData) {
       redirect(itemsMessage("The rejection evidence photo could not be uploaded. The item review was not changed.", "error"));
     }
   }
+
+  if (["accept", "override"].includes(action)) await attestInspection(supabase, itemId);
 
   const rpc = action === "reject" ? "admin_review_item_with_evidence" : "admin_review_item";
   const args = action === "reject"
@@ -259,6 +278,11 @@ export async function publishAdminItem(formData: FormData) {
   if (!itemId || (listedPriceCents !== null && (!Number.isInteger(listedPriceCents) || listedPriceCents < 1))) {
     redirect(itemsMessage("Check the listing price.", "error"));
   }
+
+  if (formData.get("inspection_passed") !== "yes") {
+    redirect(itemsMessage("Confirm the physical inspection before publishing this item.", "error"));
+  }
+  await attestInspection(supabase, itemId);
 
   const { error } = await supabase.rpc("admin_publish_item", {
     target_item_id: itemId,

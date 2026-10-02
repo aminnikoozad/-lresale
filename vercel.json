@@ -5,5 +5,8 @@
       "main": true,
       "*": false
     }
-  }
+  },
+  "crons": [
+    { "path": "/api/cron/expire-checkouts", "schedule": "0 3 * * *" }
+  ]
 }
