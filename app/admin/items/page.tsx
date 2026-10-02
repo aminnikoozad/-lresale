@@ -257,7 +257,9 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                   </div>
                 ) : <p className="form-note">Add at least one photo before publishing this item.</p>}
 
-                {!item.seller_approved_at ? (
+                {item.category === "home_decor" ? (
+                  <p className="locked-note">Use the <Link href="/admin/home-decor">Home &amp; Decor inspection workflow</Link> for acceptance and publication.</p>
+                ) : !item.seller_approved_at ? (
                   <form className="review-form" action={reviewAdminItem}>
                     <input type="hidden" name="item_id" value={item.item_id} />
                     <label>Proposed price<input name="initial_price" type="number" min="0.01" step="0.01" defaultValue={dollars(item.initial_price_cents)} required /></label>
@@ -283,6 +285,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                       <input name="listed_price" type="number" min="0.01" step="0.01" defaultValue={dollars(item.listed_price_cents ?? item.initial_price_cents)} required />
                     </label>
                     <div className="publish-note">This price can be lower than the initial approved price; the locked commission tier does not change.</div>
+                    <label><input type="checkbox" name="inspection_passed" value="yes" required /> I confirm the physical inspection passed: clean, intact and suitable for resale. Clothing and accessories are wearable without stains, tears, holes or significant damage.</label>
                     <button type="submit">Publish to Shop</button>
                   </form>
                 ) : (
