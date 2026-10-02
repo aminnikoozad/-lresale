@@ -33,6 +33,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { approveItemPricing, createCollectionRequest } from "./actions";
+import type { CommissionTier } from "@/lib/business-rules";
 
 type Item = {
   id: string;
@@ -72,6 +73,9 @@ type PickupSlot = {
   remaining: number;
 };
 type FeeRules = {
+  minimumItemValueCents: number;
+  minimumPickupEstimatedValueCents: number;
+  commissionTiers: CommissionTier[];
   processingFeeCents: number;
   rewearBagFeeCents: number;
   freePickupThresholdCents: number;
@@ -346,7 +350,7 @@ export function Dashboard({
       </section>
       <section className="mini-rules">
         <b>Quick check before sending</b>
-        <span>✓ Individual listing value is normally $20+</span>
+        <span>✓ Items must pass inspection before listing</span>
         <span>✓ {cad(feeRules.freePickupThresholdCents)}+ estimated collections qualify for free priority pickup</span>
         <span>✓ Below {cad(feeRules.freePickupThresholdCents)}, one flat {cad(feeRules.lowValuePickupItemFeeCents)} pickup fee applies to the whole pickup</span>
         {showLaunchOffer ? (
@@ -397,6 +401,8 @@ function RequestDialog({
   const threshold = cad(feeRules.freePickupThresholdCents);
   const lowValuePickupFee = cad(feeRules.lowValuePickupItemFeeCents);
   const bagMinimum = cad(feeRules.bagMinimumEstimatedValueCents);
+  const collectionMinimum = cad(feeRules.minimumPickupEstimatedValueCents);
+  const itemMinimum = cad(feeRules.minimumItemValueCents);
   const processingFee = cad(feeRules.processingFeeCents);
   const launchEligible = launchOffer.active && launchOffer.eligible;
 
@@ -507,15 +513,16 @@ function RequestDialog({
                 name="estimated_value"
                 required
                 type="number"
-                min={type === "bag" ? String(feeRules.bagMinimumEstimatedValueCents / 100) : "0.01"}
+                min={String(Math.max(feeRules.minimumPickupEstimatedValueCents, type === "bag" ? feeRules.bagMinimumEstimatedValueCents : 0) / 100)}
                 max="1000000"
                 step="0.01"
                 inputMode="decimal"
                 value={estimatedValue}
                 onChange={(event) => setEstimatedValue(Number(event.target.value))}
-                placeholder={type === "bag" ? `${bagMinimum} minimum for a REWEAR Bag` : "Enter your estimated total"}
+                placeholder={`${collectionMinimum} minimum combined value`}
               />
             </label>
+            <p>We collect batches with an estimated combined resale value of at least {collectionMinimum}. This is your estimate; each item is inspected and priced separately.</p>
             {paidPickup ? (
               <label className="check pickup-fee-check">
                 <input name="pickup_fee_accepted" value="accepted" required type="checkbox" />{" "}
@@ -538,8 +545,9 @@ function RequestDialog({
                 </>
               ) : fashionCategory ? (
                 <>
-                  <p>• Individual listings normally require an approved value of at least $20. Lower-value items may be combined into a bundle.</p>
-                  <p>• Items must be washed or cleaned as appropriate and free of undisclosed stains, tears, holes or missing parts.</p>
+                  <p>• Individual listings normally require an approved resale value of at least {itemMinimum}. Lower-value eligible items may be combined into a bundle.</p>
+                  <p>• Clothes must be freshly washed or cleaned as appropriate, hygienic, complete and in good wearable condition, without stains, tears, holes or significant damage. Disclose any flaws before pickup.</p>
+                  <p>• REWEAR inspects every item after collection and rejects any item that fails these conditions, even if the estimated batch total met {collectionMinimum}.</p>
                   <p>• Accepted fashion items are listed for up to 90 days. Unsold item choices can be managed from your item operations page.</p>
                 </>
               ) : (
@@ -551,13 +559,13 @@ function RequestDialog({
                 </>
               )}
               <p>{pilotEnabled ? `• During the pilot, pickup appointments are offered on ${pickupDayText} only and confirmed by REWEAR.` : "• Pickup appointments depend on current service-area and scheduling availability."}</p>
-              <p>• Your commission is locked from the initial approved item price: you receive 45% at $20–$99.99, 50% at $100–$249.99, 55% at $250–$499.99 and 65% at $500+.</p>
+              <p>• Your commission is locked from the initial approved item price. Current tiers: {feeRules.commissionTiers.map((tier) => `${cad(tier.minCents)}${tier.maxCents === null ? "+" : `–${cad(tier.maxCents)}`}: ${tier.sellerBps / 100}%`).join("; ")} seller share.</p>
               <p>• Category and subcategory details are intake information; REWEAR confirms final listing taxonomy after physical inspection.</p>
               <p>• <Link href="/sell-with-rewear" target="_blank">Read acceptance, pricing, fees and earnings in the Seller Guide.</Link></p>
             </div>
             <label className="check">
               <input name="condition_confirmed" value="accepted" required type="checkbox" />{" "}
-              I confirm my {categoryLabel(category)} items meet the condition, ownership and minimum-value requirements.
+              I confirm my {categoryLabel(category)} items meet the cleaning, condition, ownership and minimum-value requirements, and understand REWEAR may reject items after inspection.
             </label>
             <label className="check">
               <input name="policy_accepted" value="accepted" required type="checkbox" />{" "}

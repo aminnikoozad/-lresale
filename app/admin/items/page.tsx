@@ -271,6 +271,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                       </select>
                     </label>
                     <label>Reason<input name="reason" maxLength={500} placeholder="Required for reject/review/override" /></label>
+                    <label><input type="checkbox" name="inspection_passed" value="yes" /> Physical inspection passed: clean, safe, complete and suitable for resale. For clothing, confirm it is wearable with no stains, tears, holes or significant damage. If failed, choose Reject Item with evidence.</label>
                     <button type="submit">Save review</button>
                   </form>
                 ) : item.status === "listed" ? (
