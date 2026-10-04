@@ -5,5 +5,20 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
+    # Update coupled runtime/compiler packages together, not as partial upgrades.
+    groups:
+      react-runtime:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+      tailwind-toolchain:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+    # The current Next.js ESLint toolchain cannot load the TypeScript 7 API.
+    # Remove this temporary constraint after a coordinated compatibility upgrade.
+    ignore:
+      - dependency-name: "typescript"
+        versions: [">=7.0.0 <8.0.0"]
