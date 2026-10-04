@@ -23,7 +23,7 @@ See [pre-payment operations](docs/prepayment-operations.md) for migration/config
 
 ## Deployment and verification
 
-Vercel automatic deployment is enabled for main in vercel.json. Other branches do not automatically deploy. Verify the intended deployment and exact Supabase project before any production action. Apply required migrations to the intended environment and verify their actual behavior; a successful build does not prove email, carrier quoting, authentication or database configuration works.
+vercel.json requests automatic Git deployment for main and disables other branches by default. Verify actual Vercel deployment behavior: a PR preview was still observed during commissioning, so configuration alone is not proof that previews are suppressed. Verify the intended deployment and exact Supabase project before any production action. Apply required migrations to the intended environment and verify their actual behavior; a successful build does not prove email, carrier quoting, authentication or database configuration works.
 
 ## Sushi operator
 
