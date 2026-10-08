@@ -684,8 +684,9 @@ function ProductGrid({
             ? "Try changing your search or removing a filter."
             : homeCategory
               ? "Our team is preparing selected Home & Decor pieces. Explore other categories or offer a piece for REWEAR to review."
-              : "Published inventory will appear here automatically."}
+              : "Our team is preparing inspected pieces. Check back soon or learn how to send us your own collection."}
         </p>
+        {!filtersActive ? <Link href="/sell-with-rewear">Explore selling with REWEAR</Link> : null}
       </div>
     );
   return (
