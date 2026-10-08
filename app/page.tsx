@@ -98,16 +98,19 @@ export default async function Home() {
   const waivedServiceFee = formatCadFromCents(launchOffer.waivedServiceFeeCents);
 
   return (
-    <main>
+    <main className="market-home">
+      <div className="market-announcement">A fresh way to shop secondhand · Selected and prepared by REWEAR</div>
       <header className="site-header">
         <Link href="/" className="brand" aria-label="Rewear home">REWEAR<span>.</span></Link>
         <nav aria-label="Main navigation">
-          <a href="#shop">Shop</a>
+          <a href="#shop">Explore</a>
           {navCategories.map((entry) => <a key={entry.value} href={`#${entry.value}`}>{entry.label}</a>)}
-          <Link href="/sell-with-rewear">How selling works</Link>
+          <Link href="/sell-with-rewear">How it works</Link>
         </nav>
-        <div className="header-actions"><CartNavLink /><Link href="/account" className="header-account-link">My account</Link><Button asChild className="header-sell-button"><Link href="/sell-with-rewear">Sell with us</Link></Button></div>
+        <div className="header-actions"><CartNavLink /><Link href="/account" className="header-account-link">My account</Link><Button asChild className="header-sell-button"><Link href="/sell-with-rewear">Start selling</Link></Button></div>
       </header>
+
+      <nav className="market-category-nav" aria-label="Browse categories"><a href="#shop">All finds</a>{navCategories.map((entry) => <a key={entry.value} href={`#${entry.value}`}>{entry.label}</a>)}<Link href="/sell-with-rewear">Sell with REWEAR <ArrowRight aria-hidden="true" /></Link></nav>
 
       {launchOffer.active ? (
         <section className="shipping-strip" aria-label="Launch seller offer">
@@ -123,23 +126,25 @@ export default async function Home() {
       <section className="hero" aria-labelledby="home-hero-title">
         <div className="hero-inner">
           <div className="hero-copy">
-            <p className="eyebrow">Managed secondhand, made effortless</p>
-            <h1 id="home-hero-title">Great pieces deserve another life.</h1>
-            <p>Shop inspected secondhand finds or let Rewear handle the work of reselling your items—from collection and photography to pricing and buyer messages.</p>
-            <div className="hero-actions"><Button asChild size="lg"><a href="#shop">Shop now <ArrowRight /></a></Button><Button asChild size="lg" variant="outline"><Link href="/sell-with-rewear">Sell your items</Link></Button></div>
-            <div className="hero-trust" aria-label="Rewear service highlights"><span>Inspected listings</span><span>Managed resale</span><span>Canada-wide shopping</span></div>
+            <p className="eyebrow">The secondhand edit · Montréal</p>
+            <h1 id="home-hero-title">Preloved pieces.<br />A fresh point of view.</h1>
+            <p>Discover carefully prepared finds, or let our team handle the details of resale. You bring the pieces; REWEAR takes care of inspection, photography, pricing and listing.</p>
+            <div className="hero-actions"><Button asChild size="lg"><a href="#shop">Explore the shop <ArrowRight aria-hidden="true" /></a></Button><Button asChild size="lg" variant="outline"><Link href="/sell-with-rewear">How selling works</Link></Button></div>
+            <div className="hero-trust" aria-label="Rewear service highlights"><span>Physically inspected</span><span>Listed by our team</span><span>Clear seller terms</span></div>
           </div>
           <div className="hero-media" aria-hidden="true"><Image src="/fashion-hero.webp" alt="" fill priority sizes="(max-width: 900px) 100vw, 55vw" /></div>
         </div>
       </section>
+
+      <section className="market-discover" aria-labelledby="market-discover-title"><div className="market-discover-heading"><div><p className="eyebrow dark">Find your next favourite</p><h2 id="market-discover-title">Shop by your kind of find.</h2></div><p>Explore the categories REWEAR is currently accepting. New pieces appear after our team inspects and prepares them.</p></div><div className="market-discover-grid">{navCategories.map((entry, index) => <a className="market-discover-card" href={`#${entry.value}`} key={entry.value}><span className="market-discover-number">0{index + 1}</span><span className="market-discover-label">{entry.label}</span><ArrowRight aria-hidden="true" /></a>)}</div></section>
 
       <section className="shipping-strip" aria-label="Canada delivery policy"><Truck /><div><strong>{shipping.canadaWideEnabled === false ? "Delivery policy" : "Shop from anywhere in Canada."}</strong><span>{shippingSummary}</span></div><Link href="/shipping-policy">Delivery details</Link></section>
 
       <ShopCatalog products={catalogProducts} now={requestTime} activeCategories={activeCategories} />
 
       <section id="sell" className="process-section">
-        <div className="process-intro"><p className="eyebrow">The effortless way to resell</p><h2>We pick it up.<br />You’re done.</h2><p>From your door to the buyer, our team handles every step. Fees, acceptance rules and your commission are visible before you commit.</p><Button asChild variant="secondary"><Link href="/sell-with-rewear">See the seller guide</Link></Button></div>
-        <ol className="steps"><li><b>01</b><div><h3>Tell us you’re ready</h3><p>Choose a REWEAR Bag or use your own bag/box, review the fees and request an available collection window.</p></div></li><li><b>02</b><div><h3>We collect and prepare everything</h3><p>Our team receives, identifies, inspects, photographs, prices and lists accepted items in the categories currently enabled by Rewear.</p></div></li><li><b>03</b><div><h3>We sell. You earn.</h3><p>We handle buyers and the sale. Your item progress, batch counts, commission and seller earnings stay visible in your account.</p></div></li></ol>
+        <div className="process-intro"><p className="eyebrow">Your wardrobe, our work</p><h2>Good things deserve<br />another go.</h2><p>Have pieces you no longer wear? See the acceptance rules and fees up front. Our team takes over after collection and decides what can be listed following physical inspection.</p><Button asChild variant="secondary"><Link href="/sell-with-rewear">See the seller guide</Link></Button></div>
+        <ol className="steps"><li><b>01</b><div><h3>Prepare your collection</h3><p>Check the $8 individual item guideline and $60 estimated Bag minimum, then request an available pickup window.</p></div></li><li><b>02</b><div><h3>We collect and prepare everything</h3><p>Our team receives, identifies, inspects, photographs, prices and lists accepted items in the categories currently enabled by Rewear.</p></div></li><li><b>03</b><div><h3>Follow every step.</h3><p>We handle buyers and the sale. Your item progress, batch counts, commission and seller earnings stay visible in your account.</p></div></li></ol>
       </section>
 
       <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Company-managed shopping</p><h2>Listings are prepared and reviewed by Rewear.</h2><p>{pilot.enabled ? "During the pilot, only the categories enabled in Pilot Settings are accepted and published." : "Rewear reviews accepted items before publication."} If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
