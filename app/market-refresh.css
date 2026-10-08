@@ -47,6 +47,7 @@
 .market-category-nav a:hover,.market-category-nav a:focus-visible{color:var(--market-forest);text-decoration:underline;text-underline-offset:7px}
 .market-category-nav svg{width:14px;height:14px}
 .market-category-nav a:last-child{margin-left:auto}
+.market-category-nav .market-mobile-account{display:none}
 .market-home .hero{overflow:visible!important}
 .market-home .hero-inner{
   min-height:590px!important;
@@ -165,6 +166,7 @@
   .market-home .site-header .header-sell-button{font-size:.75rem;padding:0 10px}
   .market-category-nav{gap:22px;padding:0 16px}
   .market-category-nav a:last-child{margin-left:0}
+  .market-category-nav .market-mobile-account{display:inline-flex}
   .market-home .hero h1{font-size:clamp(2.8rem,11.5vw,4.8rem)!important}
   .market-home .hero-copy{padding:52px 20px!important}
   .market-home .hero-media{min-height:300px!important}
