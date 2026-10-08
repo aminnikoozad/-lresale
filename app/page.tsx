@@ -110,7 +110,7 @@ export default async function Home() {
         <div className="header-actions"><CartNavLink /><Link href="/account" className="header-account-link">My account</Link><Button asChild className="header-sell-button"><Link href="/sell-with-rewear">Start selling</Link></Button></div>
       </header>
 
-      <nav className="market-category-nav" aria-label="Browse categories"><a href="#shop">All finds</a>{navCategories.map((entry) => <a key={entry.value} href={`#${entry.value}`}>{entry.label}</a>)}<Link href="/sell-with-rewear">Sell with REWEAR <ArrowRight aria-hidden="true" /></Link></nav>
+      <nav className="market-category-nav" aria-label="Browse categories"><a href="#shop">All finds</a>{navCategories.map((entry) => <a key={entry.value} href={`#${entry.value}`}>{entry.label}</a>)}<Link href="/sell-with-rewear">Sell with REWEAR <ArrowRight aria-hidden="true" /></Link><Link href="/account" className="market-mobile-account">My account</Link></nav>
 
       {launchOffer.active ? (
         <section className="shipping-strip" aria-label="Launch seller offer">
@@ -144,7 +144,7 @@ export default async function Home() {
 
       <section id="sell" className="process-section">
         <div className="process-intro"><p className="eyebrow">Your wardrobe, our work</p><h2>Good things deserve<br />another go.</h2><p>Have pieces you no longer wear? See the acceptance rules and fees up front. Our team takes over after collection and decides what can be listed following physical inspection.</p><Button asChild variant="secondary"><Link href="/sell-with-rewear">See the seller guide</Link></Button></div>
-        <ol className="steps"><li><b>01</b><div><h3>Prepare your collection</h3><p>Check the $8 individual item guideline and $60 estimated Bag minimum, then request an available pickup window.</p></div></li><li><b>02</b><div><h3>We collect and prepare everything</h3><p>Our team receives, identifies, inspects, photographs, prices and lists accepted items in the categories currently enabled by Rewear.</p></div></li><li><b>03</b><div><h3>Follow every step.</h3><p>We handle buyers and the sale. Your item progress, batch counts, commission and seller earnings stay visible in your account.</p></div></li></ol>
+        <ol className="steps"><li><b>01</b><div><h3>Prepare your collection</h3><p>Check the $8 individual item minimum and $60 estimated Bag minimum, then request an available pickup window.</p></div></li><li><b>02</b><div><h3>We collect and prepare everything</h3><p>Our team receives, identifies, inspects, photographs, prices and lists accepted items in the categories currently enabled by Rewear.</p></div></li><li><b>03</b><div><h3>Follow every step.</h3><p>We handle buyers and the sale. Your item progress, batch counts, commission and seller earnings stay visible in your account.</p></div></li></ol>
       </section>
 
       <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Company-managed shopping</p><h2>Listings are prepared and reviewed by Rewear.</h2><p>{pilot.enabled ? "During the pilot, only the categories enabled in Pilot Settings are accepted and published." : "Rewear reviews accepted items before publication."} If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
