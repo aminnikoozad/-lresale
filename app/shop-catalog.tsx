@@ -11,6 +11,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { hashCategory } from "@/lib/catalog-navigation";
+import { Dialog as DialogPrimitive } from "radix-ui";
 import {
   AddToCartButton,
   FavoriteButton,
@@ -56,12 +58,6 @@ const allLabels: { value: TabValue; label: string }[] = [
   { value: "home_decor", label: "Home & Decor" },
 ];
 
-function hashCategory(hash: string, labels: { value: TabValue; label: string }[]): TabValue | null {
-  const value = hash.replace(/^#/, "").toLowerCase();
-  return labels.some((entry) => entry.value === value)
-    ? (value as TabValue)
-    : null;
-}
 function cad(cents: number) {
   return new Intl.NumberFormat("en-CA", {
     style: "currency",
@@ -109,6 +105,7 @@ export function ShopCatalog({
     const syncHash = () => {
       const next = hashCategory(window.location.hash, labels);
       if (next) {
+        setFilterOpen(false);
         setActiveCategory(next);
         setBrands([]);
         setSizes([]);
@@ -133,10 +130,15 @@ export function ShopCatalog({
 
   useEffect(() => {
     if (!filterOpen) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    // Do not leave an invisible modal/focus trap open after rotating to desktop.
+    const desktop = window.matchMedia("(min-width: 901px)");
+    const closeOnDesktop = () => {
+      if (desktop.matches) setFilterOpen(false);
+    };
+    closeOnDesktop();
+    desktop.addEventListener("change", closeOnDesktop);
     return () => {
-      document.body.style.overflow = previous;
+      desktop.removeEventListener("change", closeOnDesktop);
     };
   }, [filterOpen]);
 
@@ -368,6 +370,7 @@ export function ShopCatalog({
         <label>
           <Search />
           <input
+            aria-label="Search items"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search brand, item, subcategory, colour…"
@@ -428,6 +431,7 @@ export function ShopCatalog({
         </TabsList>
         {labels.map((tab) => (
           <TabsContent key={tab.value} value={tab.value}>
+            <DialogPrimitive.Root open={filterOpen} onOpenChange={setFilterOpen}>
             <div className="catalog-body">
               <aside
                 className="catalog-filter desktop-filter"
@@ -441,16 +445,15 @@ export function ShopCatalog({
                     <strong>{filtered.length}</strong>{" "}
                     {filtered.length === 1 ? "item" : "items"}
                   </div>
-                  <button
+                  <DialogPrimitive.Trigger asChild><button
                     className="mobile-filter-toggle"
                     type="button"
-                    onClick={() => setFilterOpen(true)}
                   >
                     <SlidersHorizontal /> Filters{" "}
                     {activeFilterCount > 0 ? (
                       <span>{activeFilterCount}</span>
                     ) : null}
-                  </button>
+                  </button></DialogPrimitive.Trigger>
                 </div>
                 <ProductGrid
                   homeCategory={activeCategory === "home_decor"}
@@ -459,38 +462,32 @@ export function ShopCatalog({
                 />
               </div>
             </div>
-            {filterOpen ? (
-              <>
-                <button
-                  className="filter-sheet-backdrop"
-                  type="button"
-                  aria-label="Close filters"
-                  onClick={() => setFilterOpen(false)}
-                />
-                <aside
+              <DialogPrimitive.Portal>
+                <DialogPrimitive.Overlay className="filter-sheet-backdrop" />
+                <DialogPrimitive.Content
                   className="catalog-filter filter-sheet"
                   aria-label="Mobile product filters"
+                  aria-describedby={undefined}
                 >
                   <div className="filter-sheet-head">
-                    <strong>Filters</strong>
-                    <button
+                    <DialogPrimitive.Title asChild><strong>Filters</strong></DialogPrimitive.Title>
+                    <DialogPrimitive.Close asChild><button
                       type="button"
                       aria-label="Close filters"
-                      onClick={() => setFilterOpen(false)}
                     >
                       <X />
-                    </button>
+                    </button></DialogPrimitive.Close>
                   </div>
                   {filterPanel}
                   <div className="filter-sheet-footer">
-                    <Button type="button" onClick={() => setFilterOpen(false)}>
+                    <DialogPrimitive.Close asChild><Button type="button">
                       Show {filtered.length}{" "}
                       {filtered.length === 1 ? "item" : "items"}
-                    </Button>
+                    </Button></DialogPrimitive.Close>
                   </div>
-                </aside>
-              </>
-            ) : null}
+                </DialogPrimitive.Content>
+              </DialogPrimitive.Portal>
+            </DialogPrimitive.Root>
           </TabsContent>
         ))}
       </Tabs>
@@ -577,6 +574,7 @@ function FilterPanel({
             inputMode="decimal"
             type="number"
             min="0"
+            aria-label="Minimum price in Canadian dollars"
             placeholder="Min $"
             value={minPrice}
             onChange={(event) => setMinPrice(event.target.value)}
@@ -585,6 +583,7 @@ function FilterPanel({
             inputMode="decimal"
             type="number"
             min="0"
+            aria-label="Maximum price in Canadian dollars"
             placeholder="Max $"
             value={maxPrice}
             onChange={(event) => setMaxPrice(event.target.value)}

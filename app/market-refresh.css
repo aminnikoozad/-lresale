@@ -112,8 +112,9 @@
 .market-home .shop-catalog{padding-top:72px!important}
 .market-home .shop-catalog .section-heading h2{color:var(--market-ink)!important}
 .market-home .catalog-shortcuts button[data-state="active"]{background:var(--market-forest)!important;border-color:var(--market-forest)!important}
-.market-home .catalog-shortcuts button:hover{border-color:var(--market-forest)!important;color:var(--market-forest)!important}
+.market-home .catalog-shortcuts button:not([data-state="active"]):hover{border-color:var(--market-forest)!important;color:var(--market-forest)!important}
 .market-home .shop-card-copy small{color:var(--market-forest)}
+.market-home .catalog-photo.live-photo img{object-fit:cover!important}
 .market-home .catalog-empty{
   min-height:240px;border:1px solid var(--market-border)!important;
   border-radius:4px!important;background:#f7f7f2!important;
@@ -146,11 +147,12 @@
 .seller-guide-shell .guide-steps li,.seller-guide-shell .accept-grid article,.seller-guide-shell .send-checklist{border-radius:6px}
 .seller-guide-shell .guide-fees{background:#1f2d27!important}
 .seller-guide-shell .guide-fees h2,.seller-guide-shell .guide-fees h3{color:#fff!important}
+.seller-guide-shell .guide-fees .eyebrow{color:#c9dfc8!important}
 .seller-guide-shell .guide-cta{background:#dfe9df;border-radius:6px}
 .seller-guide-shell .guide-cta a{background:#244a3e;border-radius:4px}
 .seller-guide-shell .seller-guide-footer .brand span{color:#244a3e}
 @media(max-width:1100px){
-  .market-home .site-header nav{display:none}
+  .market-home .site-header nav{display:none!important}
   .market-discover-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media(max-width:900px){
