@@ -13,7 +13,7 @@ export default async function Customer({params,searchParams}:{params:Promise<{id
  const {data,error}=await supabase.rpc('admin_customer_workspace',{target_customer:id});if(error||!data)notFound();
  const c=data as Workspace;const {message}=await searchParams;
  return <main className="admin-items-shell"><section className="admin-items-wrap"><Link href="/admin/customers">← Customers</Link><h1>@{c.username}</h1><p>{c.name} · {c.email}</p>
- <nav><Link href={`/admin/items?owner_id=${id}`}>Add item for this seller</Link> · <Link href="/admin/processing">Processing &amp; item labels</Link> · <Link href="/admin/support">Support inbox</Link></nav>
+
  {message&&<p role="status" className="admin-items-message">{message}</p>}
  <section className="admin-items-card"><h2>Seller workflow</h2><p>Receive → inspect &amp; photograph → propose price → seller approves → publish → record confirmed sale → review settlement.</p><p>Attach the item code to the physical garment. The code remains linked to this seller even if their username changes.</p></section>
  <section className="admin-items-card"><h2>Items belonging to @{c.username}</h2>{c.items.length===0&&<p>No items yet. Use “Add item for this seller” after receiving their goods.</p>}

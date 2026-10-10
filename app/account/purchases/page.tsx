@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function PurchasesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/login?next=/account/purchases");
   return (
     <main className="account-shell buyer-account-page">
       <header className="account-top">

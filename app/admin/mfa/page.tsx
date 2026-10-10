@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default async function AdminMfaPage() {
   const { access } = await requireAdmin({ requireMfa: false });
-  if (!access.require_mfa || access.has_aal2) redirect("/admin");
+  if (access.has_aal2) redirect("/admin");
 
   return (
     <main className="auth-page">

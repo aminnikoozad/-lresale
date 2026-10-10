@@ -2,6 +2,7 @@ import Link from "next/link";
 import {CustomerPicker} from "@/components/customer-picker";
 import { redirect } from "next/navigation";
 import { AdminItemTaxonomyFields } from "@/components/admin-item-taxonomy-fields";
+import { activePilotCategories, loadPilotSettings } from "@/lib/pilot-settings";
 import { createClient } from "@/lib/supabase/server";
 import { formatCadFromCents, loadSellingRules } from "@/lib/business-rules";
 import { createAdminBundle, createAdminItem, publishAdminItem, reviewAdminItem } from "./actions";
@@ -57,10 +58,11 @@ export default async function AdminItemsPage({ searchParams }: Props) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [permissionResult, customerResult, rules, params] = await Promise.all([
+  const [permissionResult, customerResult, rules, pilot, params] = await Promise.all([
     supabase.rpc("can_manage_items"),
     supabase.rpc("admin_customer_options"),
     loadSellingRules(supabase),
+    loadPilotSettings(supabase),
     searchParams,
   ]);
 
@@ -86,13 +88,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
           <Link href="/" className="brand">REWEAR<span>.</span></Link>
           <span className="admin-pill">Admin</span>
         </div>
-        <nav>
-          <Link href="/admin">Dashboard</Link><Link href="/admin/customers">Customers</Link>
-          <Link href="/admin/operations#pickup-requests">Pickup requests</Link>
-          <Link href="/admin/items">Items</Link><Link href="/admin/home-decor">Home &amp; Decor inspection</Link>
-          <Link href="/admin/settings">Selling Rules</Link>
-          <Link href="/account">Customer account</Link>
-        </nav>
+
       </header>
 
       <section className="admin-items-wrap">
@@ -143,7 +139,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
             <label>Brand
               <input name="brand" maxLength={100} placeholder="Aritzia" />
             </label>
-            <AdminItemTaxonomyFields />
+            <AdminItemTaxonomyFields activeCategories={activePilotCategories(pilot).map((entry) => entry.value)} />
             <label>Size
               <input name="size" maxLength={40} placeholder="XS, M, 8Y, shoe 9, One Size" />
             </label>
@@ -178,7 +174,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
             </label>
             <button className="primary-action" type="submit">Save customer item</button>
           </form>
-          <p className="form-note">Category and subcategory feed the customer-facing catalog filters. Shoes use the same Size field as shoe size.</p>
+          <p className="form-note">Live categories: {activePilotCategories(pilot).map((entry) => entry.label).join(", ")}. Category and subcategory feed the customer-facing catalog filters. Shoes use the same Size field as shoe size.</p>
         </section>
 
         <section className="admin-items-card">

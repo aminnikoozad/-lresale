@@ -22,3 +22,17 @@ The current checkout policy versions are pinned in `lib/legal-versions.ts` and i
 - Only in the final payment stage, connect a provider with signed and idempotent webhooks, server-calculated total and tax, cancellation/expiry handling, refunds and dispute reconciliation. Exercise the sandbox cases listed on `/admin/readiness` before enabling real charges.
 
 Do not treat a successful local build or the presence of environment variable names as proof of a working production integration.
+
+## Non-payment test launch and new domain
+
+Keep payments disabled throughout rehearsal. Record the exact preview commit and use an isolated test environment for sample inventory. Never publish sample stock to the live catalog or attest that an item was physically inspected unless staff actually inspected it.
+
+Before inviting test sellers/buyers, verify:
+
+- The intended database has the required migrations and configured pickup slots. A seller cannot select a collection window when none are available.
+- Auth confirmation and recovery email work through the provider configured in Supabase Auth. A missing Vercel `RESEND_API_KEY` alone says nothing about Supabase Auth email delivery.
+- A staff user can complete MFA and record a real inspection; publication without that evidence is rejected. Preserve the $8 item and $60 estimated Bag minimums.
+- A test buyer can prepare and cancel an order, stock is released, and reservation expiry is verified. The scheduled cleanup endpoint requires the server-only service key and `CRON_SECRET`; do not infer a working job from the cron schedule alone.
+- Mobile/desktop navigation, category reset, empty inventory, seller guide and interrupted authentication work. Empty inventory permits browsing/auth rehearsal, but it cannot prove inventory, inspection, checkout or fulfilment flows.
+
+When the main domain is connected, verify DNS/TLS and update `NEXT_PUBLIC_SITE_URL`, the Supabase Auth Site URL and approved redirect URLs, and Edge Function `ALLOWED_APP_ORIGINS`. Update Turnstile hostname configuration if enabled. Then repeat signup, recovery and authenticated function calls on the new domain. Domain purchase or DNS alone does not update these integrations.

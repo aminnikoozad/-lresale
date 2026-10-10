@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isPhoneVerificationRequired, normalizeCanadianPhone } from "@/lib/canadian-phone";
 import { checkPasswordCompromise } from "@/lib/password-security";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 import { PASSWORD_REQUIREMENTS_TEXT, passwordMeetsPolicy } from "@/lib/password-policy";
 
 function text(formData: FormData, key: string) {
@@ -20,8 +21,8 @@ function rawText(formData: FormData, key: string) {
   return typeof value === "string" ? value : "";
 }
 
-function messageUrl(path: string, message: string, type: "error" | "success") {
-  const params = new URLSearchParams({ message, type });
+function messageUrl(path: string, message: string, type: "error" | "success", next?: string) {
+  const params = new URLSearchParams({ message, type, ...(next ? { next } : {}) });
   return `${path}?${params.toString()}`;
 }
 
@@ -74,20 +75,21 @@ async function requestOrigin() {
 }
 
 export async function login(formData: FormData) {
-  const captchaToken = await protectAuthForm(formData, "/login");
+  const next = safeRedirectPath(text(formData, "next"), "https://rewear.invalid");
+  const captchaToken = await protectAuthForm(formData, "/login", next);
   const email = text(formData, "email").toLowerCase();
   const password = rawText(formData, "password");
   if (!email || !password) {
-    redirect(messageUrl("/login", "Enter your email and password.", "error"));
+    redirect(messageUrl("/login", "Enter your email and password.", "error", next));
   }
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken } });
   if (error) {
-    redirect(messageUrl("/login", "Email or password is incorrect.", "error"));
+    redirect(messageUrl("/login", "Email or password is incorrect.", "error", next));
   }
 
-  redirect(isPhoneVerificationRequired() && !data.user.phone_confirmed_at ? "/verify-phone" : "/account");
+  redirect(isPhoneVerificationRequired() && !data.user.phone_confirmed_at ? `/verify-phone?${new URLSearchParams({ next })}` : next);
 }
 
 export async function signup(formData: FormData) {
@@ -143,44 +145,46 @@ export async function signup(formData: FormData) {
 }
 
 export async function sendPhoneVerification(formData: FormData) {
-  if (!isPhoneVerificationRequired()) redirect("/account");
+  const next = safeRedirectPath(text(formData, "next"), "https://rewear.invalid");
+  if (!isPhoneVerificationRequired()) redirect(next);
 
   const phone = normalizeCanadianPhone(text(formData, "phone"));
-  if (!phone) redirect(messageUrl("/verify-phone", "Enter a valid Canadian phone number.", "error"));
+  if (!phone) redirect(messageUrl("/verify-phone", "Enter a valid Canadian phone number.", "error", next));
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  if (user.phone_confirmed_at) redirect("/account");
+  if (!user) redirect(`/login?${new URLSearchParams({ next })}`);
+  if (user.phone_confirmed_at) redirect(next);
 
   const { error } = await supabase.auth.updateUser({ phone });
-  if (error) redirect(messageUrl("/verify-phone", "We could not send the SMS code. Try again shortly.", "error"));
+  if (error) redirect(messageUrl("/verify-phone", "We could not send the SMS code. Try again shortly.", "error", next));
 
   const { error: profileError } = await supabase.from("profiles").update({ phone }).eq("id", user.id);
-  if (profileError) redirect(messageUrl("/verify-phone", "The phone number could not be saved. Try again.", "error"));
+  if (profileError) redirect(messageUrl("/verify-phone", "The phone number could not be saved. Try again.", "error", next));
 
-  redirect(messageUrl("/verify-phone", "A 6-digit code was sent to your phone.", "success"));
+  redirect(messageUrl("/verify-phone", "A 6-digit code was sent to your phone.", "success", next));
 }
 
 export async function verifyPhone(formData: FormData) {
-  if (!isPhoneVerificationRequired()) redirect("/account");
+  const next = safeRedirectPath(text(formData, "next"), "https://rewear.invalid");
+  if (!isPhoneVerificationRequired()) redirect(next);
 
   const token = text(formData, "token");
-  if (!/^\d{6}$/.test(token)) redirect(messageUrl("/verify-phone", "Enter the 6-digit verification code.", "error"));
+  if (!/^\d{6}$/.test(token)) redirect(messageUrl("/verify-phone", "Enter the 6-digit verification code.", "error", next));
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  if (user.phone_confirmed_at) redirect("/account");
+  if (!user) redirect(`/login?${new URLSearchParams({ next })}`);
+  if (user.phone_confirmed_at) redirect(next);
 
   const { data: profile } = await supabase.from("profiles").select("phone").eq("id", user.id).maybeSingle();
   const phone = normalizeCanadianPhone(profile?.phone ?? "");
-  if (!phone) redirect(messageUrl("/verify-phone", "Send a verification code first.", "error"));
+  if (!phone) redirect(messageUrl("/verify-phone", "Send a verification code first.", "error", next));
 
   const { error } = await supabase.auth.verifyOtp({ phone, token, type: "phone_change" });
-  if (error) redirect(messageUrl("/verify-phone", "The code is incorrect or expired. Request a new code.", "error"));
+  if (error) redirect(messageUrl("/verify-phone", "The code is incorrect or expired. Request a new code.", "error", next));
 
-  redirect(messageUrl("/account", "Your Canadian phone number is verified.", "success"));
+  redirect(next);
 }
 
 export async function requestPasswordReset(formData: FormData) {

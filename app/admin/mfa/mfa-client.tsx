@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -19,6 +19,8 @@ export function AdminMfaClient() {
   const [code, setCode] = useState("");
   const [mode, setMode] = useState<Mode>("loading");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const verificationPending = useRef(false);
 
   const prepareMfa = useCallback(async () => {
     setMode("loading");
@@ -88,6 +90,7 @@ export function AdminMfaClient() {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (verificationPending.current) return;
     setError("");
 
     if (!/^\d{6}$/.test(code) || !factorId) {
@@ -95,19 +98,23 @@ export function AdminMfaClient() {
       return;
     }
 
-    const supabase = createClient();
-    const { error: verifyError } = await supabase.auth.mfa.challengeAndVerify({
-      factorId,
-      code,
-    });
-
-    if (verifyError) {
-      setError("The code is incorrect or expired. Try the current code.");
-      return;
+    verificationPending.current = true;
+    setSubmitting(true);
+    try {
+      const supabase = createClient();
+      const { error: verifyError } = await supabase.auth.mfa.challengeAndVerify({ factorId, code });
+      if (verifyError) {
+        setError("The code is incorrect or expired. Try the current code.");
+        return;
+      }
+      router.replace("/admin");
+      router.refresh();
+    } catch {
+      setError("Verification could not be completed. Check your connection and try again.");
+    } finally {
+      verificationPending.current = false;
+      setSubmitting(false);
     }
-
-    router.replace("/admin");
-    router.refresh();
   }
 
   if (mode === "loading") {
@@ -170,6 +177,7 @@ export function AdminMfaClient() {
 
       {error ? <div className="auth-message error">{error}</div> : null}
 
+      {submitting ? <p role="status">Verifying…</p> : null}
       <form className="auth-form" onSubmit={submit}>
         <label htmlFor="mfa-code">
           6-digit code
@@ -183,7 +191,7 @@ export function AdminMfaClient() {
             required
           />
         </label>
-        <button className="auth-submit" type="submit">
+        <button className="auth-submit" type="submit" disabled={submitting} aria-busy={submitting}>
           Verify & open Admin
         </button>
       </form>

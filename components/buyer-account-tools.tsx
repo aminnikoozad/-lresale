@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bell, Heart, PackageCheck, RotateCcw, Truck } from "lucide-react";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 
@@ -41,13 +42,16 @@ export function BuyerAccountTools() {
   const [returns, setReturns] = useState<ReturnRequest[]>([]);
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   const load = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
+    setLoadError(null);
+    try {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setLoading(false); return; }
+    if (!user) { setLoadError("Your session has expired. Sign in again to view your account."); return; }
     const [favResult, alertResult, orderResult, catalogResult] = await Promise.all([
       supabase.from("favorites").select("item_id,notify_price_drop,created_at").order("created_at", { ascending: false }),
       supabase.from("price_drop_alerts").select("id,item_id,old_price_cents,new_price_cents,created_at,read_at").order("created_at", { ascending: false }).limit(20),
@@ -61,14 +65,16 @@ export function BuyerAccountTools() {
       supabase.from("return_requests").select("id,order_id,order_item_id,reason,status,created_at").in("order_id", orderIds).order("created_at", { ascending: false }),
     ]) : [{ data: [], error: null }, { data: [], error: null }];
     const firstError = favResult.error || alertResult.error || orderResult.error || catalogResult.error || itemsResult.error || returnsResult.error;
-    if (firstError) console.error("[account buyer] load failed", { code: firstError.code, message: firstError.message });
+    if (firstError) throw firstError;
     setFavorites((favResult.data ?? []) as Favorite[]);
     setAlerts((alertResult.data ?? []) as Alert[]);
     setOrders(nextOrders);
     setOrderItems((itemsResult.data ?? []) as OrderItem[]);
     setReturns((returnsResult.data ?? []) as ReturnRequest[]);
     setCatalog((catalogResult.data ?? []) as CatalogItem[]);
-    setLoading(false);
+    } catch {
+      setLoadError("Your purchases and saved items could not be loaded. Please try again.");
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => {
@@ -137,19 +143,19 @@ export function BuyerAccountTools() {
         {unread > 0 ? <Button type="button" variant="outline" onClick={markAlertsRead}><Bell /> Mark {unread} read</Button> : null}
       </div>
       {message ? <div className="success-banner">{message}</div> : null}
-      {loading ? <div className="empty-box"><p>Loading buyer account…</p></div> : (
+      {loading ? <div className="empty-box"><p>Loading buyer account…</p></div> : loadError ? <div className="empty-box" role="alert"><p>{loadError}</p><Button type="button" onClick={() => void load()}>Try again</Button><Link href="/login?next=%2Faccount%2Fpurchases">Sign in</Link></div> : (
         <div className="buyer-tools-grid">
           <section className="buyer-panel">
             <h3><Heart /> Favorites</h3>
             {favorites.length ? favorites.map((favorite) => {
               const item = catalogMap.get(favorite.item_id);
-              return <article className="buyer-row" key={favorite.item_id}><div><Link href={`/item/${favorite.item_id}`}><b>{item?.name || "Saved item"}</b></Link><span>{item ? `${item.brand} · ${cad(item.price_cents)}` : "This item is no longer publicly listed."}</span></div><button type="button" onClick={() => removeFavorite(favorite.item_id)}>Remove</button></article>;
+              return <article className="buyer-row" key={favorite.item_id}><div>{item ? <Link href={`/item/${favorite.item_id}`}><b>{item.name}</b></Link> : <b>Saved item</b>}<span>{item ? `${item.brand} · ${cad(item.price_cents)}` : "This item is no longer publicly listed."}</span></div><button type="button" onClick={() => removeFavorite(favorite.item_id)}>Remove</button></article>;
             }) : <p className="buyer-empty">Items you save with the heart button will appear here.</p>}
           </section>
 
           <section className="buyer-panel">
             <h3><Bell /> Price-drop alerts</h3>
-            {alerts.length ? alerts.map((alert) => <article className={`buyer-row ${alert.read_at ? "" : "unread"}`} key={alert.id}><div><Link href={`/item/${alert.item_id}`}><b>{catalogMap.get(alert.item_id)?.name || "Saved item"}</b></Link><span>{cad(alert.old_price_cents)} → <strong>{cad(alert.new_price_cents)}</strong> · {date(alert.created_at)}</span></div></article>) : <p className="buyer-empty">Price drops for saved items will appear here automatically.</p>}
+            {alerts.length ? alerts.map((alert) => <article className={`buyer-row ${alert.read_at ? "" : "unread"}`} key={alert.id}><div>{catalogMap.has(alert.item_id) ? <Link href={`/item/${alert.item_id}`}><b>{catalogMap.get(alert.item_id)?.name}</b></Link> : <b>Item no longer listed</b>}<span>{cad(alert.old_price_cents)} → <strong>{cad(alert.new_price_cents)}</strong> · {date(alert.created_at)}</span></div></article>) : <p className="buyer-empty">Price drops for saved items will appear here automatically.</p>}
           </section>
 
           <section className="buyer-panel purchases-panel">
@@ -190,14 +196,14 @@ export function BuyerAccountTools() {
                     const eligible = order.status === "delivered" && order.payment_status === "paid" && !existingReturn;
                     return (
                       <div className="purchase-item" key={item.id}>
-                        <div><Link href={`/item/${item.item_id}`}><b>{item.brand} · {item.item_name}</b></Link><span>{item.size ? `Size ${item.size} · ` : ""}{cad(item.unit_price_cents)}</span></div>
+                        <div>{catalogMap.has(item.item_id) ? <Link href={`/item/${item.item_id}`}><b>{item.brand} · {item.item_name}</b></Link> : <b>{item.brand} · {item.item_name}</b>}<span>{item.size ? `Size ${item.size} · ` : ""}{cad(item.unit_price_cents)}</span></div>
                         {existingReturn ? (
                           <span className="return-status"><RotateCcw /> Return: {title(existingReturn.status)}</span>
                         ) : eligible ? (
                           <form className="return-form" action={(data) => requestReturn(order, item, data)}>
                             <select name="reason" required defaultValue=""><option value="" disabled>Return / claim reason</option><option value="not_as_described">Not as described</option><option value="damaged">Damaged</option><option value="wrong_item">Wrong item</option><option value="fit_or_preference">Fit / preference</option><option value="other">Other</option></select>
                             <input name="details" maxLength={2000} placeholder="Details (optional)" />
-                            <Button type="submit" size="sm" variant="outline">Request review</Button>
+                            <PendingSubmitButton size="sm" variant="outline" pendingLabel="Requesting…">Request review</PendingSubmitButton>
                           </form>
                         ) : null}
                       </div>

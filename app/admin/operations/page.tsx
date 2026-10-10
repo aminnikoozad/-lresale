@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
 import { createPickupSlot, togglePickupSlot, toggleServiceArea, updateReminderSettings, updateShippingSettings } from "./actions";
 import { PickupInbox, type PickupRequest } from "./pickup-inbox";
@@ -53,7 +53,7 @@ function localDateTime(value: string) {
 
 export default async function AdminOperationsPage({ searchParams }: Props) {
   const { supabase, access } = await requireAdmin();
-  if (!access.can_manage_pickups && !access.can_manage_shipping) return null;
+  if (!access.can_manage_pickups && !access.can_manage_shipping) redirect("/admin");
 
   const [{ data, error }, params] = await Promise.all([
     supabase.rpc("admin_operations_snapshot"),
@@ -70,20 +70,12 @@ export default async function AdminOperationsPage({ searchParams }: Props) {
   const message = typeof params.message === "string" ? params.message : null;
   const type = params.type === "error" ? "error" : "success";
   const areaById = new Map(areas.map((area) => [area.id, area.city]));
-  const newRequestCount = pickupRequests.filter((request) => request.status === "submitted").length;
 
   return (
     <main className="ops-shell">
       <header className="ops-top">
         <div><span className="brand">REWEAR<span>.</span></span><b>Admin</b></div>
-        <nav>
-          <Link href="/admin">Dashboard</Link>
-          <a href="#pickup-requests">Pickup requests{newRequestCount ? ` (${newRequestCount})` : ""}</a>
-          <Link href="/admin/items">Items</Link>
-          <Link href="/admin/operations">Operations</Link>
-          <Link href="/admin/settings">Selling Rules</Link>
-          <Link href="/admin/security">Security</Link>
-        </nav>
+
       </header>
 
       <section className="ops-wrap">

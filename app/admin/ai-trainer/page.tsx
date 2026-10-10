@@ -24,7 +24,7 @@ export default async function AiTrainerPage() {
   return <main className="support-admin-shell">
     <header className="support-admin-top">
       <div><Link href="/admin" className="support-brand">REWEAR<span>.</span></Link><b>AI Trainer</b></div>
-      <nav><Link href="/admin">Dashboard</Link><Link href="/admin/support">Support Inbox</Link><Link href="/admin/ai-trainer">AI Trainer</Link><Link href="/admin/support/settings">Support Settings</Link></nav>
+
     </header>
     <section className="support-admin-wrap">
       <div className="support-admin-heading"><div><p className="eyebrow dark">Controlled AI improvement</p><h1>Teach the Bot</h1><p>Chat with the support AI, test current approved answers, review gaps, and propose changes. Trainer conversation is separate from official knowledge; nothing becomes customer-facing until explicitly approved.</p></div><div className="support-admin-chip">MFA verified · {access.role}</div></div>

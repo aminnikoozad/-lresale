@@ -32,7 +32,7 @@ export default async function AdminOrders({ searchParams }: { searchParams: Prom
   const orders = (data ?? []) as Order[];
   const canReviewReturns = ["owner", "admin"].includes(access.role);
   return <main className="ops-shell">
-    <header className="ops-top"><div><Link href="/admin" className="brand">REWEAR<span>.</span></Link><b>Admin</b></div><nav><Link href="/admin">Dashboard</Link><Link href="/admin/items">Items</Link><Link href="/admin/readiness">Readiness</Link></nav></header>
+    <header className="ops-top"><div><Link href="/admin" className="brand">REWEAR<span>.</span></Link><b>Admin</b></div></header>
     <section className="ops-wrap">
       <div className="ops-heading"><div><p className="eyebrow dark">Private fulfilment</p><h1>Orders & returns</h1><p>Only verified paid orders can move through processing, shipping and delivery. Reviewing a return does not issue a refund.</p></div><div className="security-chip">MFA verified · {access.role}</div></div>
       {params.message ? <div className="ops-message">{params.message}</div> : null}

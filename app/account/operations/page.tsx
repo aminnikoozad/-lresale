@@ -57,7 +57,7 @@ function when(value: string | null) {
 export default async function SellerOperationsPage({ searchParams }: Props) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  if (!user) redirect("/login?next=/account/operations");
 
   const [{ data, error }, params] = await Promise.all([
     supabase.rpc("seller_operations_snapshot"),

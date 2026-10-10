@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { changeAdminPassword, signOutAllAdminSessions } from "./actions";
 import "../operations/operations.css";
@@ -17,13 +16,7 @@ export default async function AdminSecurityPage({ searchParams }: Props) {
     <main className="ops-shell">
       <header className="ops-top">
         <div><span className="brand">REWEAR<span>.</span></span><b>Admin</b></div>
-        <nav>
-          <Link href="/admin">Dashboard</Link>
-          <Link href="/admin/items">Items</Link>
-          <Link href="/admin/operations">Operations</Link>
-          <Link href="/admin/settings">Selling Rules</Link>
-          <Link href="/admin/security">Security</Link>
-        </nav>
+
       </header>
 
       <section className="ops-wrap">

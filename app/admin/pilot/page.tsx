@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { CATALOG_CATEGORIES } from "@/lib/catalog-taxonomy";
 import { loadPilotSettings } from "@/lib/pilot-settings";
@@ -95,13 +94,7 @@ export default async function PilotDashboard({ searchParams }: Props) {
     <main className="ops-shell">
       <header className="ops-top">
         <div><span className="brand">REWEAR<span>.</span></span><b>Admin</b></div>
-        <nav>
-          <Link href="/admin">Dashboard</Link>
-          <Link href="/admin/pilot">Pilot</Link>
-          <Link href="/admin/items">Items</Link>
-          <Link href="/admin/operations">Operations</Link>
-          <Link href="/admin/settings">Selling Rules</Link>
-        </nav>
+
       </header>
 
       <section className="ops-wrap pilot-wrap">

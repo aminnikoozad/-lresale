@@ -55,9 +55,10 @@ export default async function AdminReadinessPage() {
       detail: "Verify Cloudflare Turnstile is enabled in Supabase Auth and its secret key is configured there. The app forwards the CAPTCHA token to Supabase Auth for server-side verification.",
     },
     {
-      label: "Email delivery",
-      ok: envSet("RESEND_API_KEY"),
-      detail: "Required for reliable account and transactional email delivery.",
+      label: "Supabase Auth email delivery",
+      ok: false,
+      manual: true,
+      detail: "Verify the email provider/SMTP configuration in Supabase Auth and test signup confirmation and password recovery end to end. A Vercel RESEND_API_KEY is not used by these auth flows and does not establish delivery readiness. Verify any transactional email flow separately before advertising it.",
     },
     {
       label: "Checkout reservation cleanup",
@@ -76,15 +77,16 @@ export default async function AdminReadinessPage() {
       detail: "Production carrier credentials, secure quote storage, and an enabled origin in Postal Shipping are required. Credential presence does not prove a live rate works.",
     },
     {
-      label: "AI support credentials",
-      ok: envSet("OPENAI_API_KEY"),
-      detail: "Not required for checkout itself, but required if AI support is advertised as available.",
+      label: "Supabase Edge Function AI support",
+      ok: false,
+      manual: true,
+      detail: "If AI support is advertised, verify the deployed support-ai Edge Function, its OPENAI_API_KEY in Supabase, and a successful support response. A Vercel environment variable cannot verify Edge Function configuration. AI support is not required to prepare checkout.",
     },
     {
       label: "Supabase leaked-password protection",
       ok: false,
       manual: true,
-      detail: "Manual verification required in Supabase Auth settings. Security Advisor currently reports this protection as disabled.",
+      detail: "Verify the current leaked-password protection setting in Supabase Auth and review the latest Security Advisor report. This page does not query the live setting.",
     },
     {
       label: "GST/QST and tax configuration",

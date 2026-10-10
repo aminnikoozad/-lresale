@@ -1,6 +1,8 @@
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { AuthCaptcha } from "@/components/auth-captcha";
 import { AuthHumanCheck } from "@/components/auth-human-check";
 import Link from "next/link";
+import { safeRedirectPath } from "@/lib/safe-redirect";
 import { login } from "../auth/actions";
 import "../auth.css";
 
@@ -8,6 +10,7 @@ type Props = { searchParams: Promise<Record<string, string | string[] | undefine
 
 export default async function LoginPage({ searchParams }: Props) {
   const params = await searchParams;
+  const next = safeRedirectPath(typeof params.next === "string" ? params.next : null, "https://rewear.invalid");
   const message = typeof params.message === "string" ? params.message : null;
   const type = params.type === "success" ? "success" : "error";
   return <main className="auth-page"><section className="auth-card">
@@ -16,12 +19,13 @@ export default async function LoginPage({ searchParams }: Props) {
     <p>Sign in to follow your items, requests and available balance.</p>
     {message && <div className={`auth-message ${type}`}>{message}</div>}
     <form className="auth-form" action={login}>
+      <input type="hidden" name="next" value={next} />
       <label htmlFor="email">Email address<input id="email" name="email" type="email" autoComplete="email" required /></label>
       <label htmlFor="password">Password<input id="password" name="password" type="password" autoComplete="current-password" required /></label>
       <div className="auth-row"><Link href="/forgot-password">Forgot password?</Link></div>
       <AuthHumanCheck />
       <AuthCaptcha />
-      <button className="auth-submit" type="submit">Sign in</button>
+      <PendingSubmitButton className="auth-submit" pendingLabel="Signing in…">Sign in</PendingSubmitButton>
     </form>
     <p className="auth-switch">New to Rewear? <Link href="/signup">Create an account</Link></p>
     <Link className="auth-back" href="/">← Back to marketplace</Link>

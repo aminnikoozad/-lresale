@@ -7,7 +7,7 @@ import {
   subcategoriesFor,
 } from "@/lib/catalog-taxonomy";
 
-export function AdminItemTaxonomyFields() {
+export function AdminItemTaxonomyFields({ activeCategories }: { activeCategories: CatalogCategory[] }) {
   const [category, setCategory] = useState<CatalogCategory>("women");
   const [subcategory, setSubcategory] = useState("");
   const options = useMemo(() => subcategoriesFor(category), [category]);
@@ -27,7 +27,7 @@ export function AdminItemTaxonomyFields() {
         >
           {CATALOG_CATEGORIES.map((entry) => (
             <option value={entry.value} key={entry.value}>
-              {entry.label}
+              {entry.label}{activeCategories.includes(entry.value) ? "" : " (not currently live)"}
             </option>
           ))}
         </select>

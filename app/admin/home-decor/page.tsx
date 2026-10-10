@@ -148,11 +148,7 @@ export default async function HomeInspectionPage({
         <Link href="/" className="brand">
           REWEAR.
         </Link>
-        <nav>
-          <Link href="/admin">Dashboard</Link>
-          <Link href="/admin/items">Item Management</Link>
-          <Link href="/admin/operations">Pickups</Link>
-        </nav>
+
       </header>
       <div className="admin-items-wrap">
         <div className="admin-items-heading">
