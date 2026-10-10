@@ -116,10 +116,10 @@ export const CATALOG_CATEGORIES: { value: CatalogCategory; label: string }[] = [
   { value: "home_decor", label: "Home & Decor" },
 ];
 
+export const CLOTHING_CATEGORIES = ["women", "men", "kids"] as const satisfies readonly CatalogCategory[];
+
 export const FASHION_CATEGORIES: CatalogCategory[] = [
-  "women",
-  "men",
-  "kids",
+  ...CLOTHING_CATEGORIES,
   "shoes",
   "accessories",
 ];
@@ -150,7 +150,7 @@ export function categoryLabel(category: string) {
  */
 export const PILOT_MODE = {
   enabled: true,
-  activeCategories: ["women"] as const,
+  activeCategories: CLOTHING_CATEGORIES,
   maxActiveItems: 30,
   pickupWeekday: 6, // Saturday (JS getDay / America/Toronto)
   durationWeeks: { min: 6, max: 8 },

@@ -7,11 +7,13 @@ import {
 } from "@/lib/home-decor";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { hashCategory } from "@/lib/catalog-navigation";
+import { hashCategory, catalogLocation, catalogHistoryMode, readCatalogLocation, emptyCatalogFilters, priceCents, type CatalogFilters } from "@/lib/catalog-navigation";
+import { filterCatalogProducts } from "@/lib/catalog-filtering";
+import { subcategoriesFor } from "@/lib/catalog-taxonomy";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import {
   AddToCartButton,
@@ -75,58 +77,90 @@ export function ShopCatalog({
   products,
   now,
   activeCategories,
+  loadError = false,
 }: {
   products: CatalogProduct[];
   now: number;
   activeCategories: CatalogCategory[];
+  loadError?: boolean;
 }) {
   const labels = useMemo(
     () => allLabels.filter((entry) => entry.value === "all" || activeCategories.includes(entry.value as CatalogCategory)),
     [activeCategories],
   );
-  const [activeCategory, setActiveCategory] = useState<TabValue>("all");
-  const [subcategories, setSubcategories] = useState<string[]>([]);
-  const [eras, setEras] = useState<string[]>([]);
-  const [homeFlags, setHomeFlags] = useState<string[]>([]);
-  const [collection, setCollection] = useState("");
-  const [query, setQuery] = useState("");
-  const [brands, setBrands] = useState<string[]>([]);
-  const [sizes, setSizes] = useState<string[]>([]);
-  const [conditions, setConditions] = useState<string[]>([]);
-  const [colors, setColors] = useState<string[]>([]);
-  const [materials, setMaterials] = useState<string[]>([]);
-  const [patterns, setPatterns] = useState<string[]>([]);
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [sort, setSort] = useState<SortValue>("newest");
+  const [filters, setFilters] = useState<CatalogFilters>(() => emptyCatalogFilters());
+  const { subcategories, eras, homeFlags, collection, query, brands, sizes, conditions, colors, materials, patterns, minPrice, maxPrice, sort } = filters;
+  const activeCategory = filters.category as TabValue;
+  const departmentLabel = labels.find((entry) => entry.value === activeCategory)?.label ?? "All finds";
+  const field = <K extends keyof CatalogFilters>(key: K): React.Dispatch<React.SetStateAction<CatalogFilters[K]>> => (value) => {
+    setFilters((current) => ({ ...current, [key]: typeof value === "function" ? (value as (previous: CatalogFilters[K]) => CatalogFilters[K])(current[key]) : value }));
+  };
+  const setSubcategories = field("subcategories");
+  const setEras = field("eras");
+  const setHomeFlags = field("homeFlags");
+  const setCollection = field("collection");
+  const setQuery = field("query");
+  const setBrands = field("brands");
+  const setSizes = field("sizes");
+  const setConditions = field("conditions");
+  const setColors = field("colors");
+  const setMaterials = field("materials");
+  const setPatterns = field("patterns");
+  const setMinPrice = field("minPrice");
+  const setMaxPrice = field("maxPrice");
+  const setSort = field("sort");
   const [filterOpen, setFilterOpen] = useState(false);
+  const [locationReady, setLocationReady] = useState(false);
+  const restoredFilters = useRef<CatalogFilters | null>(null);
+  const previousFilters = useRef(filters);
 
   useEffect(() => {
-    const syncHash = () => {
-      const next = hashCategory(window.location.hash, labels);
-      if (next) {
-        setFilterOpen(false);
-        setActiveCategory(next);
-        setBrands([]);
-        setSizes([]);
-        setConditions([]);
-        setColors([]);
-        setMaterials([]);
-        setPatterns([]);
-        setSubcategories([]);
-        setEras([]);
-        setHomeFlags([]);
-        setCollection("");
-        setMinPrice("");
-        setMaxPrice("");
-      } else if (!labels.some((entry) => entry.value === activeCategory)) {
-        setActiveCategory("all");
-      }
+    const syncLocation = () => {
+      const next = readCatalogLocation(window.location.search, window.location.hash, labels);
+      restoredFilters.current = next;
+      previousFilters.current = next;
+      setFilters(next);
+      setFilterOpen(false);
+      setLocationReady(true);
     };
-    syncHash();
-    window.addEventListener("hashchange", syncHash);
-    return () => window.removeEventListener("hashchange", syncHash);
-  }, [activeCategory, labels]);
+    // A repeated category link must work even when the fragment is unchanged.
+    const followCategory = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = event.target instanceof Element ? event.target.closest("a") : null;
+      if (!link || link.target || link.hasAttribute("download")) return;
+      const url = new URL(link.href, window.location.href);
+      if (url.origin !== window.location.origin || url.pathname !== window.location.pathname || !url.hash) return;
+      const category = hashCategory(url.hash, labels);
+      if (!category) return;
+      event.preventDefault();
+      setFilters((current) => emptyCatalogFilters(category, category === "all" ? "" : current.query));
+      setFilterOpen(false);
+      document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" });
+    };
+    syncLocation();
+    window.addEventListener("popstate", syncLocation);
+    window.addEventListener("hashchange", syncLocation);
+    document.addEventListener("click", followCategory, true);
+    return () => {
+      window.removeEventListener("popstate", syncLocation);
+      window.removeEventListener("hashchange", syncLocation);
+      document.removeEventListener("click", followCategory, true);
+    };
+  }, [labels]);
+
+  useEffect(() => {
+    if (!locationReady || restoredFilters.current === filters) return;
+    const next = catalogLocation(window.location.pathname, window.location.search, filters);
+    const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (current !== next) {
+      if (catalogHistoryMode(previousFilters.current, filters) === "replace") {
+        window.history.replaceState(null, "", next);
+      } else {
+        window.history.pushState(null, "", next);
+      }
+    }
+    previousFilters.current = filters;
+  }, [filters, locationReady]);
 
   useEffect(() => {
     if (!filterOpen) return;
@@ -161,91 +195,17 @@ export function ShopCatalog({
     [categoryProducts],
   );
   const categorySubcategories = useMemo(
-    () => unique(categoryProducts.map((product) => product.subcategory)),
-    [categoryProducts],
+    () => activeCategory === "all" ? [] : unique([...subcategoriesFor(activeCategory), ...categoryProducts.map((product) => product.subcategory)]),
+    [activeCategory, categoryProducts],
   );
 
-  const minCents =
-    minPrice.trim() === ""
-      ? null
-      : Math.max(0, Math.round(Number(minPrice) * 100));
-  const maxCents =
-    maxPrice.trim() === ""
-      ? null
-      : Math.max(0, Math.round(Number(maxPrice) * 100));
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const next = categoryProducts.filter((product) => {
-      const haystack =
-        `${product.name} ${product.brand} ${product.category} ${product.subcategory || ""} ${product.color || ""} ${product.material || ""} ${product.pattern || ""} ${product.home?.designer || ""} ${product.home?.era || ""} ${product.home?.keywords || ""}`.toLowerCase();
-      return (
-        (!subcategories.length ||
-          (product.subcategory && subcategories.includes(product.subcategory))) &&
-        (!eras.length || eras.includes(String(product.home?.era))) &&
-        homeFlags.every((f) =>
-          f === "price_drop"
-            ? product.priceDrop
-            : f === "new_arrivals"
-              ? homeCollectionMatches(
-                  "Recently Added",
-                  product.home ?? {},
-                  product.priceCents,
-                  product.publishedAt,
-                  now,
-                )
-              : product.home?.[f] === true,
-        ) &&
-        (!collection ||
-          (product.home &&
-            homeCollectionMatches(
-              collection,
-              product.home,
-              product.priceCents,
-              product.publishedAt,
-              now,
-            ))) &&
-        (!q || haystack.includes(q)) &&
-        (!brands.length || brands.includes(product.brand)) &&
-        (!sizes.length || (product.size && sizes.includes(product.size))) &&
-        (!conditions.length ||
-          (product.condition && conditions.includes(product.condition))) &&
-        (!colors.length || (product.color && colors.includes(product.color))) &&
-        (!materials.length ||
-          (product.material && materials.includes(product.material))) &&
-        (!patterns.length ||
-          (product.pattern && patterns.includes(product.pattern))) &&
-        (minCents == null || product.priceCents >= minCents) &&
-        (maxCents == null || product.priceCents <= maxCents)
-      );
-    });
-    return [...next].sort((a, b) => {
-      if (sort === "price_low") return a.priceCents - b.priceCents;
-      if (sort === "price_high") return b.priceCents - a.priceCents;
-      if (sort === "brand")
-        return a.brand.localeCompare(b.brand) || a.name.localeCompare(b.name);
-      return (
-        new Date(b.publishedAt || 0).getTime() -
-        new Date(a.publishedAt || 0).getTime()
-      );
-    });
-  }, [
-    categoryProducts,
-    query,
-    brands,
-    sizes,
-    conditions,
-    colors,
-    materials,
-    patterns,
-    minCents,
-    maxCents,
-    sort,
-    subcategories,
-    eras,
-    homeFlags,
-    collection,
-    now,
-  ]);
+  const minCents = priceCents(minPrice);
+  const maxCents = priceCents(maxPrice);
+  const invalidPriceRange = minCents !== null && maxCents !== null && minCents > maxCents;
+  const filtered = useMemo(
+    () => filterCatalogProducts(products, filters, now),
+    [products, filters, now],
+  );
 
   const activeFilterCount =
     subcategories.length +
@@ -260,28 +220,24 @@ export function ShopCatalog({
     patterns.length +
     (minPrice ? 1 : 0) +
     (maxPrice ? 1 : 0);
-  const clearFilters = () => {
-    setSubcategories([]);
-    setEras([]);
-    setHomeFlags([]);
-    setCollection("");
-    setBrands([]);
-    setSizes([]);
-    setConditions([]);
-    setColors([]);
-    setMaterials([]);
-    setPatterns([]);
-    setMinPrice("");
-    setMaxPrice("");
-  };
+  const clearFilters = () => setFilters(emptyCatalogFilters(activeCategory));
   const changeCategory = (value: string) => {
-    const next = value as TabValue;
-    setActiveCategory(next);
-    clearFilters();
+    if (!labels.some((label) => label.value === value)) return;
+    setFilters(emptyCatalogFilters(value, value === "all" ? "" : query));
     setFilterOpen(false);
-    const hash = next === "all" ? "shop" : next;
-    window.history.replaceState(null, "", `#${hash}`);
   };
+  const chips = [
+    ...(["subcategories", "eras", "homeFlags", "brands", "sizes", "conditions", "colors", "materials", "patterns"] as const).flatMap((key) => filters[key].map((value) => ({
+      key: `${key}:${value}`,
+      label: `${key === "sizes" ? "Size: " : ""}${value.replaceAll("_", " ")}`,
+      remove: () => setFilters((current) => ({ ...current, [key]: current[key].filter((entry) => entry !== value) })),
+    }))),
+    ...(["query", "collection", "minPrice", "maxPrice"] as const).filter((key) => filters[key]).map((key) => ({
+      key,
+      label: key === "query" ? `Search: ${query}` : key === "minPrice" ? `From $${minPrice} CAD` : key === "maxPrice" ? `Up to $${maxPrice} CAD` : collection,
+      remove: () => setFilters((current) => ({ ...current, [key]: "" })),
+    })),
+  ];
 
   const filterPanel = (
     <>
@@ -302,7 +258,7 @@ export function ShopCatalog({
         setMinPrice={setMinPrice}
         setMaxPrice={setMaxPrice}
         clearFilters={clearFilters}
-        extraActiveCount={subcategories.length + eras.length + homeFlags.length + (collection ? 1 : 0)}
+        extraActiveCount={subcategories.length + eras.length + homeFlags.length + (collection ? 1 : 0) + (query ? 1 : 0)}
       />
       {activeCategory !== "all" ? (
         <FilterGroup
@@ -358,8 +314,9 @@ export function ShopCatalog({
       </div>
       <div className="section-heading">
         <div>
-          <p className="eyebrow dark">Available now</p>
-          <h2>Curated finds. Another life.</h2>
+          <p className="catalog-breadcrumb">All finds{activeCategory !== "all" ? ` / ${departmentLabel}` : ""}</p>
+          <p className="eyebrow dark">The REWEAR collection</p>
+          <h2>{activeCategory === "all" ? "Curated finds. Another life." : `Shop ${departmentLabel}`}</h2>
         </div>
         <p>
           Search inspected items and narrow by category, subcategory, price,
@@ -429,6 +386,9 @@ export function ShopCatalog({
             </TabsTrigger>
           ))}
         </TabsList>
+        {categorySubcategories.length > 0 ? <div className="catalog-subcategories" aria-label="Shop by subcategory">
+          {categorySubcategories.map((value) => <button key={value} type="button" aria-pressed={subcategories.includes(value)} onClick={() => toggle(setSubcategories, value)}>{value}</button>)}
+        </div> : null}
         {labels.map((tab) => (
           <TabsContent key={tab.value} value={tab.value}>
             <DialogPrimitive.Root open={filterOpen} onOpenChange={setFilterOpen}>
@@ -441,9 +401,8 @@ export function ShopCatalog({
               </aside>
               <div className="catalog-results">
                 <div className="catalog-toolbar">
-                  <div className="catalog-result-count">
-                    <strong>{filtered.length}</strong>{" "}
-                    {filtered.length === 1 ? "item" : "items"}
+                  <div className="catalog-result-count" role="status" aria-live="polite">
+                    {loadError ? "Catalog unavailable" : <><strong>{filtered.length}</strong>{" "}{filtered.length === 1 ? "item" : "items"}</>}
                   </div>
                   <DialogPrimitive.Trigger asChild><button
                     className="mobile-filter-toggle"
@@ -455,7 +414,15 @@ export function ShopCatalog({
                     ) : null}
                   </button></DialogPrimitive.Trigger>
                 </div>
+                {chips.length > 0 ? <div className="catalog-active-filters" aria-label="Active filters">
+                  {chips.map((chip) => <button type="button" key={chip.key} onClick={chip.remove} aria-label={`Remove ${chip.label}`}><span>{chip.label}</span><X aria-hidden="true" /></button>)}
+                  <button type="button" onClick={clearFilters}>Clear all</button>
+                </div> : null}
+                {invalidPriceRange ? <p className="catalog-price-hint" role="status">Minimum price must be less than or equal to maximum price.</p> : null}
                 <ProductGrid
+                  loadError={loadError}
+                  departmentLabel={activeCategory === "all" ? null : departmentLabel}
+                  clearFilters={clearFilters}
                   homeCategory={activeCategory === "home_decor"}
                   products={filtered}
                   filtersActive={activeFilterCount > 0 || Boolean(query)}
@@ -567,13 +534,14 @@ function FilterPanel({
           </button>
         ) : null}
       </div>
-      <div className="filter-price">
-        <legend>Price</legend>
+      <fieldset className="filter-price">
+        <legend>Price (CAD)</legend>
         <div>
           <input
             inputMode="decimal"
             type="number"
             min="0"
+            step="0.01"
             aria-label="Minimum price in Canadian dollars"
             placeholder="Min $"
             value={minPrice}
@@ -583,13 +551,14 @@ function FilterPanel({
             inputMode="decimal"
             type="number"
             min="0"
+            step="0.01"
             aria-label="Maximum price in Canadian dollars"
             placeholder="Max $"
             value={maxPrice}
             onChange={(event) => setMaxPrice(event.target.value)}
           />
         </div>
-      </div>
+      </fieldset>
       <FilterGroup
         title={activeCategory === "home_decor" ? "Maker / Brand" : "Brand"}
         values={options.brands}
@@ -663,11 +632,22 @@ function ProductGrid({
   products,
   filtersActive,
   homeCategory,
+  departmentLabel,
+  loadError,
+  clearFilters,
 }: {
   products: CatalogProduct[];
   filtersActive: boolean;
   homeCategory: boolean;
+  departmentLabel: string | null;
+  loadError: boolean;
+  clearFilters: () => void;
 }) {
+  if (loadError) return <div className="catalog-empty catalog-unavailable" role="status">
+    <h3>We couldn’t load the collection</h3>
+    <p>Please try again in a moment. Your filters are saved in this page’s address.</p>
+    <button type="button" onClick={() => window.location.reload()}>Try again</button>
+  </div>;
   if (!products.length)
     return (
       <div className="catalog-empty">
@@ -676,15 +656,16 @@ function ProductGrid({
             ? "No matching items"
             : homeCategory
               ? "Thoughtful finds for your home, coming soon."
-              : "Nothing live here yet"}
+              : departmentLabel ? `Nothing live in ${departmentLabel} yet` : "Nothing live here yet"}
         </h3>
         <p>
           {filtersActive
             ? "Try changing your search or removing a filter."
             : homeCategory
               ? "Our team is preparing selected Home & Decor pieces. Explore other categories or offer a piece for REWEAR to review."
-              : "Our team is preparing inspected pieces. Check back soon or learn how to send us your own collection."}
+              : departmentLabel ? `Check back for inspected ${departmentLabel.toLowerCase()} pieces, explore another department, or send us your own collection for review.` : "Our team is preparing inspected pieces. Check back soon or learn how to send us your own collection."}
         </p>
+        {filtersActive ? <button type="button" onClick={clearFilters}>Clear search and filters</button> : null}
         {!filtersActive ? <Link href="/sell-with-rewear">Explore selling with REWEAR</Link> : null}
       </div>
     );

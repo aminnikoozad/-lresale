@@ -9,7 +9,8 @@ const buyer = "22222222-2222-4222-8222-222222222222";
 const item = "33333333-3333-4333-8333-333333333333";
 const checks = JSON.stringify({ clean: true, intact: true, suitable_for_resale: true, no_significant_damage: true, wearable_without_stains_tears_holes: true });
 
-test("only MFA staff can attest inspection; listing requires a recorded attestation", async () => {
+for (const category of ["women", "men", "kids"]) {
+test(`${category}: only MFA staff can attest inspection; listing requires a recorded attestation`, async () => {
   const db = new PGlite();
   try {
     await db.exec(`
@@ -24,7 +25,7 @@ test("only MFA staff can attest inspection; listing requires a recorded attestat
       create function public.can_manage_items() returns boolean language sql stable security definer as $$select auth.uid()='${staff}'::uuid$$;
       grant execute on function public.can_manage_items() to authenticated;
       create table public.items(id uuid primary key,category text,status text,inspected_at timestamptz,updated_at timestamptz,published_at timestamptz);
-      insert into public.items(id,category,status) values('${item}','women','accepted');
+      insert into public.items(id,category,status) values('${item}','${category}','accepted');
       create table public.audit_logs(admin_user_id uuid,action text,entity_type text,entity_id text,new_value jsonb,reason text);
     `);
     await db.exec(migration);
@@ -40,6 +41,7 @@ test("only MFA staff can attest inspection; listing requires a recorded attestat
     await assert.rejects(db.exec(`update public.items set status='listed',published_at=now() where id='${item}'`));
     await identity(staff);
     await assert.rejects(db.query(`select public.admin_attest_item_inspection('${item}','{}'::jsonb)`));
+    await assert.rejects(db.query(`select public.admin_attest_item_inspection('${item}','${checks}'::jsonb - 'wearable_without_stains_tears_holes')`));
     await db.query(`select public.admin_attest_item_inspection('${item}','${checks}'::jsonb)`);
     await db.query(`select public.admin_attest_item_inspection('${item}','${checks}'::jsonb)`);
     await db.exec(`reset role`);
@@ -48,7 +50,9 @@ test("only MFA staff can attest inspection; listing requires a recorded attestat
     const logs = await db.query(`select * from public.audit_logs`);
     assert.equal(logs.rows.length,1);
     await db.exec(`update public.items set status='listed',published_at=now() where id='${item}'`);
-    await db.exec(`insert into public.items(id,category,status) values('44444444-4444-4444-8444-444444444444','women','accepted')`);
+    await db.exec(`insert into public.items(id,category,status) values('44444444-4444-4444-8444-444444444444','${category}','accepted')`);
     await assert.rejects(db.exec(`update public.items set status='listed' where id='44444444-4444-4444-8444-444444444444'`));
   } finally { await db.close(); }
 });
+
+}

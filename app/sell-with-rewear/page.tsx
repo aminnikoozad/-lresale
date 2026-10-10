@@ -4,6 +4,7 @@ import { ArrowRight, Camera, CheckCircle2, CircleDollarSign, PackageCheck, Searc
 import { SellerEarningsCalculator } from "@/components/seller-earnings-calculator";
 import { createPublicClient } from "@/lib/supabase/public";
 import { formatCadFromCents, loadSellingRules, tierPriceLabel } from "@/lib/business-rules";
+import { activePilotCategories, loadPilotSettings } from "@/lib/pilot-settings";
 import { loadLaunchSellerOffer } from "@/lib/launch-offer";
 import "./seller-guide.css";
 
@@ -16,10 +17,12 @@ export const metadata: Metadata = {
 
 export default async function SellWithRewearPage() {
   const supabase = createPublicClient();
-  const [rules, launchOffer] = await Promise.all([
+  const [rules, launchOffer, pilot] = await Promise.all([
     loadSellingRules(supabase),
     loadLaunchSellerOffer(supabase),
+    loadPilotSettings(supabase),
   ]);
+  const acceptingCategories = activePilotCategories(pilot).map((entry) => entry.label).join(", ");
   const serviceFee = formatCadFromCents(rules.pickupRules.processingFeeCents);
   const freePickupThreshold = formatCadFromCents(rules.pickupRules.freePickupThresholdCents);
   const lowValueFee = formatCadFromCents(rules.pickupRules.lowValuePickupItemFeeCents);
@@ -92,10 +95,10 @@ export default async function SellWithRewearPage() {
       <section className="guide-section" id="acceptance">
         <div className="guide-heading"><p className="eyebrow dark">What we accept</p><h2>Send items that have a realistic second life.</h2></div>
         <div className="accept-grid">
-          <article className="good"><h3>Good to send</h3><ul><li>Clean women’s clothing in the categories currently enabled during the pilot.</li><li>Items in good wearable condition, without stains, tears, holes, significant damage or missing parts.</li><li>Pieces with a likely individual resale value of at least {formatCadFromCents(rules.minimumIndividualItemValueCents)}.</li><li>Lower-value compatible pieces that may make sense as a bundle.</li><li>Items with clear brand, size and care labels when available.</li></ul></article>
+          <article className="good"><h3>Good to send</h3><ul><li>Clean, resale-ready pieces in our currently accepted categories: {acceptingCategories}.</li><li>Items in good wearable condition, without stains, tears, holes, significant damage or missing parts.</li><li>Pieces with a likely individual resale value of at least {formatCadFromCents(rules.minimumIndividualItemValueCents)}.</li><li>Lower-value compatible pieces that may make sense as a bundle.</li><li>Items with clear brand, size and care labels when available.</li></ul></article>
           <article className="avoid"><h3>Usually not a fit</h3><ul><li>Heavily stained, damaged, incomplete or unhygienic items.</li><li>Items whose condition cannot be verified safely.</li><li>Pieces with very low resale demand or value unless they can be bundled.</li><li>Items that do not match the categories currently enabled in the pilot.</li></ul></article>
         </div>
-        <p className="guide-note">Submitting an item does not guarantee acceptance. Final acceptance happens after physical inspection.</p>
+        <p className="guide-note">Submitting an item does not guarantee acceptance. Women’s, men’s and kids’ clothing each have their own sizing and categories. Check the currently accepted categories above before packing. Final acceptance happens after physical inspection.</p>
       </section>
 
       <section className="guide-section split-section" id="pricing">

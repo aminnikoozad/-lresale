@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { CATALOG_CATEGORIES, isCatalogCategory, type CatalogCategory } from "./catalog-taxonomy";
+import { CATALOG_CATEGORIES, CLOTHING_CATEGORIES, isCatalogCategory, type CatalogCategory } from "./catalog-taxonomy";
 
 export type PilotSettings = {
   enabled: boolean;
@@ -12,7 +12,7 @@ export type PilotSettings = {
 
 export const DEFAULT_PILOT_SETTINGS: PilotSettings = {
   enabled: true,
-  categories: ["women"],
+  categories: [...CLOTHING_CATEGORIES],
   itemCap: null,
   pickupDays: [0, 6],
   durationWeeks: 8,
