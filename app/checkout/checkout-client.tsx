@@ -59,7 +59,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        router.push("/login");
+        router.push("/login?next=%2Fcheckout");
         return;
       }
 

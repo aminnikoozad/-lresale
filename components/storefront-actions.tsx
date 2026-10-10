@@ -49,7 +49,7 @@ export function FavoriteButton({ itemId, compact = false }: { itemId: string; co
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        router.push("/login");
+        router.push(`/login?${new URLSearchParams({ next: `/item/${itemId}` })}`);
         return;
       }
       if (saved) {

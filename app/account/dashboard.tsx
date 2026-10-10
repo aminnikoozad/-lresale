@@ -21,6 +21,7 @@ import {
   Truck,
   Wallet,
 } from "lucide-react";
+import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -577,7 +578,7 @@ function RequestDialog({
             </label>
           </div>
           <div className="request-form-footer">
-            <Button type="submit" disabled={!availableSlots.length}>Submit collection request</Button>
+            <PendingSubmitButton disabled={!availableSlots.length} pendingLabel="Submitting request…">Submit collection request</PendingSubmitButton>
             <small className="payment-note">A new batch code and final fee snapshot are created when you submit. Launch eligibility is finalized atomically at successful submission. Pickup still requires confirmation before dispatch.</small>
           </div>
         </form>

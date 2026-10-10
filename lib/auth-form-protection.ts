@@ -6,8 +6,8 @@ import { verifyHumanChallenge } from "@/lib/human-challenge";
 import { createClient } from "@/lib/supabase/server";
 
 // This limiter supplements Supabase Auth and CAPTCHA. Edge/firewall protection is still recommended for volumetric DDoS.
-export async function protectAuthForm(form: FormData, path: string) {
-  const fail = (message: string) => redirect(`${path}?message=${encodeURIComponent(message)}`);
+export async function protectAuthForm(form: FormData, path: string, next?: string) {
+  const fail = (message: string) => redirect(`${path}?${new URLSearchParams({ message, ...(next ? { next } : {}) })}`);
 
   // Cheap honeypot rejection happens before any database work.
   if (String(form.get("website") || "").trim()) fail("Verification failed. Please try again.");

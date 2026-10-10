@@ -31,3 +31,10 @@ test("rejects control characters and invalid values", () => {
 test("uses the supplied local fallback", () => {
   assert.equal(safeRedirectPath("//evil.example", origin, "/login"), "/login");
 });
+
+
+test('rejects protocol-relative paths produced by URL normalization', () => {
+  for (const path of ['/a/..//evil.test', '/a/%2e%2e//evil.test', '/%2e%2e//evil.test', '/a/b/../../\\evil.test']) {
+    assert.equal(safeRedirectPath(path, 'https://rewear.invalid'), '/account');
+  }
+});

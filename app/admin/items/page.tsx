@@ -88,13 +88,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
           <Link href="/" className="brand">REWEAR<span>.</span></Link>
           <span className="admin-pill">Admin</span>
         </div>
-        <nav>
-          <Link href="/admin">Dashboard</Link><Link href="/admin/customers">Customers</Link>
-          <Link href="/admin/operations#pickup-requests">Pickup requests</Link>
-          <Link href="/admin/items">Items</Link><Link href="/admin/home-decor">Home &amp; Decor inspection</Link>
-          <Link href="/admin/settings">Selling Rules</Link>
-          <Link href="/account">Customer account</Link>
-        </nav>
+
       </header>
 
       <section className="admin-items-wrap">

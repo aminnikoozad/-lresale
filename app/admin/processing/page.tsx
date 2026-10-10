@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
 import { ItemBarcode } from "@/components/item-barcode";
@@ -66,6 +67,8 @@ function when(value: string | null) {
 
 export default async function ProcessingPage({ searchParams }: Props) {
   const { supabase, access } = await requireAdmin();
+  const permission = await supabase.rpc("can_manage_items");
+  if (permission.error || permission.data !== true) redirect("/admin");
   const [{ data, error }, params] = await Promise.all([
     supabase.rpc("admin_processing_snapshot"),
     searchParams,
@@ -87,13 +90,7 @@ export default async function ProcessingPage({ searchParams }: Props) {
     <main className="processing-shell">
       <header className="processing-top">
         <div><Link href="/" className="brand">REWEAR<span>.</span></Link><b>Operations</b></div>
-        <nav>
-          <Link href="/admin">Dashboard</Link>
-          <Link href="/admin/operations">Pickup</Link>
-          <Link href="/admin/items">Items</Link>
-          <Link href="/admin/processing">Processing</Link>
-          <Link href="/admin/pilot">Pilot</Link>
-        </nav>
+
       </header>
 
       <section className="processing-wrap">
