@@ -2,8 +2,8 @@
 
 ## Behavior
 
-- Once collected, a bag may stay collected or advance to inspection/completed. Once under inspection, it may stay there or advance to completed. Pre-receipt, missed and cancellation transitions are blocked at the table trigger for every SQL writer. Existing finalized-state RPC rules remain in force.
-- Photo arrays reject null entries, whitespace-only entries and multidimensional arrays. A listed/relisted item must retain at least one nonempty reference. Valid existing URL formats and query strings are preserved. This verifies references only, not uploaded object existence or physical condition.
+- Once collected, a bag may stay collected or advance to inspection/completed. Once under inspection, it may stay there or advance to completed. Pre-receipt, missed and cancellation transitions are blocked at the table trigger for every SQL writer. Completed and cancelled states cannot be reopened by any SQL writer.
+- Photo arrays reject null entries, whitespace-only entries and multidimensional/non-1-indexed arrays. A listed/relisted item must retain at least one nonempty reference. Valid existing URL formats and query strings are preserved. Unchanged malformed legacy references do not block nonpublic receipt or terminal status changes, but republishing or editing those references requires correction. This verifies references only, not uploaded object existence or physical condition.
 - Reservation cleanup rejects NULL and out-of-range batch sizes. Service-role authorization and protection for in-progress payments are unchanged.
 
 No existing application rows are rewritten. This additive migration does not replace PR37's separate price/inspection trigger. Both migration orders are compatible. The lockfile includes PR36's dependency patch to keep the standard production audit passing; PR37 application changes are not included.

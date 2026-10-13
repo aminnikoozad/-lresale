@@ -17,6 +17,8 @@ async function fixture(){
     create table public.order_payment_attempts(order_id int,status text);
     create table public.inventory_reservations(id int primary key,order_id int,status text,updated_at timestamptz);
   `);
+  // Explicit pre-migration legacy fixtures, never production rows.
+  await db.exec("insert into items values(1001,'listed',array[null]::text[]),(1002,'received',array[''])");
   await db.exec(migration);
   return db;
 }
@@ -32,6 +34,10 @@ test('physical receipt is forward-only across all SQL writers, with same-state r
     await assert.rejects(db.query('update collection_requests set status=null where id=1'),/Received pickup/);
     await assert.rejects(db.query('update collection_requests set status=null where id=2'),/under inspection/);
     await db.exec(`update collection_requests set status=status; update collection_requests set status='inspection' where id=1; update collection_requests set status='completed' where id in (1,2); update collection_requests set status='cancelled' where id=3;`);
+    for(const id of [1,2,3]){
+      await assert.rejects(db.query("update collection_requests set status='submitted' where id=$1",[id]),/Finalized pickup/);
+      await assert.rejects(db.query("update collection_requests set status=null where id=$1",[id]),/Finalized pickup/);
+    }
     assert.deepEqual((await db.query('select status from collection_requests order by id')).rows,[{status:'completed'},{status:'completed'},{status:'cancelled'}]);
   }finally{await db.close();}
 });
@@ -40,7 +46,7 @@ test('photo references cannot be null, blank or multidimensional; publication ca
   const db=await fixture();
   try{
     await db.exec(`insert into items values(1,'accepted','{}');`);
-    for(const sql of ["array[null]::text[]","array['']","array['   ']","array[E'\\t\\n']","array['https://example.invalid/test.jpg',null]","array[['https://example.invalid/test.jpg']]"]){
+    for(const sql of ["array[null]::text[]","array['']","array['   ']","array[E'\\t\\n']","array['https://example.invalid/test.jpg',null]","array[['https://example.invalid/test.jpg']]","'[2:2]={https://example.invalid/test.jpg}'::text[]","'[0:0]={https://example.invalid/test.jpg}'::text[]"]){
       await assert.rejects(db.exec(`update items set photo_urls=${sql} where id=1`),/Photo references/);
       await assert.rejects(db.exec(`insert into items values(2,'listed',${sql})`),/Photo references/);
     }
@@ -66,5 +72,18 @@ test('expiry enforces bounded non-null batches and excludes live payment attempt
     assert.deepEqual((await db.query('select status from inventory_reservations order by id')).rows,[{status:'expired'},{status:'active'}]);
     await db.exec("set role authenticated");await assert.rejects(db.query('select public.expire_prepared_checkouts(1)'),/permission denied/);
     await db.exec("reset role;select set_config('test.role','authenticated',false);set role service_role");await assert.rejects(db.query('select public.expire_prepared_checkouts(1)'),/Service role required/);
+  }finally{await db.close();}
+});
+
+
+test('unchanged legacy bad photos do not block receipt or terminal states but cannot be republished',async()=>{
+  const db=await fixture();
+  try{
+    await db.exec("update items set status='sold' where id=1001; update items set status='inspection' where id=1002");
+    assert.deepEqual((await db.query('select status from items where id in(1001,1002) order by id')).rows,[{status:'sold'},{status:'inspection'}]);
+    await assert.rejects(db.exec("update items set status='relisted' where id=1001"),/Photo references/);
+    await assert.rejects(db.exec("update items set photo_urls=array['   '] where id=1002"),/Photo references/);
+    await db.exec("update items set photo_urls=array['https://example.invalid/fixed.jpg'] where id=1002");
+    await db.exec("update items set status='listed' where id=1002");
   }finally{await db.close();}
 });
