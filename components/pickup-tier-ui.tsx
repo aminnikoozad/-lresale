@@ -19,19 +19,19 @@ export function PickupTierUi() {
 
     const updateStaticCopy = () => {
       const threshold = money(rules.pickupRules.freePickupThresholdCents);
-      const perItemFee = money(rules.pickupRules.lowValuePickupItemFeeCents);
+      const flatFee = money(rules.pickupRules.lowValuePickupItemFeeCents);
       const bagMinimum = money(rules.pickupRules.bagMinimumEstimatedValueCents);
 
       document.querySelectorAll<HTMLElement>(".mini-rules span").forEach((element) => {
         if (element.textContent?.includes("Estimated collection total is")) {
-          const next = `✓ ${threshold}+ = free priority pickup; below ${threshold} = ${perItemFee} per item`;
+          const next = `✓ ${threshold}+ = free priority pickup; below ${threshold} = ${flatFee} flat per pickup`;
           if (element.textContent !== next) element.textContent = next;
         }
       });
 
       document.querySelectorAll<HTMLElement>(".empty-box p").forEach((element) => {
         if (element.textContent?.includes("Order a Bag or arrange a pickup")) {
-          const next = `Bag / Box requests require ${bagMinimum}+ estimated resale value. Standard pickups below ${threshold} are available for ${perItemFee} per item.`;
+          const next = `Bag / Box requests require ${bagMinimum}+ estimated resale value. Standard pickups below ${threshold} are available for ${flatFee} flat per pickup.`;
           if (element.textContent !== next) element.textContent = next;
         }
       });
@@ -61,12 +61,11 @@ export function PickupTierUi() {
 
       const threshold = rules.pickupRules.freePickupThresholdCents;
       const bagMinimum = rules.pickupRules.bagMinimumEstimatedValueCents;
-      const perItemFee = rules.pickupRules.lowValuePickupItemFeeCents;
+      const flatFee = rules.pickupRules.lowValuePickupItemFeeCents;
       const estimatedCents = Math.max(0, Math.round((Number(estimatedInput.value) || 0) * 100));
       const itemCount = Math.max(0, Math.floor(Number(itemCountInput.value) || 0));
       const isBag = requestType === "bag";
       const isFree = estimatedCents >= threshold;
-      const feeCents = isFree ? 0 : itemCount * perItemFee;
 
       estimatedInput.min = String((isBag ? bagMinimum : rules.minimumPickupEstimatedValueCents) / 100);
       estimatedInput.placeholder = isBag
@@ -88,14 +87,14 @@ export function PickupTierUi() {
         } else if (isFree) {
           notice.innerHTML = `<div><b>Free priority pickup</b><p>Your estimated resale value is ${money(threshold)} or more, so pickup is free and prioritized for the earliest available pickup window.</p></div>`;
         } else {
-          const feeText = itemCount > 0 ? ` Estimated pickup fee: <strong>${money(feeCents)}</strong>.` : "";
-          notice.innerHTML = `<div><b>${money(perItemFee)} pickup fee per item below ${money(threshold)}</b><p>Pickups below ${money(threshold)} are allowed, but cost ${money(perItemFee)} for each item.${feeText}</p></div>`;
+          const feeText = itemCount > 0 ? ` Estimated pickup fee: <strong>${money(flatFee)}</strong>.` : "";
+          notice.innerHTML = `<div><b>${money(flatFee)} flat pickup fee below ${money(threshold)}</b><p>Pickups below ${money(threshold)} are allowed, but cost a single ${money(flatFee)} fee for the whole pickup.${feeText}</p></div>`;
         }
       }
 
       form.querySelectorAll<HTMLElement>(".terms-box p").forEach((paragraph) => {
         if (paragraph.textContent?.includes("Eligible collections must total at least $100")) {
-          const next = `• Pickup is free and prioritized at ${money(threshold)} or more. Below ${money(threshold)}, a ${money(perItemFee)} per-item pickup fee applies. Bag / Box requests require at least ${money(bagMinimum)} estimated resale value. Items must be clean and free of stains, tears, holes or missing parts.`;
+          const next = `• Pickup is free and prioritized at ${money(threshold)} or more. Below ${money(threshold)}, a ${money(flatFee)} flat pickup fee applies. Bag / Box requests require at least ${money(bagMinimum)} estimated resale value. Items must be clean and free of stains, tears, holes or missing parts.`;
           if (paragraph.textContent !== next) paragraph.textContent = next;
         }
       });
@@ -106,7 +105,7 @@ export function PickupTierUi() {
           feeAcceptance = document.createElement("label");
           feeAcceptance.dataset.lowValueFeeAcceptance = "true";
           feeAcceptance.className = "check";
-          feeAcceptance.innerHTML = `<input name="pickup_fee_accepted" value="accepted" required type="checkbox"> <span>I accept the ${money(perItemFee)} per-item pickup fee for pickups below ${money(threshold)}.</span>`;
+          feeAcceptance.innerHTML = `<input name="pickup_fee_accepted" value="accepted" required type="checkbox"> <span>I accept the ${money(flatFee)} flat pickup fee for pickups below ${money(threshold)}.</span>`;
           const pickupPolicy = form.querySelector<HTMLInputElement>('input[name="pickup_policy_accepted"]')?.closest("label");
           pickupPolicy?.insertAdjacentElement("beforebegin", feeAcceptance);
         }
@@ -120,14 +119,14 @@ export function PickupTierUi() {
         const title = oldHoldCard.querySelector("b");
         const copy = oldHoldCard.querySelector("p");
         if (title) title.textContent = `${money(threshold)}+ = free priority pickup`;
-        if (copy) copy.textContent = `Below ${money(threshold)}, pickup is ${money(perItemFee)} per item. Bag / Box requests require at least ${money(bagMinimum)} in estimated resale value.`;
+        if (copy) copy.textContent = `Below ${money(threshold)}, pickup is ${money(flatFee)} flat per pickup. Bag / Box requests require at least ${money(bagMinimum)} in estimated resale value.`;
       }
 
       const paymentNote = form.querySelector<HTMLElement>(".payment-note");
       if (paymentNote) {
         paymentNote.textContent = isBag
           ? `Bag / Box requests require ${money(bagMinimum)}+ estimated resale value.`
-          : `Pickup is free and prioritized at ${money(threshold)}+; below that, the fee is ${money(perItemFee)} per item.`;
+          : `Pickup is free and prioritized at ${money(threshold)}+; below that, the fee is ${money(flatFee)} flat per pickup.`;
       }
     };
 

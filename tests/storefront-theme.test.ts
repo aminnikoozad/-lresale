@@ -36,3 +36,22 @@ test("simple hero removes decorative lettering and card numbering without removi
   assert.match(page, /name="q"/);
   assert.match(page, /aria-label="Shop departments"/);
 });
+
+test("account link keeps an accessible name when its visible text is hidden on mobile", () => {
+  const accountLink = page.match(/<Link\b[^>]*className="market-account-link"[^>]*>/)?.[0];
+  assert.ok(accountLink, "The storefront account link must exist");
+  assert.match(accountLink, /href="\/account"/);
+  assert.match(accountLink, /aria-label="Account"/);
+});
+
+test("default and social metadata describe the clothing-only storefront", () => {
+  const layout = readFileSync(new URL("../app/layout.tsx", import.meta.url), "utf8");
+  const metadata = layout.match(/export const metadata: Metadata = \{[\s\S]*?\n\};/)?.[0];
+  assert.ok(metadata, "Root metadata must be defined");
+  assert.match(metadata, /default: "Rewear Market \| Secondhand clothing"/);
+  assert.match(metadata, /title: "Rewear Market \| Secondhand clothing"/);
+  const descriptions = [...metadata.matchAll(/description: "([^"]+)"/g)];
+  assert.equal(descriptions.length, 2, "Both search and social descriptions must be present");
+  for (const [, description] of descriptions) assert.match(description, /secondhand clothing/);
+  assert.doesNotMatch(metadata, /electronics|home\s*(?:&\s*)?decor|shoes/i);
+});

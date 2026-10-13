@@ -30,15 +30,15 @@ const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.siteUrl),
   title: {
-    default: "Rewear Market | Secondhand fashion, electronics & home decor",
+    default: "Rewear Market | Secondhand clothing",
     template: "%s | Rewear",
   },
-  description: "Sell and shop quality secondhand clothing, shoes, electronics and selected Home & Decor pieces with managed pickup and Canada-wide shopping.",
+  description: "Sell and shop quality secondhand clothing with managed pickup and Canada-wide shopping.",
   openGraph: {
     type: "website",
     siteName: "Rewear Market",
-    title: "Rewear Market | Secondhand fashion, electronics & home decor",
-    description: "Sell and shop quality secondhand clothing, shoes, electronics and selected Home & Decor pieces with managed pickup and Canada-wide shopping.",
+    title: "Rewear Market | Secondhand clothing",
+    description: "Sell and shop quality secondhand clothing with managed pickup and Canada-wide shopping.",
   },
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };

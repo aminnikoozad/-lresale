@@ -26,8 +26,7 @@ export default function CartPage() {
       <div className="checkout-progress" aria-label="Checkout progress">
         <div className="active"><span>1</span><b>Bag</b></div>
         <div><span>2</span><b>Delivery</b></div>
-        <div><span>3</span><b>Payment</b></div>
-        <div><span>4</span><b>Confirmation</b></div>
+        <div><span>3</span><b>Order prepared</b></div>
       </div>
 
       {!items.length ? (

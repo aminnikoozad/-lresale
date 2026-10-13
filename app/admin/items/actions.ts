@@ -274,9 +274,10 @@ export async function publishAdminItem(formData: FormData) {
   const itemId = text(formData, "item_id");
   const rawPrice = text(formData, "listed_price");
   const listedPriceCents = rawPrice ? centsFromDollars(rawPrice) : null;
+  const rules = await loadSellingRules(supabase);
 
-  if (!itemId || (listedPriceCents !== null && (!Number.isInteger(listedPriceCents) || listedPriceCents < 1))) {
-    redirect(itemsMessage("Check the listing price.", "error"));
+  if (!itemId || (listedPriceCents !== null && (!Number.isInteger(listedPriceCents) || listedPriceCents < rules.minimumSellingPriceCents))) {
+    redirect(itemsMessage(`The listing price must be at least $${(rules.minimumSellingPriceCents / 100).toFixed(2)} CAD.`, "error"));
   }
 
   if (formData.get("inspection_passed") !== "yes") {

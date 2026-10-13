@@ -62,8 +62,8 @@ export default async function AdminReadinessPage() {
     },
     {
       label: "Checkout reservation cleanup",
-      ok: (process.env.CRON_SECRET?.length ?? 0) >= 32 && (envSet("SUPABASE_SECRET_KEY") || envSet("SUPABASE_SERVICE_ROLE_KEY")),
-      detail: "Set a 32+ character CRON_SECRET and the server-only Supabase service key. The daily production job expires prepared orders; verify its first run in deployment logs.",
+      ok: (process.env.CRON_SECRET?.length ?? 0) >= 32 && carrier.storage,
+      detail: "Set a 32+ character CRON_SECRET and the server-only Supabase service key. The daily production job expires prepared orders; verify its first run in deployment logs. Privileged cleanup is disabled while test isolation is enabled.",
     },
     {
       label: "Production database migrations",
