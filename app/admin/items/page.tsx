@@ -278,9 +278,9 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                   <form className="review-form publish-form" action={publishAdminItem}>
                     <input type="hidden" name="item_id" value={item.item_id} />
                     <label>Shop price (CAD)
-                      <input name="listed_price" type="number" min="0.01" step="0.01" defaultValue={dollars(item.listed_price_cents ?? item.initial_price_cents)} required />
+                      <input name="listed_price" type="number" min={rules.minimumSellingPriceCents / 100} step="0.01" defaultValue={dollars(item.listed_price_cents ?? item.initial_price_cents)} required />
                     </label>
-                    <div className="publish-note">This price can be lower than the initial approved price; the locked commission tier does not change.</div>
+                    <div className="publish-note">This price can be lower than the initial approved price, but must be at least {formatCadFromCents(rules.minimumSellingPriceCents)}. The locked commission tier does not change.</div>
                     <label><input type="checkbox" name="inspection_passed" value="yes" required /> I confirm the physical inspection passed: clean, intact and suitable for resale. Clothing and accessories are wearable without stains, tears, holes or significant damage.</label>
                     <button type="submit">Publish to Shop</button>
                   </form>

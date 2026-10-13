@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
+import { getSupabaseConfig } from "./lib/supabase/config";
 
-const supabaseOrigin = "https://lsdhobwrnmlkqnvkamlt.supabase.co";
+// Validate before a build/server starts, and keep image/network policy on the
+// same project as the browser and server clients.
+const supabaseEndpoint = new URL(getSupabaseConfig().url);
+const supabaseOrigin = supabaseEndpoint.origin;
+const supabaseWebsocketOrigin = supabaseOrigin.replace(/^https:/, "wss:");
+const supabaseConnections = process.env.NEXT_PUBLIC_SUPABASE_TEST_ISOLATION === "true"
+  ? `${supabaseOrigin} ${supabaseWebsocketOrigin}`
+  : `https://*.supabase.co wss://*.supabase.co ${supabaseOrigin} ${supabaseWebsocketOrigin}`;
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -14,7 +22,7 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${supabaseOrigin}`,
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com",
+  `connect-src 'self' ${supabaseConnections} https://challenges.cloudflare.com`,
   "upgrade-insecure-requests",
 ].join("; ");
 
@@ -24,7 +32,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "lsdhobwrnmlkqnvkamlt.supabase.co",
+        hostname: supabaseEndpoint.hostname,
+        port: supabaseEndpoint.port,
         pathname: "/storage/v1/object/public/**",
       },
     ],

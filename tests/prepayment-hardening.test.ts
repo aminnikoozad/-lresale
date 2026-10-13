@@ -20,6 +20,37 @@ test("prepared checkout records versioned policy acceptance server-side", () => 
   assert.match(checkoutClient, /RETURN_POLICY_VERSION/);
 });
 
+test("cart and checkout progress describe unpaid order preparation", async () => {
+  const cart = await readFile(new URL("../app/cart/page.tsx", import.meta.url), "utf8");
+  const checkoutCss = await readFile(new URL("../app/checkout-readiness.css", import.meta.url), "utf8");
+  assert.match(checkoutCss, /\.checkout-progress\{[^}]*grid-template-columns:repeat\(3,1fr\)/);
+  for (const [source, expectedCount] of [[cart, 1], [checkoutClient, 2]] as const) {
+    const progress = [...source.matchAll(/<div className="checkout-progress"[^>]*>\s*((?:<div[^>]*>[\s\S]*?<\/div>\s*)+)<\/div>/g)];
+    assert.equal(progress.length, expectedCount, "Every checkout progress state must be checked");
+    for (const [, steps] of progress) {
+      assert.deepEqual([...steps.matchAll(/<b>([^<]+)<\/b>/g)].map((match) => match[1]), ["Bag", "Delivery", "Order prepared"]);
+    }
+  }
+  assert.match(checkoutClient, /Save delivery & prepare order/);
+  assert.match(checkoutClient, /Payments are not available yet/);
+  assert.match(checkoutClient, /No charge has been made/);
+  assert.match(checkoutClient, /This order remains Awaiting Payment/);
+  assert.doesNotMatch(checkoutClient, /Next: Payment|Save delivery & prepare payment/);
+});
+
+test("pickup fee labels and displayed estimates remain flat per pickup", async () => {
+  const pickup = await readFile(new URL("../components/pickup-tier-ui.tsx", import.meta.url), "utf8");
+  const settings = await readFile(new URL("../app/admin/settings/page.tsx", import.meta.url), "utf8");
+  for (const source of [pickup, settings]) {
+    assert.doesNotMatch(source, /per[- ]item|for each item|perItemFee/i);
+    assert.match(source, /flat (?:per pickup|pickup fee|fee for the whole pickup)/);
+  }
+  assert.doesNotMatch(pickup, /itemCount\s*\*/);
+  assert.match(pickup, /Estimated pickup fee: <strong>\$\{money\(flatFee\)\}/);
+  assert.match(pickup, /const flatFee = rules\.pickupRules\.lowValuePickupItemFeeCents/);
+  assert.match(settings, /name="low_value_pickup_item_fee"/);
+});
+
 test("paid orders require payment and policy evidence", () => {
   assert.match(paymentSql, /orders_paid_requires_payment_evidence_check/i);
   assert.match(paymentSql, /provider_payment_id is not null/i);

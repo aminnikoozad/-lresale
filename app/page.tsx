@@ -115,7 +115,7 @@ export default async function Home() {
           <button type="submit" aria-label="Search catalog"><ArrowRight aria-hidden="true" /></button>
         </form>
         <div className="header-actions">
-          <Link href="/account" className="market-account-link"><UserRound aria-hidden="true" /><span>Account</span></Link>
+          <Link href="/account" className="market-account-link" aria-label="Account"><UserRound aria-hidden="true" /><span>Account</span></Link>
           <CartNavLink />
           <Button asChild className="header-sell-button"><Link href="/sell-with-rewear">Sell with REWEAR</Link></Button>
         </div>
