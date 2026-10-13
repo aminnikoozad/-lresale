@@ -1,6 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr";
-import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "./config";
+import { getSupabaseConfig } from "./config";
 
 export function createClient() {
-  return createBrowserClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  const { url, publishableKey } = getSupabaseConfig();
+  return createBrowserClient(url, publishableKey);
 }

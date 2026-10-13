@@ -1,12 +1,26 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-const URL = Deno.env.get("SUPABASE_URL")!;
-const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
-const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const localIsolation = Deno.env.get("REWEAR_LOCAL_TEST_ISOLATION");
+if (localIsolation !== undefined && localIsolation !== "true" && localIsolation !== "false") {
+  throw new Error("REWEAR_LOCAL_TEST_ISOLATION must be true or false.");
+}
+const isolatedLocal = localIsolation === "true";
+const LOCAL_APP_ORIGIN = "http://127.0.0.1:3000";
+const configuredOrigins = Deno.env.get("ALLOWED_APP_ORIGINS");
+if (isolatedLocal) {
+  // Validate raw text before normalization, and before reading any credentials.
+  // A local CORS exception must never enable a hosted or DNS-routed backend.
+  const loopback = /^http:\/\/(?:127\.0\.0\.1|\[::1\]):([1-9]\d{4})\/?$/.exec(SUPABASE_URL ?? "");
+  const port = loopback ? Number(loopback[1]) : 0;
+  if (port < 20000 || port > 32767 || configuredOrigins !== LOCAL_APP_ORIGIN) {
+    throw new Error("Local test isolation requires a literal HTTP loopback Supabase origin on port 20000-32767 and ALLOWED_APP_ORIGINS=http://127.0.0.1:3000.");
+  }
+}
 const DEFAULT_ORIGIN = "https://lresale.vercel.app";
 const ALLOWED_ORIGINS = new Set(
-  (Deno.env.get("ALLOWED_APP_ORIGINS") || DEFAULT_ORIGIN)
+  isolatedLocal ? [LOCAL_APP_ORIGIN] : (configuredOrigins || DEFAULT_ORIGIN)
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean)
@@ -20,6 +34,8 @@ const ALLOWED_ORIGINS = new Set(
     })
     .filter(Boolean),
 );
+const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
+const SERVICE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const base = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -57,7 +73,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     const auth = req.headers.get("Authorization") || "";
-    const userClient = createClient(URL, ANON, { global: { headers: { Authorization: auth } } });
+    const userClient = createClient(SUPABASE_URL!, ANON, { global: { headers: { Authorization: auth } } });
     const { data: userData, error: userError } = await userClient.auth.getUser();
     if (userError || !userData.user || userData.user.is_anonymous) return json(req, { error: "Authentication required" }, 401);
 
@@ -82,7 +98,7 @@ Deno.serve(async (req: Request) => {
     const bytes = new Uint8Array(await file.arrayBuffer());
     if (!validMagic(file.type, bytes.slice(0, 32))) return json(req, { error: "Photo content does not match its declared image type" }, 400);
 
-    const admin = createClient(URL, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
+    const admin = createClient(SUPABASE_URL!, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
     const { data: item, error: itemError } = await admin.from("items").select("id").eq("id", itemId).maybeSingle();
     if (itemError || !item) return json(req, { error: "Item not found" }, 404);
 

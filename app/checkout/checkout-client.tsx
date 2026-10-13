@@ -113,8 +113,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
         <div className="checkout-progress" aria-label="Checkout progress">
           <div className="done"><span><Check /></span><b>Bag</b></div>
           <div className="done"><span><Check /></span><b>Delivery</b></div>
-          <div className="active"><span>3</span><b>Payment</b></div>
-          <div><span>4</span><b>Confirmation</b></div>
+          <div className="done"><span><Check /></span><b>Order prepared</b></div>
         </div>
         <LockKeyhole />
         <h1>Checkout details saved</h1>
@@ -123,7 +122,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
         <div className="payment-pending">
           <CreditCard />
           <div>
-            <b>Payment connection is the next step</b>
+            <b>Order prepared, awaiting payment</b>
             <span>No charge has been made. This order remains Awaiting Payment until a secure payment provider is connected and confirms payment.</span>
           </div>
         </div>
@@ -141,8 +140,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
       <div className="checkout-progress" aria-label="Checkout progress">
         <div className="done"><span><Check /></span><b>Bag</b></div>
         <div className="active"><span>2</span><b>Delivery</b></div>
-        <div><span>3</span><b>Payment</b></div>
-        <div><span>4</span><b>Confirmation</b></div>
+        <div><span>3</span><b>Order prepared</b></div>
       </div>
 
       <div className="checkout-layout">
@@ -187,10 +185,10 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
 
           <div className="checkout-next-step-preview">
             <CreditCard />
-            <div><b>Next: Payment</b><span>Card or wallet fields will appear here after the payment provider is connected. They are intentionally disabled today.</span></div>
+            <div><b>Payments are not available yet</b><span>Card or wallet fields will appear here after the payment provider is connected. They are intentionally disabled today.</span></div>
           </div>
 
-          <Button type="submit" size="lg" disabled={submitting}>{submitting ? "Checking availability…" : "Save delivery & prepare payment"}</Button>
+          <Button type="submit" size="lg" disabled={submitting}>{submitting ? "Checking availability…" : "Save delivery & prepare order"}</Button>
           <small>Preparing checkout does not charge your card. The database verifies current price and availability again before creating the order.</small>
         </form>
 
