@@ -53,9 +53,84 @@ test("test isolation refuses the production URL and key independently", () => {
   for (const url of [production.url, `${production.url}/`, production.url.toUpperCase(), `${production.url}:443`]) {
     assert.throws(() => resolveSupabaseConfig({ url, publishableKey: testKey, testIsolation: "true" }), /refuses the production/);
   }
-  assert.throws(() => resolveSupabaseConfig({
-    url: testUrl, publishableKey: production.publishableKey, testIsolation: "true",
-  }), /refuses the production/);
+  for (const url of [testUrl, "http://127.0.0.1:20000", "http://[::1]:32767"]) {
+    assert.throws(() => resolveSupabaseConfig({
+      url, publishableKey: production.publishableKey, testIsolation: "true",
+    }), /refuses the production/);
+  }
+});
+
+test("explicit isolation allows only canonical literal loopback on native CLI ports", () => {
+  for (const host of ["127.0.0.1", "[::1]"]) {
+    for (const port of [20000, 20001, 25321, 32766, 32767]) {
+      const origin = `http://${host}:${port}`;
+      for (const url of [origin, `${origin}/`, `  ${origin}/  `]) {
+        assert.deepEqual(resolveSupabaseConfig({ url, publishableKey: testKey, testIsolation: "true" }), {
+          url: origin, publishableKey: testKey,
+        });
+      }
+    }
+  }
+});
+
+test("loopback HTTP requires explicit isolation, complete overrides, and a public key", () => {
+  for (const url of ["http://127.0.0.1:20000", "http://[::1]:32767"]) {
+    for (const testIsolation of [undefined, "false"]) {
+      assert.throws(() => resolveSupabaseConfig({ url, publishableKey: testKey, testIsolation }), /HTTPS origin/);
+    }
+    for (const publishableKey of [undefined, "", "  "]) {
+      assert.throws(() => resolveSupabaseConfig({ url, publishableKey, testIsolation: "true" }), /Set both/);
+    }
+    for (const publishableKey of ["sb_secret_synthetic", "e30.synthetic.signature", "sb_publishable_"]) {
+      assert.throws(() => resolveSupabaseConfig({ url, publishableKey, testIsolation: "true" }), /must be a publishable key/);
+    }
+  }
+});
+
+test("isolation refuses loopback ports outside the native range and ambiguous port syntax", () => {
+  for (const host of ["127.0.0.1", "[::1]"]) {
+    for (const port of ["", "0", "80", "443", "19999", "32768", "54321", "65535", "65536", "020000", "+20000", "20000.0", "2e4", "0x4e20"]) {
+      const url = `http://${host}${port ? `:${port}` : ""}`;
+      assert.throws(() => resolveSupabaseConfig({ url, publishableKey: testKey, testIsolation: "true" }), /HTTPS origin/, url);
+    }
+  }
+});
+
+test("isolation refuses DNS names, address aliases, non-loopback addresses, and alternate protocols", () => {
+  for (const host of [
+    "localhost", "localhost.", "sub.localhost", "127.0.0.1.nip.io", "api.example.test",
+    "127.0.0.1.", "127.1", "127.0.1", "2130706433", "0x7f000001", "0177.0.0.1", "%31%32%37.0.0.1",
+    "127.0.0.2", "0.0.0.0", "10.0.0.1", "192.168.1.1", "169.254.169.254", "8.8.8.8",
+    "[0:0:0:0:0:0:0:1]", "[::ffff:127.0.0.1]", "[::]", "[fe80::1]",
+    new URL(testUrl).hostname, new URL(production.url).hostname,
+  ]) {
+    const url = `http://${host}:20000`;
+    assert.throws(() => resolveSupabaseConfig({ url, publishableKey: testKey, testIsolation: "true" }), /HTTPS origin/, url);
+  }
+  for (const scheme of ["https", "ws", "wss", "ftp", "file"]) {
+    for (const host of ["127.0.0.1", "[::1]"]) {
+      const url = `${scheme}://${host}:20000`;
+      assert.throws(() => resolveSupabaseConfig({ url, publishableKey: testKey, testIsolation: "true" }), /HTTPS origin|canonical/, url);
+    }
+  }
+});
+
+test("loopback trust is checked before URL normalization can erase hostile syntax", () => {
+  for (const host of ["127.0.0.1", "[::1]"]) {
+    const origin = `http://${host}:20000`;
+    const malformed = [
+      `${origin}/rest/v1`, `${origin}//`, `${origin}/.`, `${origin}/..`, `${origin}/%2e`,
+      `${origin}/a/..`, `${origin}/a/%2e%2e`, `${origin}/?`, `${origin}/#`,
+      `${origin}?proxy=production`, `${origin}#fragment`, `${origin}\\`,
+      origin.replace("://", "://user:password@"), origin.replace("://", "://@"),
+      origin.replace("://", ":///"), origin.replace("://", ":\\\\"),
+      origin.replace("://", ":/"), origin.replace(":20000", ":20\n000"),
+      origin.replace(":20000", ":20\t000"), `${origin}\u0000`,
+    ];
+    for (const url of malformed) {
+      assert.throws(() => resolveSupabaseConfig({ url, publishableKey: testKey, testIsolation: "true" }), /HTTPS origin/, JSON.stringify(url));
+    }
+  }
 });
 
 test("malformed, insecure, or credential-bearing endpoints are rejected", () => {
@@ -125,7 +200,12 @@ function loadNextConfig(overrides: Record<string, string>) {
   return spawnSync(process.execPath, ["--input-type=module", "-e", `
     const { default: configModule } = await import("next/dist/server/config.js");
     const config = await configModule.default("phase-production-build", process.cwd());
-    console.log(JSON.stringify({ images: config.images.remotePatterns, headers: await config.headers() }));
+    console.log(JSON.stringify({
+      skipProxyUrlNormalize: config.skipProxyUrlNormalize,
+      images: config.images.remotePatterns,
+      imageOptions: { unoptimized: config.images.unoptimized, dangerouslyAllowLocalIP: config.images.dangerouslyAllowLocalIP },
+      headers: await config.headers(),
+    }));
   `], { env: { ...env, ...overrides }, encoding: "utf8", timeout: 30_000 });
 }
 
@@ -134,6 +214,21 @@ test("Next build/startup rejects missing isolated configuration before creating 
   assert.equal(result.error, undefined);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /Set both/);
+});
+
+test("default and normally configured hosted deployments retain Next URL normalization", () => {
+  const configurations: Record<string, string>[] = [
+    {},
+    { NEXT_PUBLIC_SUPABASE_TEST_ISOLATION: "false" },
+    { NEXT_PUBLIC_SUPABASE_URL: testUrl, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: testKey },
+    { NEXT_PUBLIC_SUPABASE_URL: testUrl, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: testKey, NEXT_PUBLIC_SUPABASE_TEST_ISOLATION: "false" },
+  ];
+  for (const overrides of configurations) {
+    const result = loadNextConfig(overrides);
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(JSON.parse(result.stdout).skipProxyUrlNormalize, false);
+  }
 });
 
 test("Next image policy and isolated CSP use only the selected test project", () => {
@@ -145,6 +240,7 @@ test("Next image policy and isolated CSP use only the selected test project", ()
   assert.equal(result.error, undefined);
   assert.equal(result.status, 0, result.stderr);
   const config = JSON.parse(result.stdout);
+  assert.equal(config.skipProxyUrlNormalize, false);
   assert.deepEqual(config.images, [{
     protocol: "https", hostname: new URL(testUrl).hostname, port: "", pathname: "/storage/v1/object/public/**",
   }]);
@@ -153,6 +249,51 @@ test("Next image policy and isolated CSP use only the selected test project", ()
   assert.ok(csp.includes(`img-src 'self' data: blob: ${testUrl}`));
   assert.equal(csp.includes(production.url), false);
   assert.equal(csp.includes("*.supabase.co"), false);
+  assert.ok(csp.includes("upgrade-insecure-requests"));
+  assert.deepEqual(config.imageOptions, { unoptimized: false, dangerouslyAllowLocalIP: false });
+});
+
+test("isolated native image and websocket policy permits only the selected loopback origin", () => {
+  for (const url of ["http://127.0.0.1:20000", "http://[::1]:32767"]) {
+    const result = loadNextConfig({
+      NEXT_PUBLIC_SUPABASE_URL: url,
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: testKey,
+      NEXT_PUBLIC_SUPABASE_TEST_ISOLATION: "true",
+    });
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 0, result.stderr);
+    const config = JSON.parse(result.stdout);
+    assert.equal(config.skipProxyUrlNormalize, true);
+    assert.deepEqual(config.images, [{
+      protocol: "http", hostname: new URL(url).hostname, port: new URL(url).port, pathname: "/storage/v1/object/public/**",
+    }]);
+    assert.deepEqual(config.imageOptions, { unoptimized: true, dangerouslyAllowLocalIP: false });
+    const csp = config.headers[0].headers.find((header: { key: string }) => header.key === "Content-Security-Policy").value;
+    const directives = csp.split("; ");
+    assert.ok(directives.includes(`connect-src 'self' ${url} ${url.replace("http:", "ws:")} https://challenges.cloudflare.com`));
+    assert.ok(directives.includes(`img-src 'self' data: blob: ${url}`));
+    assert.equal(csp.includes("upgrade-insecure-requests"), false);
+    assert.equal(csp.includes(production.url), false);
+    assert.equal(csp.includes("*.supabase.co"), false);
+    assert.equal(csp.includes("localhost"), false);
+  }
+});
+
+test("Next startup cannot enable local HTTP by omitting isolation or choosing a DNS alias", () => {
+  for (const [url, testIsolation] of [
+    ["http://127.0.0.1:20000", "false"],
+    ["http://localhost:20000", "true"],
+    ["http://127.0.0.1:32768", "true"],
+  ]) {
+    const result = loadNextConfig({
+      NEXT_PUBLIC_SUPABASE_URL: url,
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: testKey,
+      NEXT_PUBLIC_SUPABASE_TEST_ISOLATION: testIsolation,
+    });
+    assert.equal(result.error, undefined);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /HTTPS origin/);
+  }
 });
 
 function loadPostalStorage(testIsolation: string | undefined, keys: Record<string, string> = {}) {

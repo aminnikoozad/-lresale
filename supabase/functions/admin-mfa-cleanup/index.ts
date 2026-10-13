@@ -1,9 +1,26 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const localIsolation = Deno.env.get("REWEAR_LOCAL_TEST_ISOLATION");
+if (localIsolation !== undefined && localIsolation !== "true" && localIsolation !== "false") {
+  throw new Error("REWEAR_LOCAL_TEST_ISOLATION must be true or false.");
+}
+const isolatedLocal = localIsolation === "true";
+const LOCAL_APP_ORIGIN = "http://127.0.0.1:3000";
+const configuredOrigins = Deno.env.get("ALLOWED_APP_ORIGINS");
+if (isolatedLocal) {
+  // Validate raw text before normalization, and before reading any credentials.
+  // A local CORS exception must never enable a hosted or DNS-routed backend.
+  const loopback = /^http:\/\/(?:127\.0\.0\.1|\[::1\]):([1-9]\d{4})\/?$/.exec(SUPABASE_URL ?? "");
+  const port = loopback ? Number(loopback[1]) : 0;
+  if (port < 20000 || port > 32767 || configuredOrigins !== LOCAL_APP_ORIGIN) {
+    throw new Error("Local test isolation requires a literal HTTP loopback Supabase origin on port 20000-32767 and ALLOWED_APP_ORIGINS=http://127.0.0.1:3000.");
+  }
+}
 const DEFAULT_ORIGIN = "https://lresale.vercel.app";
 const ALLOWED_ORIGINS = new Set(
-  (Deno.env.get("ALLOWED_APP_ORIGINS") || DEFAULT_ORIGIN)
+  isolatedLocal ? [LOCAL_APP_ORIGIN] : (configuredOrigins || DEFAULT_ORIGIN)
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean)
@@ -42,7 +59,7 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return json(req, { error: "Method not allowed" }, 405);
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseUrl = SUPABASE_URL;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const authHeader = req.headers.get("Authorization") ?? "";

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bell, Heart, PackageCheck, RotateCcw, Truck } from "lucide-react";
 import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { Button } from "@/components/ui/button";
+import { formatReservationTime } from "@/lib/reservation-time";
 import { createClient } from "@/lib/supabase/client";
 
 type Favorite = { item_id: string; notify_price_drop: boolean; created_at: string };
@@ -186,7 +187,7 @@ export function BuyerAccountTools() {
                   {order.payment_status === "not_configured" ? (
                     <div className="order-payment-note">Payment processing is not active yet. No charge has been made for this prepared order.</div>
                   ) : null}
-                  {order.status === "awaiting_payment" && order.reservation_expires_at ? <div className="order-payment-note">Reservation ends {date(order.reservation_expires_at)} at {new Intl.DateTimeFormat("en-CA", { timeStyle: "short", timeZoneName: "short" }).format(new Date(order.reservation_expires_at))}. Return to your bag to check availability afterward.</div> : null}
+                  {order.status === "awaiting_payment" && order.reservation_expires_at ? <div className="order-payment-note">Reservation ends {date(order.reservation_expires_at)} at {formatReservationTime(order.reservation_expires_at)}. Return to your bag to check availability afterward.</div> : null}
                   {order.status === "awaiting_payment" && order.payment_status === "not_configured" ? (
                     <Button type="button" size="sm" variant="outline" onClick={() => void cancelPreparedOrder(order.id)}>Cancel prepared checkout</Button>
                   ) : null}

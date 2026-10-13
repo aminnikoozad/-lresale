@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import ts from "typescript";
 
 const legalSql = await readFile(new URL("../supabase/migrations/20260925130000_checkout_legal_acceptance_foundation.sql", import.meta.url), "utf8");
 const paymentSql = await readFile(new URL("../supabase/migrations/20260925131500_payment_idempotency_and_order_invariants.sql", import.meta.url), "utf8");
@@ -25,10 +26,25 @@ test("cart and checkout progress describe unpaid order preparation", async () =>
   const checkoutCss = await readFile(new URL("../app/checkout-readiness.css", import.meta.url), "utf8");
   assert.match(checkoutCss, /\.checkout-progress\{[^}]*grid-template-columns:repeat\(3,1fr\)/);
   for (const [source, expectedCount] of [[cart, 1], [checkoutClient, 2]] as const) {
-    const progress = [...source.matchAll(/<div className="checkout-progress"[^>]*>\s*((?:<div[^>]*>[\s\S]*?<\/div>\s*)+)<\/div>/g)];
+    const file = ts.createSourceFile("checkout.tsx", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const progress: ts.JsxElement[] = [];
+    function visit(node: ts.Node) {
+      if (ts.isJsxElement(node) && node.openingElement.attributes.properties.some((attribute) =>
+        ts.isJsxAttribute(attribute) && attribute.name.getText(file) === "className" &&
+        attribute.initializer && ts.isStringLiteral(attribute.initializer) &&
+        attribute.initializer.text === "checkout-progress")) progress.push(node);
+      ts.forEachChild(node, visit);
+    }
+    visit(file);
     assert.equal(progress.length, expectedCount, "Every checkout progress state must be checked");
-    for (const [, steps] of progress) {
-      assert.deepEqual([...steps.matchAll(/<b>([^<]+)<\/b>/g)].map((match) => match[1]), ["Bag", "Delivery", "Order prepared"]);
+    for (const element of progress) {
+      const labels = element.children.filter(ts.isJsxElement).map((step) => {
+        const label = step.children.find((child) => ts.isJsxElement(child) && child.openingElement.tagName.getText(file) === "b");
+        return label && ts.isJsxElement(label)
+          ? label.children.filter(ts.isJsxText).map((text) => text.text).join("")
+          : null;
+      });
+      assert.deepEqual(labels, ["Bag", "Delivery", "Order prepared"]);
     }
   }
   assert.match(checkoutClient, /Save delivery & prepare order/);
