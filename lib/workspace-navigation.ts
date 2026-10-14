@@ -28,7 +28,6 @@ export function adminNavigation(access: MenuAccess): WorkspaceLink[] {
     ...(access.can_manage_shipping ? [{ href: "/admin/orders", label: "Orders" }, { href: "/admin/postal", label: "Postal shipping" }] : []),
     ...(access.can_manage_selling_rules ? [{ href: "/admin/pilot", label: "Pilot" }, { href: "/admin/settings", label: "Selling rules" }] : []),
     ...(access.can_support ? [{ href: "/admin/support", label: "Support" }, { href: "/admin/support/settings", label: "Support settings" }] : []),
-    ...(access.ai_view ? [{ href: "/admin/ai-trainer", label: "AI trainer" }] : []),
     { href: "/admin/readiness", label: "Readiness" },
     { href: "/admin/security", label: "My security" },
     ...(!access.has_aal2 ? [{ href: "/admin/mfa", label: "Verify MFA" }] : []),

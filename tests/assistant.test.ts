@@ -1,0 +1,151 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { PGlite } from "@electric-sql/pglite";
+import { sanitizeOperation } from "../lib/assistant-contract.ts";
+import { searchAssistantInventory } from "../lib/assistant-search.ts";
+const products = [
+  {
+    id: "a",
+    name: "Cotton T-Shirt",
+    brand: "A",
+    category: "women",
+    size: "S",
+    color: "black",
+    priceCents: 1500,
+  },
+  {
+    id: "b",
+    name: "Cotton T-Shirt",
+    brand: "A",
+    category: "women",
+    size: "M",
+    color: "black",
+    priceCents: 1200,
+  },
+  {
+    id: "c",
+    name: "Cotton T-Shirt",
+    brand: "A",
+    category: "men",
+    size: "S",
+    color: "blue",
+    priceCents: 1000,
+  },
+];
+test("French requests and named sizes find exact inventory without mixing alternatives", () => {
+  const result = searchAssistantInventory(products, {
+    query: "t-shirt",
+    category: "women",
+    size: "small",
+    color: "noir",
+    max_price_cents: 2000,
+  });
+  assert.deepEqual(
+    result.exact.map((r) => r.product.id),
+    ["a"],
+  );
+  assert.deepEqual(result.alternatives, []);
+});
+test("missing stock labels budget and size mismatches and stays in department", () => {
+  const result = searchAssistantInventory(products, {
+    category: "women",
+    size: "S",
+    max_price_cents: 1000,
+  });
+  assert.equal(result.exact.length, 0);
+  assert.ok(
+    result.alternatives.every(
+      (r) => r.product.category === "women" && r.differences.includes("budget"),
+    ),
+  );
+});
+test("search covers products beyond first 250 records", () => {
+  const many = Array.from({ length: 400 }, (_, i) => ({
+    ...products[0],
+    id: String(i),
+    name: `Unique ${i}`,
+  }));
+  assert.equal(
+    searchAssistantInventory(many, { query: "Unique 399" }).exact[0].product.id,
+    "399",
+  );
+});
+test("drafts cannot select arbitrary RPCs or accept legal terms on behalf of a customer", () => {
+  assert.equal(sanitizeOperation({ name: "admin_approve_payment" }), null);
+  const result = sanitizeOperation({
+    name: "create_pickup",
+    fields: {
+      address: "10 Example Street",
+      policy_accepted: "accepted",
+      user_id: "another-person",
+    },
+  });
+  assert.deepEqual(result?.fields, { address: "10 Example Street" });
+});
+test("customer memory is isolated and the public quota cannot be bypassed with fresh identities", async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(
+      `create role anon;create role authenticated;create role service_role;create schema auth;create table auth.users(id uuid primary key);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.uid',true),'')::uuid$$;grant usage on schema auth to authenticated;grant execute on function auth.uid() to authenticated;insert into auth.users values ('11111111-1111-4111-8111-111111111111'),('22222222-2222-4222-8222-222222222222');`,
+    );
+    await db.exec(
+      readFileSync(
+        new URL(
+          "../supabase/migrations/20261014235000_shopping_assistant.sql",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    );
+    await db.exec(
+      `set role authenticated;set request.uid='11111111-1111-4111-8111-111111111111';insert into assistant_preferences(user_id,preferences) values(auth.uid(),'{}');`,
+    );
+    await assert.rejects(
+      db.exec(
+        `insert into assistant_preferences(user_id) values('22222222-2222-4222-8222-222222222222')`,
+      ),
+      /row-level security/,
+    );
+    await db.exec(`set request.uid='22222222-2222-4222-8222-222222222222';`);
+    assert.equal(
+      (await db.query("select * from assistant_preferences")).rows.length,
+      0,
+    );
+    await assert.rejects(
+      db.query(`select assistant_take_quota('any',false)`),
+      /permission denied/,
+    );
+    await db.exec("reset role");
+    for (let i = 0; i < 30; i++)
+      assert.equal(
+        (
+          await db.query<{ ok: boolean }>(
+            `select assistant_take_quota('one',false) ok`,
+          )
+        ).rows[0].ok,
+        true,
+      );
+    assert.equal(
+      (
+        await db.query<{ ok: boolean }>(
+          `select assistant_take_quota('one',false) ok`,
+        )
+      ).rows[0].ok,
+      false,
+    );
+    await db.exec("delete from assistant_quota");
+    for (let i = 0; i < 500; i++)
+      await db.query(`select assistant_take_quota($1,false)`, [String(i)]);
+    assert.equal(
+      (
+        await db.query<{ ok: boolean }>(
+          `select assistant_take_quota('new-identity',false) ok`,
+        )
+      ).rows[0].ok,
+      false,
+    );
+  } finally {
+    await db.close();
+  }
+});
