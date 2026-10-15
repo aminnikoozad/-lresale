@@ -10,7 +10,7 @@ export function CustomerSupport({
 }: {
   userId: string | null;
   fr: boolean;
-  loginReturnTo?: "/support" | "/assistant";
+  loginReturnTo?: "/support" | "/assistant" | "/account/messages";
 }) {
   const [supabase] = useState(() => createClient());
   const [threads, setThreads] = useState<

@@ -11,7 +11,7 @@ function text(formData: FormData, key: string) {
 
 function resultUrl(message: string, type: "success" | "error") {
   const params = new URLSearchParams({ message, type });
-  return `/account/operations?${params.toString()}`;
+  return `/account/seller/items?${params.toString()}`;
 }
 
 async function sellerClient() {
@@ -33,8 +33,8 @@ export async function scheduleAutoPublish(formData: FormData) {
     expected_price: expectedPrice,
   });
   if (error) redirect(resultUrl(error.message || "Automatic publishing could not be scheduled.", "error"));
-  revalidatePath("/account");
-  revalidatePath("/account/operations");
+  revalidatePath("/account/seller");
+  revalidatePath("/account/seller/items");
   redirect(resultUrl("Price approved. The item is scheduled to publish automatically after the review window.", "success"));
 }
 
@@ -50,7 +50,7 @@ export async function setUnsoldPreference(formData: FormData) {
     target_preference: preference,
   });
   if (error) redirect(resultUrl(error.message || "Unsold-item preference could not be saved.", "error"));
-  revalidatePath("/account");
-  revalidatePath("/account/operations");
+  revalidatePath("/account/seller");
+  revalidatePath("/account/seller/items");
   redirect(resultUrl("Unsold-item preference saved.", "success"));
 }

@@ -110,7 +110,7 @@ export async function updatePilotSettings(formData: FormData) {
   }
 
   revalidatePath("/");
-  revalidatePath("/account");
+  revalidatePath("/account", "layout");
   revalidatePath("/admin/pilot");
   redirect(pilotRedirect("Pilot settings saved. Storefront, intake and database enforcement now use these settings."));
 }

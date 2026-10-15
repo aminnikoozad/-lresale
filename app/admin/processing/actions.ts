@@ -56,7 +56,7 @@ export async function runOperationsAutomation() {
   const { data, error } = await supabase.rpc("admin_run_rewear_ops_automations");
   if (error) redirect(url(error.message || "Automation could not be run.", "error"));
   revalidatePath("/admin/processing");
-  revalidatePath("/account");
+  revalidatePath("/account", "layout");
   revalidatePath("/");
   const result = data && typeof data === "object" ? JSON.stringify(data) : "completed";
   redirect(url(`Automation ${result}`, "success"));
