@@ -21,3 +21,11 @@ There are no tracked outbound email templates or sender display-name settings on
 Stored approved support knowledge and historical notifications may still contain REWEAR. Review current knowledge through its normal approval flow; do not rewrite historical migrations/messages. Support edge-function source copy changes require the existing separate function deployment workflow.
 
 No DNS changes, payment changes, migrations, credentials, live support data, auth settings or unrelated application behavior are part of this release.
+
+## Approved domain configuration — 2026-10-15
+
+After explicit action-time approval, Supabase Site URL is https://shikimomo.com and its exact /auth/callback is added alongside the existing https://lresale.vercel.app/auth/callback. The same callback handles recovery with next=/update-password. Vercel production NEXT_PUBLIC_SITE_URL is https://shikimomo.com.
+
+The four existing edge functions add exactly https://shikimomo.com to their allowed-origin Set without replacing ALLOWED_APP_ORIGINS, legacy defaults, JWT verification or authorization logic. Live preflights pass with 200 for the new origin and reject an unrelated origin with 403. The prior domain still passes for support-ai, support-trainer and admin-mfa-cleanup. Photo upload rejected the prior origin before and after this change; this existing behavior is not broadened by this release. Deployed source is preserved, including any nonfunctional comment differences from the repository.
+
+Email SMTP/sender configuration remains unchanged and custom SMTP is disabled.

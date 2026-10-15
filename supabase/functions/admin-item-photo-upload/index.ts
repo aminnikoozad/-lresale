@@ -20,6 +20,8 @@ const ALLOWED_ORIGINS = new Set(
     })
     .filter(Boolean),
 );
+// Owner-approved production origin; preserve every configured legacy origin.
+ALLOWED_ORIGINS.add("https://shikimomo.com");
 const base = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
