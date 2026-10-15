@@ -3,6 +3,8 @@ import { siteConfig } from "@/lib/site-config";
 
 const publicRoutes = [
   "",
+  "/shop",
+  "/assistant",
   "/sell-with-shikimomo",
   "/pickup-policy",
   "/shipping-policy",

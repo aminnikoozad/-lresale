@@ -21,7 +21,7 @@ test("staff menus respect independent inventory, shipping, pickup and support ca
   assert.equal(hrefs({ can_manage_shipping: true }).includes("/admin/operations#pickup-requests"), false);
   assert.ok(hrefs({ can_manage_pickups: true }).includes("/admin/operations#pickup-requests"));
   assert.equal(hrefs({ can_support: true }).includes("/admin/ai-trainer"), false);
-  assert.ok(hrefs({ ai_view: true }).includes("/admin/ai-trainer"));
+  assert.equal(hrefs({ ai_view: true }).includes("/admin/ai-trainer"), false);
   assert.ok(hrefs({ can_manage_selling_rules: true }).includes("/admin/pilot"));
 });
 
