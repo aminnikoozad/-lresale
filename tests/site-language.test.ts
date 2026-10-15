@@ -63,4 +63,8 @@ test('French customer copy uses articles, available places and fixed fees withou
  const policy=translate('fr','The offer has no scheduled calendar end date. It ends automatically when claim #100 is used. After that, the regular $12 batch service fee applies to all new batches. The flat $5 pickup transportation fee for pickups below $100 is separate and is not waived.');
  assert.match(policy,/place no 100/);assert.match(policy,/\$12/);assert.match(policy,/\$5/);assert.match(policy,/\$100/);assert.match(policy,/ne sont pas exonérés/);
  assert.doesNotMatch(policy,/ZXQ|undefined/);
+ const first=translate('fr','First 100 sellers: your first $12 batch service fee is waived.');
+ assert.equal(first,'Pour les 100 premiers vendeurs : les frais de service de $12 de votre premier lot sont exonérés.');
+ const missed=translate('fr','Shikimomo currently does not charge a first- or second-missed-pickup cash fee under the active rules. After 2 confirmed missed pickups, free-pickup access may be suspended. Other options may remain available.');
+ assert.match(missed,/aucune pénalité monétaire/);assert.match(missed,/Après 2 collectes manquées/);assert.match(missed,/peut être suspendu/);
 });
