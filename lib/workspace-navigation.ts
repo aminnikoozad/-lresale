@@ -13,6 +13,7 @@ export const accountNavigation: WorkspaceLink[] = [
   { href: "/account/operations", label: "Item tracking" },
   { href: "/account/purchases", label: "Purchases & saved" },
   { href: "/account/profile", label: "Profile & messages" },
+  { href: "/support", label: "Contact & support" },
 ];
 export function adminNavigation(access: MenuAccess): WorkspaceLink[] {
   return [

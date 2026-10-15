@@ -5,6 +5,7 @@ const publicRoutes = [
   "",
   "/shop",
   "/assistant",
+  "/support",
   "/sell-with-shikimomo",
   "/pickup-policy",
   "/shipping-policy",

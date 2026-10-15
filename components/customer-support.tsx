@@ -20,27 +20,36 @@ export function CustomerSupport({
     >([]),
     [text, setText] = useState(""),
     [busy, setBusy] = useState(false),
+    [pendingHandoff, setPendingHandoff] = useState<string | null>(null),
     [error, setError] = useState("");
   const load = useCallback(async () => {
     if (!userId) return;
-    const { data } = await supabase
+    const { data, error: loadError } = await supabase
       .from("support_conversations")
       .select("id,subject,status")
       .eq("customer_id", userId)
       .order("last_message_at", { ascending: false })
       .limit(20);
+    if (loadError) {
+      setError(fr ? "Impossible de charger vos conversations. Réessayez." : "Your conversations could not be loaded. Please try again.");
+      return;
+    }
     setThreads(data || []);
-  }, [supabase, userId]);
-  const loadMessages = useCallback(async () => {
-    if (!selected) return;
-    const { data } = await supabase
+  }, [supabase, userId, fr]);
+  const loadMessages = useCallback(async (conversationId = selected) => {
+    if (!conversationId) return;
+    const { data, error: loadError } = await supabase
       .from("support_messages")
       .select("id,sender_kind,body")
-      .eq("conversation_id", selected)
-      .order("created_at")
+      .eq("conversation_id", conversationId)
+      .order("created_at", { ascending: false })
       .limit(100);
-    setMessages(data || []);
-  }, [supabase, selected]);
+    if (loadError) {
+      setError(fr ? "Impossible de charger les messages. Réessayez." : "Messages could not be loaded. Please try again.");
+      return;
+    }
+    setMessages((data || []).reverse());
+  }, [supabase, selected, fr]);
   useEffect(() => {
     const timer = setTimeout(() => void load(), 0);
     return () => clearTimeout(timer);
@@ -68,7 +77,7 @@ export function CustomerSupport({
   }, [supabase, selected, loadMessages]);
   if (!userId)
     return (
-      <Link href="/login?next=%2Fassistant">
+      <Link href="/login?next=%2Fsupport">
         {fr
           ? "Connectez-vous pour contacter l’équipe"
           : "Sign in to contact the team"}
@@ -120,11 +129,18 @@ export function CustomerSupport({
               });
               if (start.error || !start.data) throw Error();
               id = String(start.data);
+              setSelected(id);
               const handoff = await supabase.rpc("support_request_human", {
                 p_conversation_id: id,
               });
-              if (handoff.error) throw Error();
-              setSelected(id);
+              if (handoff.error) {
+                setPendingHandoff(id);
+                setText("");
+                await load();
+                await loadMessages(id);
+                setError(fr ? "Votre message a été enregistré, mais la demande à l’équipe a échoué. Réessayez la demande ci-dessous sans renvoyer votre message." : "Your message was saved, but the team handoff failed. Retry the request below without sending your message again.");
+                return;
+              }
             } else {
               const sent = await supabase.rpc("support_send_customer_message", {
                 p_conversation_id: id,
@@ -134,7 +150,7 @@ export function CustomerSupport({
             }
             setText("");
             await load();
-            await loadMessages();
+            await loadMessages(id);
           } catch {
             setError(
               fr
@@ -157,7 +173,19 @@ export function CustomerSupport({
           {fr ? "Envoyer à l’équipe" : "Send to the team"}
         </button>
       </form>
-      {error && <p role="alert">{error}</p>}
+      {error && <div role="alert"><p>{error}</p><button type="button" onClick={() => { setError(""); void load(); void loadMessages(); }}>{fr ? "Réessayer le chargement" : "Retry loading"}</button></div>}
+      {pendingHandoff && <button type="button" disabled={busy} onClick={async () => {
+        setBusy(true);
+        try {
+          const { error: handoffError } = await supabase.rpc("support_request_human", { p_conversation_id: pendingHandoff });
+          if (handoffError) throw Error();
+          setPendingHandoff(null);
+          setError("");
+          await load();
+        } catch {
+          setError(fr ? "Votre message est enregistré, mais la demande à l’équipe n’a pas abouti. Réessayez plus tard." : "Your message is saved, but the team request could not be completed. Please try again later.");
+        } finally { setBusy(false); }
+      }}>{fr ? "Réessayer la demande à l’équipe" : "Retry team request"}</button>}
     </section>
   );
 }

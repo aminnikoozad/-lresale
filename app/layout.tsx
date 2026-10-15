@@ -6,6 +6,8 @@ import { PickupConfirmationUi } from "@/components/pickup-confirmation-ui";
 import { ExperienceSwitch } from "@/components/experience-switch";
 import { CartProvider } from "@/components/cart-store";
 import { siteConfig } from "@/lib/site-config";
+import { SupportFooter } from "@/components/support-footer";
+import "./support.css";
 import "./globals.css";
 import "./additions.css";
 import "./catalog.css";
@@ -30,28 +32,33 @@ import "./assistant.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk", display: "swap" });
 
-export const metadata: Metadata = {
+export async function generateMetadata(): Promise<Metadata> {
+  const fr = (await cookies()).get("shikimomo-language")?.value === "fr";
+  const title = fr ? "Shikimomo | Mode, électronique et décoration d’occasion" : "Shikimomo | Secondhand fashion, electronics & home decor";
+  const description = fr ? "Achetez et vendez des vêtements, chaussures, appareils électroniques et articles pour la maison d’occasion avec collecte prise en charge et livraison au Canada." : "Sell and shop quality secondhand clothing, shoes, electronics and selected Home & Decor pieces with managed pickup and Canada-wide shopping.";
+  return {
   metadataBase: new URL(siteConfig.siteUrl),
   title: {
-    default: "Shikimomo | Secondhand fashion, electronics & home decor",
+    default: title,
     template: "%s | Shikimomo",
   },
-  description: "Sell and shop quality secondhand clothing, shoes, electronics and selected Home & Decor pieces with managed pickup and Canada-wide shopping.",
+  description,
   openGraph: {
     type: "website",
     siteName: "Shikimomo",
-    title: "Shikimomo | Secondhand fashion, electronics & home decor",
-    description: "Sell and shop quality secondhand clothing, shoes, electronics and selected Home & Decor pieces with managed pickup and Canada-wide shopping.",
+    title,
+    description,
   },
   manifest: "/manifest.webmanifest",
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };
+}
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const locale = (await cookies()).get("shikimomo-language")?.value === "fr" ? "fr" : "en";
   return (
     <html lang={locale} className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body><LanguageProvider initialLocale={locale}><LanguageSwitch /><CartProvider>{children}<PickupConfirmationUi /><ExperienceSwitch /></CartProvider></LanguageProvider></body>
+      <body><LanguageProvider initialLocale={locale}><LanguageSwitch /><CartProvider>{children}<SupportFooter /><PickupConfirmationUi /><ExperienceSwitch /></CartProvider></LanguageProvider></body>
     </html>
   );
 }

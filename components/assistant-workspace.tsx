@@ -4,7 +4,6 @@ import { BrandWordmark } from "./brand-wordmark";
 import { useLocale } from "./site-language";
 import { useRouter } from "next/navigation";
 import { PendingSubmitButton } from "./pending-submit-button";
-import { CustomerSupport } from "./customer-support";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -570,7 +569,7 @@ export function AssistantWorkspace({ available = false, chatEnabled = true, voic
               </button>
             </div>
           ))}
-          <CustomerSupport userId={identity} fr={fr} />
+          <Link href="/support">{t("Contact & support", "Contact et soutien")}</Link>
           <Link href="/privacy">{t("Privacy", "Confidentialité")}</Link>
         </aside>
       )}
