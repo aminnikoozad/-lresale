@@ -1,10 +1,10 @@
-# REWEAR AI on the owner's hardware
+# Shikimomo AI on the owner's hardware
 
 This stack runs language inference, English/French speech recognition and speech
 synthesis on the owner's machine. It does not use OpenAI, cloud speech recognition,
 browser SpeechRecognition or a hosted inference provider. Weights are downloaded
 once during installation, not on customer requests. The model is a licensed existing
-model, not a new foundation model trained or exclusively owned by REWEAR.
+model, not a new foundation model trained or exclusively owned by Shikimomo.
 
 ## Components and scope
 

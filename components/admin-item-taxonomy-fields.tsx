@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import { useMemo, useState } from "react";
 import {
@@ -12,7 +14,7 @@ export function AdminItemTaxonomyFields({ activeCategories }: { activeCategories
   const [subcategory, setSubcategory] = useState("");
   const options = useMemo(() => subcategoriesFor(category), [category]);
 
-  return (
+  return <Localize>{(
     <>
       <label>
         Category
@@ -51,5 +53,5 @@ export function AdminItemTaxonomyFields({ activeCategories }: { activeCategories
         </select>
       </label>
     </>
-  );
+  )}</Localize>;
 }

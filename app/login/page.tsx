@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { AuthCaptcha } from "@/components/auth-captcha";
@@ -11,10 +13,10 @@ type Props = { searchParams: Promise<Record<string, string | string[] | undefine
 
 export default async function LoginPage({ searchParams }: Props) {
   const params = await searchParams;
-  const next = safeRedirectPath(typeof params.next === "string" ? params.next : null, "https://rewear.invalid");
+  const next = safeRedirectPath(typeof params.next === "string" ? params.next : null, "https://shikimomo.invalid");
   const message = typeof params.message === "string" ? params.message : null;
   const type = params.type === "success" ? "success" : "error";
-  return <main className="auth-page"><section className="auth-card">
+  return <Localize>{<main className="auth-page"><section className="auth-card">
     <Link href="/" className="brand"><BrandWordmark /></Link>
     <h1>Welcome back.</h1>
     <p>Sign in to follow your items, requests and available balance.</p>
@@ -30,5 +32,5 @@ export default async function LoginPage({ searchParams }: Props) {
     </form>
     <p className="auth-switch">New to Shikimomo? <Link href="/signup">Create an account</Link></p>
     <Link className="auth-back" href="/">← Back to marketplace</Link>
-  </section></main>;
+  </section></main>}</Localize>;
 }

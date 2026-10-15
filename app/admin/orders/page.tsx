@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -32,7 +34,7 @@ export default async function AdminOrders({ searchParams }: { searchParams: Prom
   if (error) throw new Error("The private order queue could not be loaded.");
   const orders = (data ?? []) as Order[];
   const canReviewReturns = ["owner", "admin"].includes(access.role);
-  return <main className="ops-shell">
+  return <Localize>{<main className="ops-shell">
     <header className="ops-top"><div><Link href="/admin" className="brand"><BrandWordmark /></Link><b>Admin</b></div></header>
     <section className="ops-wrap">
       <div className="ops-heading"><div><p className="eyebrow dark">Private fulfilment</p><h1>Orders & returns</h1><p>Only verified paid orders can move through processing, shipping and delivery. Reviewing a return does not issue a refund.</p></div><div className="security-chip">MFA verified · {access.role}</div></div>
@@ -51,5 +53,5 @@ export default async function AdminOrders({ searchParams }: { searchParams: Prom
         </article>;
       }) : <section className="ops-card"><h2>No orders yet</h2><p>Prepared and paid orders will appear here when customers use checkout.</p></section>}
     </section>
-  </main>;
+  </main>}</Localize>;
 }

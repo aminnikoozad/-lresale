@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -69,7 +71,7 @@ export default async function SellerOperationsPage({ searchParams }: Props) {
   const message = typeof params.message === "string" ? params.message : null;
   const type = params.type === "error" ? "error" : "success";
 
-  return (
+  return <Localize>{(
     <main className="seller-ops-shell">
       <header className="seller-ops-top">
         <Link href="/" className="brand"><BrandWordmark /></Link>
@@ -158,5 +160,5 @@ export default async function SellerOperationsPage({ searchParams }: Props) {
         })}</div> : <div className="seller-ops-empty"><h2>No items yet</h2><p>Your item timeline appears here after Shikimomo receives your first item.</p></div>}
       </section>
     </main>
-  );
+  )}</Localize>;
 }

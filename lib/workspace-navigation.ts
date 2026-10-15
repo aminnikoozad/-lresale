@@ -26,7 +26,7 @@ export function adminNavigation(access: MenuAccess): WorkspaceLink[] {
     ...(access.can_manage_pickups || access.can_manage_shipping ? [{ href: "/admin/operations", label: "Operations" }] : []),
     ...(access.can_manage_pickups ? [{ href: "/admin/operations#pickup-requests", label: "Pickup inbox" }] : []),
     ...(access.can_manage_shipping ? [{ href: "/admin/orders", label: "Orders" }, { href: "/admin/postal", label: "Postal shipping" }] : []),
-    ...(access.can_manage_selling_rules ? [{ href: "/admin/pilot", label: "Pilot" }, { href: "/admin/settings", label: "Selling rules" }] : []),
+    ...(access.can_manage_selling_rules ? [{ href: "/admin/pilot", label: "Pilot" }, { href: "/admin/settings", label: "Selling rules" }, { href: "/admin/smart-shop", label: "Smart Shopping" }] : []),
     ...(access.can_support ? [{ href: "/admin/support", label: "Support" }, { href: "/admin/support/settings", label: "Support settings" }] : []),
     { href: "/admin/readiness", label: "Readiness" },
     { href: "/admin/security", label: "My security" },

@@ -1,5 +1,7 @@
+
+import { Localize } from "@/components/site-language";
 export default function AdminLoading() {
-  return (
+  return <Localize>{(
     <main className="page-skeleton" aria-label="Loading administration">
       <div className="skeleton-header"><div className="skeleton-brand" /><div className="skeleton-line" style={{ width: 300 }} /></div>
       <div style={{ maxWidth: 1280, margin: "34px auto 0" }}>
@@ -11,5 +13,5 @@ export default function AdminLoading() {
         <div className="skeleton-box" style={{ height: 320, marginTop: 22 }} />
       </div>
     </main>
-  );
+  )}</Localize>;
 }

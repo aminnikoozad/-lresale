@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -68,7 +70,7 @@ export function PickupConfirmationUi() {
 
   if (!pathname.startsWith("/account") || (!pickups.length && !message)) return null;
 
-  return (
+  return <Localize>{(
     <aside className="pickup-confirmation-panel" aria-live="polite">
       {message ? <div className="pickup-confirmation-message">{message}</div> : null}
       {pickups.map((pickup) => (
@@ -84,5 +86,5 @@ export function PickupConfirmationUi() {
         </article>
       ))}
     </aside>
-  );
+  )}</Localize>;
 }

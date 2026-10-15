@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -31,5 +33,5 @@ export function AdminNotificationBridge(){
   },[supabase]);
   if(!item)return null;
   const href=item.conversation_id?`/admin/support/${item.conversation_id}`:"/admin/ai-trainer";
-  return <div className={`support-global-toast priority-${item.priority}`} role="status" aria-live="polite"><div><BellRing/><strong>{item.title}</strong></div><p>{item.body}</p><div><Link href={href} onClick={()=>{void supabase.rpc("support_mark_notification_read",{p_notification_id:item.id});setItem(null)}}>Open</Link><button type="button" aria-label="Dismiss" onClick={()=>setItem(null)}><X/></button></div></div>;
+  return <Localize>{<div className={`support-global-toast priority-${item.priority}`} role="status" aria-live="polite"><div><BellRing/><strong>{item.title}</strong></div><p>{item.body}</p><div><Link href={href} onClick={()=>{void supabase.rpc("support_mark_notification_read",{p_notification_id:item.id});setItem(null)}}>Open</Link><button type="button" aria-label="Dismiss" onClick={()=>setItem(null)}><X/></button></div></div>}</Localize>;
 }

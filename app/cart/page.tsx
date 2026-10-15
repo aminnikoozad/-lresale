@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import Image from "next/image";
 import { PostalEstimator } from "@/components/postal-estimator";
@@ -16,7 +18,7 @@ export default function CartPage() {
   const subtotal = items.reduce((sum, item) => sum + item.priceCents, 0);
   const checkoutHref = items.length ? `/checkout?items=${encodeURIComponent(items.map((item) => item.id).join(","))}` : "#";
 
-  return (
+  return <Localize>{(
     <main className="cart-page section-wrap">
       <header className="cart-header">
         <Link href="/#shop"><ArrowLeft /> Continue shopping</Link>
@@ -76,5 +78,5 @@ export default function CartPage() {
         </div>
       )}
     </main>
-  );
+  )}</Localize>;
 }

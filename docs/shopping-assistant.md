@@ -1,4 +1,4 @@
-# REWEAR personal shopping assistant
+# Shikimomo personal shopping assistant
 
 Replaces the legacy customer support bot UI and trainer with a two-mode storefront: `/` offers a choice, `/shop` retains the catalog, and `/assistant` handles conversation, product cards and reviewed customer operations. The cart is shared. The SVG mark is provisional and lightweight.
 

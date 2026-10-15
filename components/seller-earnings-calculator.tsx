@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import { useMemo, useState } from "react";
 import type { CommissionTier } from "@/lib/business-rules";
@@ -39,7 +41,7 @@ export function SellerEarningsCalculator({
     };
   }, [price, processingFeeCents, tiers]);
 
-  return (
+  return <Localize>{(
     <div className="earnings-calculator">
       <div className="calculator-inputs">
         <label>
@@ -59,5 +61,5 @@ export function SellerEarningsCalculator({
         <p className="calculator-warning">Enter an estimated sale price of at least {cad(minimumItemValueCents)} for an individual listing estimate.</p>
       )}
     </div>
-  );
+  )}</Localize>;
 }

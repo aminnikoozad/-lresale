@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -129,14 +131,14 @@ export function RecoveryForm() {
     }
   }
 
-  if (state === "checking") return <p role="status">Verifying your reset link…</p>;
+  if (state === "checking") return <Localize>{<p role="status">Verifying your reset link…</p>}</Localize>;
 
-  if (state === "invalid") return <div role="alert">
+  if (state === "invalid") return <Localize>{<div role="alert">
     <p>This reset link could not be verified. Request a new link and open the latest email.</p>
     <Link href="/forgot-password">Send a new reset link</Link>
-  </div>;
+  </div>}</Localize>;
 
-  if (state === "mfa") return <div className="mfa-box">
+  if (state === "mfa") return <Localize>{<div className="mfa-box">
     <h2>Two-step verification</h2>
     <p>This account has an authenticator enabled. Enter the current 6-digit code before choosing a new password.</p>
     {message ? <div className="auth-message error" role="alert">{message}</div> : null}
@@ -144,12 +146,12 @@ export function RecoveryForm() {
       <label htmlFor="recovery-mfa-code">Authenticator code<input id="recovery-mfa-code" value={mfaCode} onChange={(event) => setMfaCode(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" required disabled={submitting} /></label>
       <button className="auth-submit" type="submit" disabled={submitting}>{submitting ? "Verifying…" : "Verify & continue"}</button>
     </form>
-  </div>;
+  </div>}</Localize>;
 
-  return <form className="auth-form" onSubmit={submit}>
+  return <Localize>{<form className="auth-form" onSubmit={submit}>
     {message ? <div className="auth-message error" role="alert">{message}</div> : null}
     <label htmlFor="password">New password<input id="password" name="password" type="password" minLength={8} maxLength={128} autoComplete="new-password" required disabled={submitting} aria-describedby="reset-password-rules" /><small id="reset-password-rules" className="auth-field-note">{PASSWORD_REQUIREMENTS_TEXT}</small></label>
     <label htmlFor="password_confirmation">Confirm password<input id="password_confirmation" name="password_confirmation" type="password" minLength={8} maxLength={128} autoComplete="new-password" required disabled={submitting} /></label>
     <button className="auth-submit" type="submit" disabled={submitting}>{submitting ? "Updating…" : "Update password"}</button>
-  </form>;
+  </form>}</Localize>;
 }

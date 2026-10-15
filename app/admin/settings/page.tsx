@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -36,7 +38,7 @@ export default async function SellingRulesPage({ searchParams }: Props) {
   const editable = !permissionError && Boolean(canManage);
   const tiers = [...rules.commissionTiers].sort((a, b) => a.minCents - b.minCents);
 
-  return (
+  return <Localize>{(
     <main className="admin-settings-shell">
       <header className="admin-settings-top">
         <div>
@@ -206,5 +208,5 @@ export default async function SellingRulesPage({ searchParams }: Props) {
         </form>
       </section>
     </main>
-  );
+  )}</Localize>;
 }

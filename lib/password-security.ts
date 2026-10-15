@@ -32,7 +32,7 @@ export async function checkPasswordCompromise(
     const response = await fetchImpl(`${PWNED_PASSWORDS_RANGE_URL}/${prefix}`, {
       method: "GET",
       headers: {
-        "User-Agent": "REWEAR-Password-Safety/1.0",
+        "User-Agent": "Shikimomo-Password-Safety/1.0",
         "Add-Padding": "true",
       },
       cache: "no-store",

@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -85,7 +87,7 @@ export function SupportThreadClient({initialConversation,initialMessages,initial
   const otherAgents=presence.filter(p=>p.actor_kind==="agent"&&p.actor_id!==myId&&(p.viewing||p.typing));
   const adminName=(id:string)=>admins.find(a=>a.user_id===id)?.display_name||"Another support agent";
 
-  return <>
+  return <Localize>{<>
     {error?<div className="support-admin-error">{error}</div>:null}
     <div className="support-thread-layout">
       <section className="support-thread-card">
@@ -135,5 +137,5 @@ export function SupportThreadClient({initialConversation,initialMessages,initial
         <section className="support-panel-card"><h3>Customer history</h3><div className="support-history-mini">{customerHistory.length?customerHistory.map(h=><Link key={h.id} href={`/admin/support/${h.id}`}><b>{h.category} › {h.subcategory}</b><br/><span>{h.status} · {new Date(h.last_message_at).toLocaleDateString()}</span></Link>):<p>No previous support chats.</p>}</div></section>
       </aside>
     </div>
-  </>;
+  </>}</Localize>;
 }

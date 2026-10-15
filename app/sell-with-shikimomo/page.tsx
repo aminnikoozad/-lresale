@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -17,7 +19,7 @@ export const metadata: Metadata = {
   description: "See how Shikimomo pickup, inspection, pricing, commission, service fees and seller earnings work before you send anything.",
 };
 
-export default async function SellWithRewearPage() {
+export default async function SellWithShikimomoPage() {
   const supabase = createPublicClient();
   const [rules, launchOffer, pilot] = await Promise.all([
     loadSellingRules(supabase),
@@ -31,7 +33,7 @@ export default async function SellWithRewearPage() {
   const collectionMinimum = formatCadFromCents(rules.minimumPickupEstimatedValueCents);
   const waivedServiceFee = formatCadFromCents(launchOffer.waivedServiceFeeCents);
 
-  return (
+  return <Localize>{(
     <main className="seller-guide-shell">
       <header className="seller-guide-top">
         <Link href="/" className="brand"><BrandWordmark /></Link>
@@ -112,5 +114,5 @@ export default async function SellWithRewearPage() {
 
       <footer className="seller-guide-footer"><Link href="/" className="brand"><BrandWordmark /></Link><div><Link href="/pickup-policy">Pickup policy</Link><Link href="/shipping-policy">Shipping policy</Link><Link href="/account">Customer account</Link></div></footer>
     </main>
-  );
+  )}</Localize>;
 }

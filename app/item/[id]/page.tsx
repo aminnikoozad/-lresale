@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import {
   fieldLabel,
   galleryOrder,
@@ -99,7 +101,7 @@ export default async function ProductPage({ params }: Props) {
   };
   const inspectedOn = inspectionDate(product.inspected_at);
 
-  return (
+  return <Localize>{(
     <main className="product-page section-wrap">
       <div className="product-topbar">
         <Link href="/#shop">
@@ -134,7 +136,7 @@ export default async function ProductPage({ params }: Props) {
             <p className="eyebrow dark">{product.brand}</p>
             <span className="one-of-one-badge">One of one</span>
           </div>
-          <h1>{product.name}</h1>
+          <h1 translate="no">{product.name}</h1>
           <strong className="product-price">{cad(product.price_cents)}</strong>
           <p className="product-availability-note">
             Unique secondhand item. Availability is rechecked before an order is
@@ -358,5 +360,5 @@ export default async function ProductPage({ params }: Props) {
         </aside>
       </div>
     </main>
-  );
+  )}</Localize>;
 }

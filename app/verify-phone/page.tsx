@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { safeRedirectPath } from "@/lib/safe-redirect";
@@ -13,7 +15,7 @@ type Props = { searchParams: Promise<Record<string, string | string[] | undefine
 
 export default async function VerifyPhonePage({ searchParams }: Props) {
   const params = await searchParams;
-  const next = safeRedirectPath(typeof params.next === "string" ? params.next : null, "https://rewear.invalid");
+  const next = safeRedirectPath(typeof params.next === "string" ? params.next : null, "https://shikimomo.invalid");
   if (!isPhoneVerificationRequired()) redirect(next);
 
   const supabase = await createClient();
@@ -28,7 +30,7 @@ export default async function VerifyPhonePage({ searchParams }: Props) {
   const type = params.type === "success" ? "success" : "error";
   const savedPhone = profile?.phone ?? "";
 
-  return <main className="auth-page"><section className="auth-card">
+  return <Localize>{<main className="auth-page"><section className="auth-card">
     <Link href="/" className="brand"><BrandWordmark /></Link>
     <h1>Verify your phone.</h1>
     <p>Only Canadian phone numbers can be used to activate a Shikimomo account.</p>
@@ -46,5 +48,5 @@ export default async function VerifyPhonePage({ searchParams }: Props) {
       <PendingSubmitButton className="auth-submit secondary" pendingLabel="Verifying…">Verify and continue</PendingSubmitButton>
     </form>
     <form action={logout}><button className="auth-link-button" type="submit">Use another account</button></form>
-  </section></main>;
+  </section></main>}</Localize>;
 }

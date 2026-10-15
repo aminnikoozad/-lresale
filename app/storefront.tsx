@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 
 
@@ -106,7 +108,7 @@ export default async function Home() {
     kids: "Everyday clothing for growing kids.",
   };
 
-  return (
+  return <Localize>{(
     <main className="market-home">
       <a className="market-skip-link" href="#shop">Skip to the shop</a>
       <div className="market-announcement">Shikimomo · Managed secondhand in Montréal</div>
@@ -200,5 +202,5 @@ export default async function Home() {
         </div>
       </footer>
     </main>
-  );
+  )}</Localize>;
 }

@@ -1,3 +1,4 @@
+import { loadSmartShopSettings } from "@/lib/smart-shop-settings";
 import { NextRequest, NextResponse } from "next/server";
 import { assistantHostConfig } from "@/lib/assistant-host";
 export const maxDuration = 60;
@@ -6,6 +7,8 @@ const headers = { "Cache-Control": "private, no-store" };
 export async function POST(req: NextRequest) {
   if (req.headers.get("origin") !== req.nextUrl.origin)
     return NextResponse.json({ error: "Origin not allowed" }, { status: 403, headers });
+  const settings = await loadSmartShopSettings();
+  if (!settings.enabled || !settings.voice_enabled) return NextResponse.json({ code: "assistant_paused", error: "Smart Shopping is not active yet" }, { status: 503 });
   const config = assistantHostConfig(process.env);
   if (!config)
     return NextResponse.json({ code: "self_hosted_not_configured", error: "Voice server not connected" }, { status: 503, headers });

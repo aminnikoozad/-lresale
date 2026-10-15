@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -64,9 +66,9 @@ export default async function CheckoutPage({ searchParams }: Props) {
         initialDelivery = draft;
     } catch {}
   }
-  return (
+  return <Localize>{(
     <main className="checkout-page section-wrap">
       <CheckoutClient itemIds={itemIds} initialDelivery={initialDelivery} />
     </main>
-  );
+  )}</Localize>;
 }

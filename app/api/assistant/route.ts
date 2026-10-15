@@ -1,3 +1,4 @@
+import { loadSmartShopSettings } from "@/lib/smart-shop-settings";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseConfig } from "@/lib/supabase/config";
@@ -10,6 +11,7 @@ export async function POST(req: NextRequest) {
       { error: "Origin not allowed" },
       { status: 403, headers },
     );
+  const settings = await loadSmartShopSettings();
   const raw = await req.text();
   if (raw.length > 3_000_000)
     return NextResponse.json(
@@ -30,6 +32,7 @@ export async function POST(req: NextRequest) {
       { error: "Invalid request" },
       { status: 400, headers },
     );
+  if (!settings.enabled || (body.channel === "voice" ? !settings.voice_enabled : !settings.chat_enabled)) return NextResponse.json({ code: "assistant_paused", error: "Smart Shopping is not active yet" }, { status: 503, headers });
   // No caller-selected function, URL, RPC, role, or server credential is forwarded.
   const { url, publishableKey } = getSupabaseConfig();
   const upstreamHeaders: Record<string, string> = {
@@ -54,7 +57,9 @@ export async function POST(req: NextRequest) {
       headers: upstreamHeaders,
       body: JSON.stringify({
         mode: body.mode,
+        channel: body.channel === "voice" ? "voice" : "chat",
         language: body.language,
+        memory_enabled: settings.memory_enabled,
         messages: body.messages,
         request: body.request,
         image: body.image,

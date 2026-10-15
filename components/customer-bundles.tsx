@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -46,7 +48,7 @@ export async function CustomerBundles() {
     );
   }
 
-  return (
+  return <Localize>{(
     <section className="account-panel" style={{ marginTop: 20 }}>
       <div className="panel-title">
         <div>
@@ -146,5 +148,5 @@ export async function CustomerBundles() {
         })}
       </div>
     </section>
-  );
+  )}</Localize>;
 }

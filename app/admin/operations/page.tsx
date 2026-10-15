@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -72,7 +74,7 @@ export default async function AdminOperationsPage({ searchParams }: Props) {
   const type = params.type === "error" ? "error" : "success";
   const areaById = new Map(areas.map((area) => [area.id, area.city]));
 
-  return (
+  return <Localize>{(
     <main className="ops-shell">
       <header className="ops-top">
         <div><span className="brand"><BrandWordmark /></span><b>Admin</b></div>
@@ -154,5 +156,5 @@ export default async function AdminOperationsPage({ searchParams }: Props) {
         </section>
       </section>
     </main>
-  );
+  )}</Localize>;
 }

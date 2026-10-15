@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { adminNavigation } from "@/lib/workspace-navigation";
@@ -33,7 +35,7 @@ export default async function AdminPage() {
     can_manage_selling_rules: !ruleAccess.error && ruleAccess.data === true, can_support: supportContext?.can_support === true, ai_view: supportContext?.ai_view === true }).map((entry) => entry.href));
 
 
-  return (
+  return <Localize>{(
     <main className="ops-shell">
       <header className="ops-top">
         <div><span className="brand">Shikimomo<span>.</span></span><b>Admin</b></div>
@@ -45,6 +47,7 @@ export default async function AdminPage() {
           <div>
             <p className="eyebrow dark">Private administration</p>
             <h1>Admin Dashboard</h1>
+            {access.can_manage_selling_rules && <Link href="/admin/smart-shop">Smart Shopping controls</Link>}
             <p>Customer support, pickup requests, inventory and privileged Shikimomo operations. This area is not linked from customer-facing pages.</p>
           </div>
           <div className="security-chip">{access.has_aal2 ? "MFA verified" : "Signed in"} · {access.role}</div>
@@ -98,5 +101,5 @@ export default async function AdminPage() {
         <section className="ops-card"><div className="ops-card-title"><div><h2>Signed-in staff</h2><p>{user.email}</p></div><strong>{access.role}</strong></div>{access.can_manage_pickups ? <p className="empty">Total pickup requests: {requests.count ?? 0}</p> : null}</section>
       </section>
     </main>
-  );
+  )}</Localize>;
 }

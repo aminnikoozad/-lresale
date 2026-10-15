@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { createClient } from "@/lib/supabase/server";
 import {
   formatCadFromCents,
@@ -9,7 +11,7 @@ export async function CommissionSection() {
   const supabase = await createClient();
   const rules = await loadSellingRules(supabase);
 
-  return (
+  return <Localize>{(
     <section
       className="commission-section section-wrap"
       aria-labelledby="commission-title"
@@ -57,5 +59,5 @@ export async function CommissionSection() {
           : "."}
       </p>
     </section>
-  );
+  )}</Localize>;
 }

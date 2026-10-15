@@ -71,11 +71,11 @@ async function requestOrigin() {
 
   const requestHeaders = await headers();
   const origin = requestHeaders.get("origin");
-  return origin?.startsWith("http://localhost") ? origin : "https://lresale.vercel.app";
+  return origin?.startsWith("http://localhost") ? origin : "https://shikimomo.com";
 }
 
 export async function login(formData: FormData) {
-  const next = safeRedirectPath(text(formData, "next"), "https://rewear.invalid");
+  const next = safeRedirectPath(text(formData, "next"), "https://shikimomo.invalid");
   const captchaToken = await protectAuthForm(formData, "/login", next);
   const email = text(formData, "email").toLowerCase();
   const password = rawText(formData, "password");
@@ -145,7 +145,7 @@ export async function signup(formData: FormData) {
 }
 
 export async function sendPhoneVerification(formData: FormData) {
-  const next = safeRedirectPath(text(formData, "next"), "https://rewear.invalid");
+  const next = safeRedirectPath(text(formData, "next"), "https://shikimomo.invalid");
   if (!isPhoneVerificationRequired()) redirect(next);
 
   const phone = normalizeCanadianPhone(text(formData, "phone"));
@@ -166,7 +166,7 @@ export async function sendPhoneVerification(formData: FormData) {
 }
 
 export async function verifyPhone(formData: FormData) {
-  const next = safeRedirectPath(text(formData, "next"), "https://rewear.invalid");
+  const next = safeRedirectPath(text(formData, "next"), "https://shikimomo.invalid");
   if (!isPhoneVerificationRequired()) redirect(next);
 
   const token = text(formData, "token");

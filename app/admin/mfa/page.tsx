@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -14,7 +16,7 @@ export default async function AdminMfaPage() {
   const { access } = await requireAdmin({ requireMfa: false });
   if (access.has_aal2) redirect("/admin");
 
-  return (
+  return <Localize>{(
     <main className="auth-page">
       <section className="auth-card">
         <div className="brand"><BrandWordmark /></div>
@@ -24,5 +26,5 @@ export default async function AdminMfaPage() {
         <AdminMfaClient />
       </section>
     </main>
-  );
+  )}</Localize>;
 }

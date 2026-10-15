@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -87,7 +89,7 @@ export default async function ProcessingPage({ searchParams }: Props) {
     ? items.filter((item) => item.itemCode.includes(query) || item.name.toUpperCase().includes(query) || (item.customerCode ?? "").toUpperCase().includes(query))
     : items;
 
-  return (
+  return <Localize>{(
     <main className="processing-shell">
       <header className="processing-top">
         <div><Link href="/" className="brand"><BrandWordmark /></Link><b>Operations</b></div>
@@ -181,5 +183,5 @@ export default async function ProcessingPage({ searchParams }: Props) {
         </section>
       </section>
     </main>
-  );
+  )}</Localize>;
 }

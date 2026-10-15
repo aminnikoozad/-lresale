@@ -1,8 +1,10 @@
 "use client";
 
+import { useLocale, translateElement } from "./site-language";
+import type { Locale } from "@/lib/translations";
 import { useEffect } from "react";
 
-function ensureEvidenceFields(form: HTMLFormElement, selectName: "review_action" | "below_minimum_action") {
+function ensureEvidenceFields(form: HTMLFormElement, selectName: "review_action" | "below_minimum_action", locale:Locale) {
   const select = form.querySelector<HTMLSelectElement>(`select[name="${selectName}"]`);
   if (!select) return;
 
@@ -23,6 +25,7 @@ function ensureEvidenceFields(form: HTMLFormElement, selectName: "review_action"
     submit?.insertAdjacentElement("beforebegin", wrapper);
   }
 
+  if(wrapper)translateElement(wrapper,locale);
   const refresh = () => {
     const rejecting = select.value === "reject";
     if (!wrapper) return;
@@ -41,15 +44,16 @@ function ensureEvidenceFields(form: HTMLFormElement, selectName: "review_action"
 }
 
 export function RejectionEvidenceFields() {
+  const {locale}=useLocale();
   useEffect(() => {
     const scan = () => {
-      document.querySelectorAll<HTMLFormElement>("form.review-form").forEach((form) => ensureEvidenceFields(form, "review_action"));
-      document.querySelectorAll<HTMLFormElement>("form.admin-item-form").forEach((form) => ensureEvidenceFields(form, "below_minimum_action"));
+      document.querySelectorAll<HTMLFormElement>("form.review-form").forEach((form) => ensureEvidenceFields(form, "review_action",locale));
+      document.querySelectorAll<HTMLFormElement>("form.admin-item-form").forEach((form) => ensureEvidenceFields(form, "below_minimum_action",locale));
     };
     const observer = new MutationObserver(scan);
     observer.observe(document.body, { childList: true, subtree: true });
     scan();
     return () => observer.disconnect();
-  }, []);
+  }, [locale]);
   return null;
 }

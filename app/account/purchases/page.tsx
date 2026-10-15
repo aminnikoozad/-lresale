@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -11,7 +13,7 @@ export default async function PurchasesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/account/purchases");
-  return (
+  return <Localize>{(
     <main className="account-shell buyer-account-page">
       <header className="account-top">
         <Link href="/" className="brand"><BrandWordmark /></Link>
@@ -19,5 +21,5 @@ export default async function PurchasesPage() {
       </header>
       <BuyerAccountTools />
     </main>
-  );
+  )}</Localize>;
 }

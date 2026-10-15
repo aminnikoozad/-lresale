@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -35,7 +37,7 @@ export default async function SupportConversationPage({ params }: { params: Prom
     .order("last_message_at", { ascending: false })
     .limit(8);
 
-  return (
+  return <Localize>{(
     <main className="support-admin-shell">
       <header className="support-admin-top">
         <div><Link href="/admin" className="support-brand"><BrandWordmark /></Link><b>Support</b></div>
@@ -58,5 +60,5 @@ export default async function SupportConversationPage({ params }: { params: Prom
         />
       </section>
     </main>
-  );
+  )}</Localize>;
 }

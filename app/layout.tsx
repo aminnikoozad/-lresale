@@ -1,3 +1,5 @@
+import { cookies } from "next/headers";
+import { LanguageProvider, LanguageSwitch } from "@/components/site-language";
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { PickupConfirmationUi } from "@/components/pickup-confirmation-ui";
@@ -45,10 +47,11 @@ export const metadata: Metadata = {
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const locale = (await cookies()).get("shikimomo-language")?.value === "fr" ? "fr" : "en";
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body><CartProvider>{children}<PickupConfirmationUi /><ExperienceSwitch /></CartProvider></body>
+    <html lang={locale} className={`${inter.variable} ${spaceGrotesk.variable}`}>
+      <body><LanguageProvider initialLocale={locale}><LanguageSwitch /><CartProvider>{children}<PickupConfirmationUi /><ExperienceSwitch /></CartProvider></LanguageProvider></body>
     </html>
   );
 }

@@ -74,7 +74,7 @@ class Engines:
         if finalizing or not body.get("tools"):
             payload.pop("tools", None)
             payload["response_format"] = {"type": "json_object"}
-        payload.update(model="rewear-local", stream=False, max_tokens=1200, temperature=0.3, chat_template_kwargs={"enable_thinking": False})
+        payload.update(model="shikimomo-local", stream=False, max_tokens=1200, temperature=0.3, chat_template_kwargs={"enable_thinking": False})
         result = self.local_model("/v1/chat/completions", payload)
         message = (result.get("choices") or [{}])[0].get("message", {})
         if payload.get("tools") and not message.get("tool_calls"):

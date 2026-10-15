@@ -1,4 +1,4 @@
-name: rewear-local-ai
+name: shikimomo-local-ai
 services:
   download:
     profiles: [install]
@@ -12,7 +12,7 @@ services:
   llama:
     # Pin this to the tested image digest after hardware validation.
     image: ghcr.io/ggml-org/llama.cpp:server
-    command: ["--model", "/models/llm/Qwen3-8B-Q4_K_M.gguf", "--alias", "rewear-local", "--host", "0.0.0.0", "--port", "8080", "--jinja", "--ctx-size", "16384", "--parallel", "1", "--threads", "4"]
+    command: ["--model", "/models/llm/Qwen3-8B-Q4_K_M.gguf", "--alias", "shikimomo-local", "--host", "0.0.0.0", "--port", "8080", "--jinja", "--ctx-size", "16384", "--parallel", "1", "--threads", "4"]
     volumes: ["./models:/models:ro"]
     networks: [private-ai]
     restart: unless-stopped

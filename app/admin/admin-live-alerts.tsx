@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -92,7 +94,7 @@ export function AdminLiveAlerts() {
     }
   }
 
-  return (
+  return <Localize>{(
     <>
       <section className="ops-card admin-alert-card" aria-label="Admin pickup notifications">
         <div className="ops-card-title">
@@ -130,5 +132,5 @@ export function AdminLiveAlerts() {
         </div>
       ) : null}
     </>
-  );
+  )}</Localize>;
 }

@@ -1,6 +1,8 @@
+
+import { Localize } from "@/components/site-language";
 import { HOME_SUBCATEGORIES } from "@/lib/home-decor";
 export function HomeIntake() {
-  return (
+  return <Localize>{(
     <fieldset className="home-intake">
       <legend>About your Home &amp; Decor items</legend>
       <p>
@@ -55,5 +57,5 @@ export function HomeIntake() {
         required specialist or compliance review.
       </p>
     </fieldset>
-  );
+  )}</Localize>;
 }

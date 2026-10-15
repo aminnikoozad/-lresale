@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import { BrandWordmark } from "@/components/brand-wordmark";
 
@@ -16,7 +18,7 @@ export function WorkspaceNavigation({ title, links }: { title: string; links: Wo
   const [expandedAt, setExpandedAt] = useState<string | null>(null);
   const open = expandedAt === pathname;
   const id = title === "Admin" ? "admin-workspace-links" : "account-workspace-links";
-  return <header className="workspace-navigation" onKeyDown={(event) => { if (event.key === "Escape") { setExpandedAt(null); menuButton.current?.focus(); } }}>
+  return <Localize>{<header className="workspace-navigation" onKeyDown={(event) => { if (event.key === "Escape") { setExpandedAt(null); menuButton.current?.focus(); } }}>
     <div className="workspace-navigation-heading">
       <span><Link href="/" aria-label="Shikimomo shop"><BrandWordmark /></Link><strong>{title}</strong></span>
       <button ref={menuButton} className="workspace-menu-toggle" type="button" aria-controls={id} aria-expanded={open} onClick={() => setExpandedAt(open ? null : pathname)}>Menu <ChevronDown aria-hidden="true" /></button>
@@ -27,5 +29,5 @@ export function WorkspaceNavigation({ title, links }: { title: string; links: Wo
       </nav>
       <div className="workspace-navigation-exit"><Link href="/">Back to shop</Link><form action={logout}><button type="submit"><LogOut aria-hidden="true" /> Sign out</button></form></div>
     </div>
-  </header>;
+  </header>}</Localize>;
 }

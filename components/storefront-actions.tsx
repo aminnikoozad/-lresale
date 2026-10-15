@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import { useRouter } from "next/navigation";
 import { Heart, ShoppingBag, Check } from "lucide-react";
@@ -10,7 +12,7 @@ import { useCart, type CartItem } from "@/components/cart-store";
 export function AddToCartButton({ item, compact = false }: { item: CartItem; compact?: boolean }) {
   const { add, has } = useCart();
   const inCart = has(item.id);
-  return (
+  return <Localize>{(
     <Button
       type="button"
       size={compact ? "icon-sm" : "default"}
@@ -21,7 +23,7 @@ export function AddToCartButton({ item, compact = false }: { item: CartItem; com
       {inCart ? <Check /> : <ShoppingBag />}
       {!compact ? (inCart ? "In your bag" : "Add to bag") : null}
     </Button>
-  );
+  )}</Localize>;
 }
 
 export function FavoriteButton({ itemId, compact = false }: { itemId: string; compact?: boolean }) {
@@ -68,7 +70,7 @@ export function FavoriteButton({ itemId, compact = false }: { itemId: string; co
     }
   };
 
-  return (
+  return <Localize>{(
     <Button
       type="button"
       size={compact ? "icon-sm" : "default"}
@@ -82,5 +84,5 @@ export function FavoriteButton({ itemId, compact = false }: { itemId: string; co
       <Heart fill={saved ? "currentColor" : "none"} />
       {!compact ? (saved ? "Saved" : "Save") : null}
     </Button>
-  );
+  )}</Localize>;
 }

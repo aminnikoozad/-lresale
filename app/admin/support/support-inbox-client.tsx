@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -75,7 +77,7 @@ export function SupportInboxClient({ initialStats, categories }: { initialStats:
     return () => { void supabase.removeChannel(channel); };
   }, [load, supabase]);
 
-  return (
+  return <Localize>{(
     <>
       <section className="support-stat-grid">
         <article><Headphones/><div><b>{stats.waiting}</b><span>Waiting for human</span></div></article>
@@ -115,5 +117,5 @@ export function SupportInboxClient({ initialStats, categories }: { initialStats:
         </div>
       </section>
     </>
-  );
+  )}</Localize>;
 }

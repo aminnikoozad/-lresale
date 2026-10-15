@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import { ArrowLeft, LogOut, UserRound } from "lucide-react";
@@ -224,7 +226,7 @@ export default async function AccountPage({ searchParams }: Props) {
   const rawRequests = requestsResult.data ?? [];
   const launchOfferEligible = launchOffer.active && rawRequests.length === 0;
 
-  return (
+  return <Localize>{(
     <main className="account-shell">
       <header className="account-top">
         <Link href="/" className="brand">
@@ -391,5 +393,5 @@ export default async function AccountPage({ searchParams }: Props) {
         <ArrowLeft /> Back to marketplace
       </Link>
     </main>
-  );
+  )}</Localize>;
 }

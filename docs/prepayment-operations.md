@@ -1,4 +1,4 @@
-# REWEAR pre-payment operations
+# Shikimomo pre-payment operations
 
 The site intentionally prepares orders without collecting money. A prepared order is **not** a sale, and staff cannot advance it until a future verified payment flow has recorded payment evidence.
 

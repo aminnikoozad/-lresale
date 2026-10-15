@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -22,7 +24,7 @@ export default async function SupportInboxPage() {
   };
   const categories = (categoryRows ?? []).map((row) => row.name as string);
 
-  return (
+  return <Localize>{(
     <main className="support-admin-shell">
       <header className="support-admin-top">
         <div><Link href="/admin" className="support-brand"><BrandWordmark /></Link><b>Support</b></div>
@@ -40,5 +42,5 @@ export default async function SupportInboxPage() {
         <SupportInboxClient initialStats={stats} categories={categories} />
       </section>
     </main>
-  );
+  )}</Localize>;
 }
