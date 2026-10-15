@@ -21,7 +21,7 @@ export default function CartPage() {
   return <Localize>{(
     <main className="cart-page section-wrap">
       <header className="cart-header">
-        <Link href="/#shop"><ArrowLeft /> Continue shopping</Link>
+        <Link href="/shop#shop"><ArrowLeft /> Continue shopping</Link>
         <h1><ShoppingBag /> Your bag</h1>
       </header>
 
@@ -37,7 +37,7 @@ export default function CartPage() {
           <ShoppingBag />
           <h2>Your bag is empty</h2>
           <p>Each secondhand item is unique. Save the pieces you want before they’re gone.</p>
-          <Button asChild><Link href="/#shop">Browse available items</Link></Button>
+          <Button asChild><Link href="/shop#shop">Browse available items</Link></Button>
         </section>
       ) : (
         <div className="cart-layout">

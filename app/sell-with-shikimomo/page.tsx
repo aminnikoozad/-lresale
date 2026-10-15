@@ -37,7 +37,7 @@ export default async function SellWithShikimomoPage() {
     <main className="seller-guide-shell">
       <header className="seller-guide-top">
         <Link href="/" className="brand"><BrandWordmark /></Link>
-        <nav><Link href="/#shop">Shop</Link><Link href="/pickup-policy">Pickup policy</Link><Link href="/account">My account</Link></nav>
+        <nav><Link href="/shop#shop">Shop</Link><Link href="/pickup-policy">Pickup policy</Link><Link href="/account">My account</Link></nav>
       </header>
 
       <section className="seller-guide-hero">
