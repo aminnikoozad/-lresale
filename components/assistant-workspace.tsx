@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  MessageCircle,
   Mic,
   MicOff,
   Send,
@@ -46,6 +47,8 @@ export function AssistantWorkspace() {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
   const cart = useCart();
+  const [mode, setMode] = useState<"chat" | "voice">("chat");
+  const voiceAttempt = useRef(0);
   const [fr, setFr] = useState(false),
     [messages, setMessages] = useState<AssistantMessage[]>([]),
     [text, setText] = useState(""),
@@ -82,7 +85,9 @@ export function AssistantWorkspace() {
     bag.current = cart.items;
   }, [cart.items]);
   const stopVoice = useCallback(() => {
+    voiceAttempt.current += 1;
     const v = voiceRef.current;
+    voiceRef.current = null;
     if (v) {
       clearTimeout(v.timer);
       v.channel.close();
@@ -221,17 +226,18 @@ export function AssistantWorkspace() {
     };
   }, [identity, supabase]);
   async function invoke(body: Record<string, unknown>) {
-    const { data, error } = await supabase.functions.invoke(
-      "rewear-assistant",
-      { body },
-    );
-    if (error || data?.error)
+    const response = await fetch("/api/assistant", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await response.json();
+    if (!response.ok || data?.error)
       throw new Error(
-        data?.error ||
-          t(
-            "The assistant is unavailable. Please try again or use the shop.",
-            "L’assistant est indisponible. Réessayez ou ouvrez la boutique.",
-          ),
+        t(
+          "Smart Shopping is temporarily unavailable. You can still enter the website.",
+          "L’achat intelligent est temporairement indisponible. Vous pouvez toujours accéder au site.",
+        ),
       );
     return data;
   }
@@ -264,6 +270,26 @@ export function AssistantWorkspace() {
   }
   async function send(value = text) {
     if (busyRef.current || (!value.trim() && !image)) return;
+    if (voiceRef.current?.channel.readyState === "open" && !image) {
+      const channel = voiceRef.current.channel;
+      channel.send(
+        JSON.stringify({
+          type: "conversation.item.create",
+          item: {
+            type: "message",
+            role: "user",
+            content: [{ type: "input_text", text: value.trim() }],
+          },
+        }),
+      );
+      channel.send(JSON.stringify({ type: "response.create" }));
+      setMessages((m) => [
+        ...m,
+        { id: crypto.randomUUID(), role: "user", text: value.trim() },
+      ]);
+      setText("");
+      return;
+    }
     busyRef.current = true;
     setBusy(true);
     setError("");
@@ -303,12 +329,18 @@ export function AssistantWorkspace() {
   }
   async function startVoice() {
     if (connecting || voiceRef.current) return;
+    setMode("voice");
+    const attempt = ++voiceAttempt.current;
     setConnecting(true);
     setError("");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true },
       });
+      if (attempt !== voiceAttempt.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
       const pc = new RTCPeerConnection();
       const audio = document.createElement("audio");
       audio.autoplay = true;
@@ -336,6 +368,7 @@ export function AssistantWorkspace() {
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
       channel.onmessage = (event) => {
         void (async () => {
+          if (voiceRef.current !== connection) return;
           const e = JSON.parse(event.data);
           if (
             e.type ===
@@ -698,11 +731,75 @@ export function AssistantWorkspace() {
           <Link href="/privacy">{t("Privacy", "Confidentialité")}</Link>
         </aside>
       )}
+      <div
+        className="assistant-mode-tabs"
+        role="tablist"
+        aria-label={t("Shopping mode", "Mode d’achat")}
+      >
+        <button
+          id="assistant-chat-tab"
+          role="tab"
+          aria-selected={mode === "chat"}
+          aria-controls="assistant-panel"
+          onClick={() => {
+            stopVoice();
+            setMode("chat");
+          }}
+        >
+          <MessageCircle size={18} />
+          {t("Chat", "Clavardage")}
+        </button>
+        <button
+          id="assistant-voice-tab"
+          role="tab"
+          aria-selected={mode === "voice"}
+          aria-controls="assistant-panel"
+          onClick={() => setMode("voice")}
+        >
+          <Mic size={18} />
+          {t("Live voice", "Voix en direct")}
+        </button>
+      </div>
       <section
+        id="assistant-panel"
+        role="tabpanel"
+        aria-labelledby={
+          mode === "voice" ? "assistant-voice-tab" : "assistant-chat-tab"
+        }
         className="assistant-conversation"
         aria-label={t("Conversation", "Conversation")}
       >
-        {!messages.length && (
+        {mode === "voice" && (
+          <section className="assistant-live-panel">
+            <AssistantMark active={voice || connecting} />
+            <h2>
+              {t("Live voice conversation", "Conversation vocale en direct")}
+            </h2>
+            <p>
+              {voice
+                ? t(
+                    "I’m listening. Speak naturally; you can interrupt me.",
+                    "Je vous écoute. Parlez naturellement; vous pouvez m’interrompre.",
+                  )
+                : t(
+                    "Start talking. Products and requests appear here while we speak.",
+                    "Parlons ensemble. Les articles et les demandes s’affichent ici pendant notre conversation.",
+                  )}
+            </p>
+            <button
+              disabled={connecting}
+              onClick={() => (voice ? stopVoice() : void startVoice())}
+            >
+              {voice ? <MicOff size={19} /> : <Mic size={19} />}
+              {connecting
+                ? t("Connecting…", "Connexion…")
+                : voice
+                  ? t("End live conversation", "Terminer la conversation")
+                  : t("Start live voice", "Démarrer la voix en direct")}
+            </button>
+          </section>
+        )}
+        {!messages.length && mode === "chat" && (
           <div className="assistant-welcome">
             <AssistantMark active={voice} />
             <p>YOUR REWEAR</p>
@@ -795,9 +892,30 @@ export function AssistantWorkspace() {
       </section>
       <div className="assistant-composer-wrap">
         {error && (
-          <p role="alert" className="assistant-error">
-            {error}
-          </p>
+          <>
+            <p role="alert" className="assistant-error">
+              {error}
+            </p>
+            <div className="assistant-error-actions">
+              <button
+                onClick={() => {
+                  setError("");
+                  if (mode === "voice") void startVoice();
+                  else {
+                    const previous = [...history.current]
+                      .reverse()
+                      .find((m) => m.role === "user");
+                    if (previous) void send(previous.text);
+                  }
+                }}
+              >
+                {t("Try again", "Réessayer")}
+              </button>
+              <Link href="/shop">
+                {t("Enter website", "Entrer sur le site")}
+              </Link>
+            </div>
+          </>
         )}
         {voice && (
           <div className="assistant-voice-status">

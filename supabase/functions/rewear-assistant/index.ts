@@ -99,23 +99,28 @@ Deno.serve(async (req) => {
       .map((x) => x.toString(16).padStart(2, "0"))
       .join("");
     const voice = body.mode === "voice";
+    const key = Deno.env.get("OPENAI_API_KEY");
+    if (!key)
+      return respond(
+        {
+          code: "ai_not_configured",
+          error:
+            "Smart Shopping is temporarily unavailable. You can still enter the website.",
+        },
+        503,
+      );
+    if (body.mode === "health") return respond({ available: true });
     const { data: quota, error: quotaError } = await service.rpc(
       "assistant_take_quota",
       { p_identity: hash, p_voice: voice },
     );
     if (quotaError || !quota)
       return respond(
-        { error: "Please try again later. You can still use the shop." },
-        429,
-      );
-    const key = Deno.env.get("OPENAI_API_KEY");
-    if (!key)
-      return respond(
         {
-          error:
-            "The assistant is temporarily unavailable. You can still use the shop.",
+          code: "rate_limited",
+          error: "Please try again later. You can still use the shop.",
         },
-        503,
+        429,
       );
     if (voice) {
       if (typeof body.sdp !== "string" || body.sdp.length > 100_000)
@@ -128,7 +133,8 @@ Deno.serve(async (req) => {
           type: "realtime",
           model: Deno.env.get("OPENAI_REALTIME_MODEL") || "gpt-realtime-2.1",
           instructions:
-            instructions + " For every inventory search or customer action call use_store. " +
+            instructions +
+            " For every inventory search or customer action call use_store. " +
             ` Start in ${body.language === "fr" ? "French" : "English"}.`,
           tools,
           tool_choice: "auto",
@@ -162,7 +168,6 @@ Deno.serve(async (req) => {
         );
       return respond({ sdp: await response.text() });
     }
-    if (body.mode === "health") return respond({ available: true });
     const history = Array.isArray(body.messages)
       ? body.messages
           .slice(-16)

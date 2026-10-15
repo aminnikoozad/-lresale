@@ -1,3 +1,4 @@
+import { authorizeAssistantOperation } from "@/lib/assistant-authorization";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { sanitizeOperation } from "@/lib/assistant-contract";
@@ -31,6 +32,24 @@ export async function POST(req: NextRequest) {
   const op = sanitizeOperation(input);
   if (!op)
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+  const authorized = await authorizeAssistantOperation(
+    op,
+    user.id,
+    async (requirement) => {
+      const { data, error } = await supabase
+        .from(requirement.table)
+        .select("id")
+        .eq("id", requirement.id)
+        .eq(requirement.ownerColumn, requirement.ownerId)
+        .maybeSingle();
+      return !error && !!data;
+    },
+  );
+  if (!authorized)
+    return NextResponse.json(
+      { error: "This action is not available for your account." },
+      { status: 403 },
+    );
   if (op.name === "checkout") {
     const f = op.fields;
     if (

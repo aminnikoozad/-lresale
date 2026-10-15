@@ -149,3 +149,70 @@ test("customer memory is isolated and the public quota cannot be bypassed with f
     await db.close();
   }
 });
+
+test("customer operation gateway rejects administrative commands even with a staff identity", async () => {
+  const { authorizeAssistantOperation } = await import(
+    "../lib/assistant-authorization.ts"
+  );
+  let queried = false;
+  assert.equal(
+    await authorizeAssistantOperation(
+      { name: "admin_publish_item", fields: { item_id: "x" }, summary: "" },
+      "staff-user",
+      async () => {
+        queried = true;
+        return true;
+      },
+    ),
+    false,
+  );
+  assert.equal(queried, false);
+  for (const op of [
+    "approve_price",
+    "auto_publish",
+    "unsold_preference",
+    "approve_bundle",
+    "confirm_pickup",
+    "cancel_pickup",
+    "cancel_checkout",
+    "request_return",
+  ]) {
+    const fields = {
+      item_id: "item",
+      bundle_id: "bundle",
+      request_id: "pickup",
+      order_id: "order",
+      user_id: "victim",
+    };
+    const allowed = await authorizeAssistantOperation(
+      { name: op, fields, summary: "" },
+      "staff-user",
+      async (requirement) => {
+        assert.equal(requirement.ownerId, "staff-user");
+        return false;
+      },
+    );
+    assert.equal(
+      allowed,
+      false,
+      `${op} must not use staff visibility to act on another customer's records`,
+    );
+  }
+  assert.equal(
+    await authorizeAssistantOperation(
+      { name: "approve_price", fields: { item_id: "own-item" }, summary: "" },
+      "customer",
+      async (requirement) =>
+        requirement.id === "own-item" && requirement.ownerId === "customer",
+    ),
+    true,
+  );
+  assert.equal(
+    await authorizeAssistantOperation(
+      { name: "change_username", fields: { username: "newname" }, summary: "" },
+      "",
+      async () => true,
+    ),
+    false,
+  );
+});
