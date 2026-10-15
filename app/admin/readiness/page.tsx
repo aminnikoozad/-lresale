@@ -6,6 +6,8 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { postalReadiness } from "@/lib/postal-server";
 import { publicLaunchReadiness, siteConfig } from "@/lib/site-config";
 import { assistantHostConfig } from "@/lib/assistant-host";
+import { getSupabaseConfig } from "@/lib/supabase/config";
+import { serviceCredentialReadiness } from "@/lib/supabase/service-readiness";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +25,7 @@ type Check = {
 export default async function AdminReadinessPage() {
   const { supabase, access } = await requireAdmin();
   const carrier = postalReadiness();
+  const database = serviceCredentialReadiness(process.env, getSupabaseConfig().url);
   const postalState = access.can_manage_shipping && access.has_aal2
     ? await supabase.rpc("admin_postal_state")
     : null;
@@ -64,8 +67,13 @@ export default async function AdminReadinessPage() {
       detail: "Verify the email provider/SMTP configuration in Supabase Auth and test signup confirmation and password recovery end to end. A Vercel RESEND_API_KEY is not used by these auth flows and does not establish delivery readiness. Verify any transactional email flow separately before advertising it.",
     },
     {
+      label: "Server database project",
+      ok: database.projectMatches,
+      detail: "Vercel Supabase URLs and server-only keys must belong to the same project as the storefront. Never switch the storefront database to make an unrelated service key work. After correcting configuration, verify the cleanup endpoint succeeds.",
+    },
+    {
       label: "Checkout reservation cleanup",
-      ok: (process.env.CRON_SECRET?.length ?? 0) >= 32 && (envSet("SUPABASE_SECRET_KEY") || envSet("SUPABASE_SERVICE_ROLE_KEY")),
+      ok: (process.env.CRON_SECRET?.length ?? 0) >= 32 && database.ready,
       detail: "Set a 32+ character CRON_SECRET and the server-only Supabase service key. The daily production job expires prepared orders; verify its first run in deployment logs.",
     },
     {
