@@ -89,7 +89,7 @@ export default async function ProcessingPage({ searchParams }: Props) {
   return (
     <main className="processing-shell">
       <header className="processing-top">
-        <div><Link href="/" className="brand">REWEAR<span>.</span></Link><b>Operations</b></div>
+        <div><Link href="/" className="brand">Shikimomo<span>.</span></Link><b>Operations</b></div>
 
       </header>
 
@@ -117,7 +117,7 @@ export default async function ProcessingPage({ searchParams }: Props) {
         <section className="processing-card controls-grid">
           <div>
             <h2>Find / scan an item</h2>
-            <p>Scan a Code 39 label into this field or type the REWEAR item code.</p>
+            <p>Scan a Code 39 label into this field or type the Shikimomo item code.</p>
             <form method="get" className="inline-form">
               <input name="q" defaultValue={query} placeholder="RW-00001000" autoComplete="off" autoFocus={Boolean(query)} />
               <button type="submit">Find item</button>

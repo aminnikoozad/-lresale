@@ -63,7 +63,7 @@ export function AdminMfaClient() {
 
       const { data: enrollment, error: enrollError } = await supabase.auth.mfa.enroll({
         factorType: "totp",
-        friendlyName: `Rewear Admin ${Date.now()}`,
+        friendlyName: `Shikimomo Admin ${Date.now()}`,
       });
       if (enrollError) throw enrollError;
 

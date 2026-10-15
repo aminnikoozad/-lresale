@@ -77,7 +77,7 @@ export async function createCollectionRequest(formData: FormData) {
 
   if (isBagRequest && estimatedValueCents < rules.pickupRules.bagMinimumEstimatedValueCents) {
     redirect(accountMessage(
-      `REWEAR Bag requests require an estimated resale value of at least ${cad(rules.pickupRules.bagMinimumEstimatedValueCents)}. You can still use your own bag or box and request pickup instead.`,
+      `Shikimomo Bag requests require an estimated resale value of at least ${cad(rules.pickupRules.bagMinimumEstimatedValueCents)}. You can still use your own bag or box and request pickup instead.`,
       "error",
     ));
   }
@@ -146,7 +146,7 @@ export async function createCollectionRequest(formData: FormData) {
     : "";
 
   redirect(accountMessage(
-    `${batch} was submitted.${promoMessage} Recorded fees: ${serviceFees.join(" + ")}. A REWEAR Bag is included in the batch service fee when requested.`,
+    `${batch} was submitted.${promoMessage} Recorded fees: ${serviceFees.join(" + ")}. A Shikimomo Bag is included in the batch service fee when requested.`,
     "success",
   ));
 }

@@ -57,7 +57,7 @@ async function modelReply(prompt: string, kb: KB[], rules: any[], mode: string) 
   const model = Deno.env.get("OPENAI_SUPPORT_MODEL") || "gpt-5-mini";
   const context = kb.slice(0, 30).map((k, i) => `KB ${i + 1} [${k.id}] ${k.title}: ${k.approved_answer}`).join("\n\n");
   const behavior = rules.slice(0, 40).map((r: any) => `RULE ${r.id}: ${r.rule_name}: ${r.instruction}`).join("\n");
-  const system = `You are the private Rewear AI Trainer for an authenticated, authorized administrator. Security and privacy are non-overridable. You may discuss ONLY approved support knowledge and approved behavior rules provided below. Never expose credentials, tokens, hidden infrastructure secrets or unrelated customer private data. Never automatically publish changes. In teach mode, return a proposed change for review only. MODE=${mode}.\n\nAPPROVED KNOWLEDGE:\n${context}\n\nAPPROVED BEHAVIOR:\n${behavior}`;
+  const system = `You are the private Shikimomo AI Trainer for an authenticated, authorized administrator. Security and privacy are non-overridable. You may discuss ONLY approved support knowledge and approved behavior rules provided below. Never expose credentials, tokens, hidden infrastructure secrets or unrelated customer private data. Never automatically publish changes. In teach mode, return a proposed change for review only. MODE=${mode}.\n\nAPPROVED KNOWLEDGE:\n${context}\n\nAPPROVED BEHAVIOR:\n${behavior}`;
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",

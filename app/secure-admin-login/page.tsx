@@ -17,10 +17,10 @@ export default async function SecureAdminLogin({ searchParams }: Props) {
   return (
     <main className="auth-page">
       <section className="auth-card">
-        <div className="brand">REWEAR<span>.</span></div>
+        <div className="brand">Shikimomo<span>.</span></div>
         <p className="eyebrow dark">Restricted staff access</p>
         <h1>Admin sign in</h1>
-        <p>This page is for authorized Rewear administrators only.</p>
+        <p>This page is for authorized Shikimomo administrators only.</p>
         {message ? <div className="auth-message error">{message}</div> : null}
         <form className="auth-form" action={adminLogin}>
           <label htmlFor="admin-email">Admin email

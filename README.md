@@ -1,12 +1,12 @@
-# REWEAR Market
+# Shikimomo
 
-Managed secondhand marketplace starting in Montréal, with Canada-wide shipping infrastructure. REWEAR receives and inspects items, prepares listings, manages orders and coordinates fulfillment. It is not a peer-to-peer marketplace.
+Managed secondhand marketplace starting in Montréal, with Canada-wide shipping infrastructure. Shikimomo receives and inspects items, prepares listings, manages orders and coordinates fulfillment. It is not a peer-to-peer marketplace.
 
 ## Application
 
 - Next.js 16 / React 19, TypeScript, Supabase and Vercel.
 - Node.js >=22.13.0 and <23; use Node 22 locally and in Vercel.
-- Public storefront: https://lresale.vercel.app
+- Public storefront: https://shikimomo.com
 - Install locked dependencies with `npm ci`; start locally with `npm run dev`.
 - Validate with `npm test`: database/security regressions, ESLint and production build. Local PGlite tests do not apply or verify production migrations.
 - `npm run generate:admin-salt` creates the local admin rate-limit salt before development/build/lint. Never commit credentials or expose server secrets through NEXT_PUBLIC_ variables.

@@ -37,7 +37,7 @@ export default async function SupportConversationPage({ params }: { params: Prom
   return (
     <main className="support-admin-shell">
       <header className="support-admin-top">
-        <div><Link href="/admin" className="support-brand">REWEAR<span>.</span></Link><b>Support</b></div>
+        <div><Link href="/admin" className="support-brand">Shikimomo<span>.</span></Link><b>Support</b></div>
 
       </header>
       <section className="support-admin-wrap">

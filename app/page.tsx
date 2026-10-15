@@ -1,3 +1,5 @@
+export const metadata = { alternates: { canonical: "/" } };
+
 import { connection } from "next/server";
 import type { HomeData } from "@/lib/home-decor";
 import Image from "next/image";
@@ -106,25 +108,25 @@ export default async function Home() {
   return (
     <main className="market-home">
       <a className="market-skip-link" href="#shop">Skip to the shop</a>
-      <div className="market-announcement">REWEAR · Managed secondhand in Montréal</div>
+      <div className="market-announcement">Shikimomo · Managed secondhand in Montréal</div>
       <header className="site-header market-header">
-        <Link href="/" className="brand" aria-label="REWEAR home">REWEAR<span>.</span></Link>
+        <Link href="/" className="brand" aria-label="Shikimomo home">Shikimomo<span>.</span></Link>
         <form className="market-header-search" action="/#shop" method="get" role="search">
           <Search aria-hidden="true" />
-          <input type="search" name="q" aria-label="Search the REWEAR catalog" placeholder="Search brands or pieces" />
+          <input type="search" name="q" aria-label="Search the Shikimomo catalog" placeholder="Search brands or pieces" />
           <button type="submit" aria-label="Search catalog"><ArrowRight aria-hidden="true" /></button>
         </form>
         <div className="header-actions">
           <Link href="/account" className="market-account-link"><UserRound aria-hidden="true" /><span>Account</span></Link>
           <CartNavLink />
-          <Button asChild className="header-sell-button"><Link href="/sell-with-rewear">Sell with REWEAR</Link></Button>
+          <Button asChild className="header-sell-button"><Link href="/sell-with-shikimomo">Sell with Shikimomo</Link></Button>
         </div>
       </header>
 
       <nav className="market-category-nav" aria-label="Shop departments">
         <a href="#shop">All finds</a>
         {navCategories.map((entry) => <a key={entry.value} href={`#${entry.value}`}>{entry.label}</a>)}
-        <Link href="/sell-with-rewear" className="market-how-link">How it works <ArrowRight aria-hidden="true" /></Link>
+        <Link href="/sell-with-shikimomo" className="market-how-link">How it works <ArrowRight aria-hidden="true" /></Link>
       </nav>
 
       {launchOffer.active ? (
@@ -134,7 +136,7 @@ export default async function Home() {
             <strong>Launch offer: first {launchOffer.maxClaims} sellers get the {waivedServiceFee} batch service fee waived on their first collection.</strong>
             <span>{launchOffer.remaining} spots remain. Creating an account does not reserve a spot; the offer is claimed only when a first collection request is successfully submitted. The flat $5 pickup fee still applies when the pickup value is below $100.</span>
           </div>
-          <Link href="/sell-with-rewear#launch-offer">Offer details</Link>
+          <Link href="/sell-with-shikimomo#launch-offer">Offer details</Link>
         </section>
       ) : null}
 
@@ -145,7 +147,7 @@ export default async function Home() {
             <p>Shop inspected clothing, or send us the pieces you no longer wear. We handle preparation, photography and resale.</p>
             <div className="hero-actions">
               <Button asChild size="lg"><a href="#shop">Explore the shop <ArrowRight aria-hidden="true" /></a></Button>
-              <Button asChild size="lg" variant="outline"><Link href="/sell-with-rewear">Sell your pieces</Link></Button>
+              <Button asChild size="lg" variant="outline"><Link href="/sell-with-shikimomo">Sell your pieces</Link></Button>
             </div>
           </div>
           <div className="hero-media">
@@ -154,7 +156,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <div className="market-service-strip" aria-label="How REWEAR is different">
+      <div className="market-service-strip" aria-label="How Shikimomo is different">
         <span><ShieldCheck aria-hidden="true" /><span><strong>Checked before listing</strong>Real pieces. Accountable inspection.</span></span>
         <span><Camera aria-hidden="true" /><span><strong>We do the resale work</strong>Preparation, photography and listing.</span></span>
         <span><PackageCheck aria-hidden="true" /><span><strong>Know where you stand</strong>Clear condition, prices and seller terms.</span></span>
@@ -176,17 +178,17 @@ export default async function Home() {
       <section className="shipping-strip" aria-label="Canada delivery policy"><Truck aria-hidden="true" /><div><strong>{shipping.canadaWideEnabled === false ? "Delivery, with the details up front." : "Finds worth sending across Canada."}</strong><span>{shippingSummary}</span></div><Link href="/shipping-policy">Delivery details <ArrowRight aria-hidden="true" /></Link></section>
 
       <section id="sell" className="process-section">
-        <div className="process-intro"><p className="eyebrow">Selling with REWEAR</p><h2>You send it.<br />We handle the rest.</h2><p>For the pieces you no longer reach for: check the acceptance rules and fees up front. Our team takes over after collection and decides what can be listed following physical inspection.</p><Button asChild variant="secondary"><Link href="/sell-with-rewear">See the seller guide</Link></Button></div>
-        <ol className="steps"><li><b>01</b><div><h3>Prepare your collection</h3><p>Check the $8 individual item minimum and $60 estimated Bag minimum, then request an available pickup window.</p></div></li><li><b>02</b><div><h3>We collect and prepare everything</h3><p>Our team receives, identifies, inspects, photographs, prices and lists accepted items in the categories currently enabled by Rewear.</p></div></li><li><b>03</b><div><h3>Follow every step.</h3><p>We handle buyers and the sale. Your item progress, batch counts, commission and seller earnings stay visible in your account.</p></div></li></ol>
+        <div className="process-intro"><p className="eyebrow">Selling with Shikimomo</p><h2>You send it.<br />We handle the rest.</h2><p>For the pieces you no longer reach for: check the acceptance rules and fees up front. Our team takes over after collection and decides what can be listed following physical inspection.</p><Button asChild variant="secondary"><Link href="/sell-with-shikimomo">See the seller guide</Link></Button></div>
+        <ol className="steps"><li><b>01</b><div><h3>Prepare your collection</h3><p>Check the $8 individual item minimum and $60 estimated Bag minimum, then request an available pickup window.</p></div></li><li><b>02</b><div><h3>We collect and prepare everything</h3><p>Our team receives, identifies, inspects, photographs, prices and lists accepted items in the categories currently enabled by Shikimomo.</p></div></li><li><b>03</b><div><h3>Follow every step.</h3><p>We handle buyers and the sale. Your item progress, batch counts, commission and seller earnings stay visible in your account.</p></div></li></ol>
       </section>
 
-      <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Company-managed shopping</p><h2>Listings are prepared and reviewed by Rewear.</h2><p>{pilot.enabled ? "During the pilot, only the categories enabled in Pilot Settings are accepted and published." : "Rewear reviews accepted items before publication."} If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
+      <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Company-managed shopping</p><h2>Listings are prepared and reviewed by Shikimomo.</h2><p>{pilot.enabled ? "During the pilot, only the categories enabled in Pilot Settings are accepted and published." : "Shikimomo reviews accepted items before publication."} If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
 
       <footer>
-        <div className="brand">REWEAR<span>.</span></div>
+        <div className="brand">Shikimomo<span>.</span></div>
         <p>{pilot.enabled ? `${navCategories.map((entry) => entry.label).join(" · ")} pilot` : "Women · Men · Kids · Shoes · Accessories · Electronics · Home & Decor"}</p>
         <div className="footer-links">
-          <Link href="/sell-with-rewear">Seller guide</Link>
+          <Link href="/sell-with-shikimomo">Seller guide</Link>
           <Link href="/seller-terms">Seller terms</Link>
           <Link href="/pickup-policy">Pickup policy</Link>
           <Link href="/shipping-policy">Shipping policy</Link>

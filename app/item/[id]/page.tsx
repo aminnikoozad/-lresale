@@ -149,7 +149,7 @@ export default async function ProductPage({ params }: Props) {
           <div className="product-trust product-trust-primary">
             <ShieldCheck />
             <div>
-              <b>Inspected by REWEAR</b>
+              <b>Inspected by Shikimomo</b>
               <span>
                 Our team physically reviews condition and listing details before
                 publication
@@ -242,7 +242,7 @@ export default async function ProductPage({ params }: Props) {
               </dl>
               {home.era && home.era !== "Unknown" ? (
                 <p>
-                  Era estimated by REWEAR based on available item information.
+                  Era estimated by Shikimomo based on available item information.
                 </p>
               ) : null}
               {home.disclosed_defects?.length || home.visible_defects ? (
@@ -290,7 +290,7 @@ export default async function ProductPage({ params }: Props) {
                 ) : null}
                 {home.pickup_only ? (
                   <p>
-                    This item is eligible for collection only. Contact REWEAR to
+                    This item is eligible for collection only. Contact Shikimomo to
                     arrange fulfilment.
                   </p>
                 ) : null}
@@ -350,7 +350,7 @@ export default async function ProductPage({ params }: Props) {
             <div>
               <ShieldCheck />
               <span>
-                <b>Centralized support</b>REWEAR handles fulfilment and
+                <b>Centralized support</b>Shikimomo handles fulfilment and
                 post-purchase support.
               </span>
             </div>

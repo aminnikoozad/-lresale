@@ -71,14 +71,14 @@ export default async function SellerOperationsPage({ searchParams }: Props) {
   return (
     <main className="seller-ops-shell">
       <header className="seller-ops-top">
-        <Link href="/" className="brand">REWEAR<span>.</span></Link>
-        <nav><Link href="/account">Selling dashboard</Link><Link href="/sell-with-rewear">Seller guide</Link><Link href="/account/purchases">Purchases</Link></nav>
+        <Link href="/" className="brand">Shikimomo<span>.</span></Link>
+        <nav><Link href="/account">Selling dashboard</Link><Link href="/sell-with-shikimomo">Seller guide</Link><Link href="/account/purchases">Purchases</Link></nav>
       </header>
       <section className="seller-ops-wrap">
         <div className="seller-ops-heading">
           <p className="eyebrow dark">My items → Operations</p>
           <h1>Follow every item</h1>
-          <p>See where each item is in the REWEAR process, review pricing, schedule publishing, and decide what should happen if it does not sell.</p>
+          <p>See where each item is in the Shikimomo process, review pricing, schedule publishing, and decide what should happen if it does not sell.</p>
         </div>
         {message ? <div className={`seller-ops-message ${type}`}>{message}</div> : null}
 
@@ -116,7 +116,7 @@ export default async function SellerOperationsPage({ searchParams }: Props) {
 
               {needsReview ? (
                 <section className="seller-review-box">
-                  <div><h3>Ready for your review</h3><p>Approve the displayed initial price and locked commission, then REWEAR will publish this item automatically after the review window.</p></div>
+                  <div><h3>Ready for your review</h3><p>Approve the displayed initial price and locked commission, then Shikimomo will publish this item automatically after the review window.</p></div>
                   <form action={scheduleAutoPublish}>
                     <input type="hidden" name="item_id" value={item.itemId} />
                     <input type="hidden" name="expected_price" value={item.initialPriceCents ?? ""} />
@@ -154,7 +154,7 @@ export default async function SellerOperationsPage({ searchParams }: Props) {
               </section>
             </article>
           );
-        })}</div> : <div className="seller-ops-empty"><h2>No items yet</h2><p>Your item timeline appears here after REWEAR receives your first item.</p></div>}
+        })}</div> : <div className="seller-ops-empty"><h2>No items yet</h2><p>Your item timeline appears here after Shikimomo receives your first item.</p></div>}
       </section>
     </main>
   );

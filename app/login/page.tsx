@@ -14,7 +14,7 @@ export default async function LoginPage({ searchParams }: Props) {
   const message = typeof params.message === "string" ? params.message : null;
   const type = params.type === "success" ? "success" : "error";
   return <main className="auth-page"><section className="auth-card">
-    <Link href="/" className="brand">REWEAR<span>.</span></Link>
+    <Link href="/" className="brand">Shikimomo<span>.</span></Link>
     <h1>Welcome back.</h1>
     <p>Sign in to follow your items, requests and available balance.</p>
     {message && <div className={`auth-message ${type}`}>{message}</div>}
@@ -27,7 +27,7 @@ export default async function LoginPage({ searchParams }: Props) {
       <AuthCaptcha />
       <PendingSubmitButton className="auth-submit" pendingLabel="Signing in…">Sign in</PendingSubmitButton>
     </form>
-    <p className="auth-switch">New to Rewear? <Link href="/signup">Create an account</Link></p>
+    <p className="auth-switch">New to Shikimomo? <Link href="/signup">Create an account</Link></p>
     <Link className="auth-back" href="/">← Back to marketplace</Link>
   </section></main>;
 }

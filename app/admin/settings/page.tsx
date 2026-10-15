@@ -39,7 +39,7 @@ export default async function SellingRulesPage({ searchParams }: Props) {
     <main className="admin-settings-shell">
       <header className="admin-settings-top">
         <div>
-          <Link href="/" className="brand">REWEAR<span>.</span></Link>
+          <Link href="/" className="brand">Shikimomo<span>.</span></Link>
           <span className="admin-pill">Admin</span>
         </div>
         <Link href="/account">Customer account</Link>

@@ -1,10 +1,13 @@
-const FALLBACK_SITE_URL = "https://lresale.vercel.app";
+const FALLBACK_SITE_URL = "https://shikimomo.com";
 
 function httpsOrigin(value: string | undefined) {
   if (!value) return null;
   try {
     const url = new URL(value);
-    return url.protocol === "https:" ? url.origin : null;
+    if (url.protocol !== "https:") return null;
+    return ["https://lresale.vercel.app", "https://www.shikimomo.com"].includes(url.origin)
+      ? FALLBACK_SITE_URL
+      : url.origin;
   } catch {
     return null;
   }
@@ -17,7 +20,7 @@ function clean(value: string | undefined, max = 200) {
 
 export const siteConfig = {
   siteUrl: httpsOrigin(process.env.NEXT_PUBLIC_SITE_URL) ?? FALLBACK_SITE_URL,
-  businessName: clean(process.env.NEXT_PUBLIC_BUSINESS_NAME, 120) || "Rewear Market",
+  businessName: clean(process.env.NEXT_PUBLIC_BUSINESS_NAME, 120).replace(/\bRewear(?: Market)?\b/gi, "Shikimomo") || "Shikimomo",
   supportEmail: clean(process.env.NEXT_PUBLIC_SUPPORT_EMAIL, 254),
   privacyEmail: clean(process.env.NEXT_PUBLIC_PRIVACY_EMAIL, 254),
   businessAddress: clean(process.env.NEXT_PUBLIC_BUSINESS_ADDRESS, 300),

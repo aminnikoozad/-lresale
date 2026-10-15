@@ -15,7 +15,7 @@ export function WorkspaceNavigation({ title, links }: { title: string; links: Wo
   const id = title === "Admin" ? "admin-workspace-links" : "account-workspace-links";
   return <header className="workspace-navigation" onKeyDown={(event) => { if (event.key === "Escape") { setExpandedAt(null); menuButton.current?.focus(); } }}>
     <div className="workspace-navigation-heading">
-      <span><Link href="/" aria-label="REWEAR shop">REWEAR.</Link><strong>{title}</strong></span>
+      <span><Link href="/" aria-label="Shikimomo shop">Shikimomo.</Link><strong>{title}</strong></span>
       <button ref={menuButton} className="workspace-menu-toggle" type="button" aria-controls={id} aria-expanded={open} onClick={() => setExpandedAt(open ? null : pathname)}>Menu <ChevronDown aria-hidden="true" /></button>
     </div>
     <div id={id} className="workspace-navigation-panel" data-open={open}>

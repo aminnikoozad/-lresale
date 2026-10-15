@@ -153,7 +153,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
           </div>
 
           <p className="checkout-intro">Enter the address that will be used for shipping quotes, tax calculation and the final payment step once payment processing is connected.</p>
-          {initialDelivery ? <div className="checkout-prefill-note"><Check /> We prefilled the delivery details saved in your REWEAR profile. Review them before continuing.</div> : null}
+          {initialDelivery ? <div className="checkout-prefill-note"><Check /> We prefilled the delivery details saved in your Shikimomo profile. Review them before continuing.</div> : null}
           {authenticated === false ? <div className="checkout-login-note">You’ll be asked to sign in before the order can be prepared.</div> : null}
           {error ? <div className="checkout-error">{error}</div> : null}
 

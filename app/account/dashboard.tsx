@@ -154,7 +154,7 @@ export function Dashboard({
         <div className="dash-actions">
           <RequestDialog
             type="bag"
-            label="Request a REWEAR Bag"
+            label="Request a Shikimomo Bag"
             icon={<Package />}
             serviceAreas={serviceAreas}
             pickupSlots={pickupSlots}
@@ -211,7 +211,7 @@ export function Dashboard({
             <span>Items with us</span>
           </div>
           <strong>{items.length}</strong>
-          <small>{pilotEnabled ? `${activeCategoryLabels || "Selected categories"} during the pilot` : "Accepted Rewear inventory"}</small>
+          <small>{pilotEnabled ? `${activeCategoryLabels || "Selected categories"} during the pilot` : "Accepted Shikimomo inventory"}</small>
         </article>
         <article>
           <div>
@@ -326,7 +326,7 @@ export function Dashboard({
               <div className="empty-box">
                 <Package />
                 <h2>No batches yet</h2>
-                <p>Start with a REWEAR Bag or use your own bag/box. Every new batch receives a trackable batch code.</p>
+                <p>Start with a Shikimomo Bag or use your own bag/box. Every new batch receives a trackable batch code.</p>
               </div>
             )}
           </TabsContent>
@@ -357,10 +357,10 @@ export function Dashboard({
         {showLaunchOffer ? (
           <span>✓ Launch offer: regular {cad(feeRules.processingFeeCents)} first-batch service fee is waived if one of the remaining {launchOffer.remaining} spots is claimed at successful submission</span>
         ) : (
-          <span>✓ Batch service fee is {cad(feeRules.processingFeeCents)} once per new batch; a REWEAR Bag is included if requested</span>
+          <span>✓ Batch service fee is {cad(feeRules.processingFeeCents)} once per new batch; a Shikimomo Bag is included if requested</span>
         )}
         <span>✓ Clothing should be washed and neatly folded</span>
-        <Link href="/sell-with-rewear">Read the full seller guide →</Link>
+        <Link href="/sell-with-shikimomo">Read the full seller guide →</Link>
       </section>
     </div>
   );
@@ -482,14 +482,14 @@ function RequestDialog({
             <div className="hold-card">
               <Truck />
               <div>
-                <b>{launchEligible ? "Launch offer may apply to this first collection" : type === "bag" ? `REWEAR Bag · included in ${processingFee}` : paidPickup ? "Own bag / box · smaller pickup" : "Own bag / box · free priority pickup"}</b>
+                <b>{launchEligible ? "Launch offer may apply to this first collection" : type === "bag" ? `Shikimomo Bag · included in ${processingFee}` : paidPickup ? "Own bag / box · smaller pickup" : "Own bag / box · free priority pickup"}</b>
                 <p>
                   {launchEligible
                     ? paidPickup
                       ? `The regular ${processingFee} batch service fee will be waived if a launch spot remains when this first collection is successfully submitted. The flat ${lowValuePickupFee} pickup fee below ${threshold} still applies.`
-                      : `The regular ${processingFee} batch service fee will be waived if a launch spot remains when this first collection is successfully submitted. ${type === "bag" ? `The REWEAR Bag is included and requires at least ${bagMinimum} estimated resale value.` : `${threshold} or more also qualifies for free priority pickup.`}`
+                      : `The regular ${processingFee} batch service fee will be waived if a launch spot remains when this first collection is successfully submitted. ${type === "bag" ? `The Shikimomo Bag is included and requires at least ${bagMinimum} estimated resale value.` : `${threshold} or more also qualifies for free priority pickup.`}`
                     : type === "bag"
-                      ? `REWEAR Bag requests require at least ${bagMinimum} estimated resale value. One ${processingFee} batch service fee covers processing and includes the REWEAR Bag; there is no separate Bag fee.`
+                      ? `Shikimomo Bag requests require at least ${bagMinimum} estimated resale value. One ${processingFee} batch service fee covers processing and includes the Shikimomo Bag; there is no separate Bag fee.`
                       : paidPickup
                         ? `This batch records the same ${processingFee} service fee plus one flat ${lowValuePickupFee} pickup fee for the whole pickup because the estimated resale value is below ${threshold}.`
                         : `This batch records one ${processingFee} service fee; ${threshold} or more qualifies for free priority pickup.`}
@@ -534,7 +534,7 @@ function RequestDialog({
               <input name="service_fee_accepted" value="accepted" required type="checkbox" />{" "}
               {launchEligible
                 ? `I understand the regular batch service fee is ${processingFee}. If one of the ${launchOffer.remaining} currently remaining launch spots is still available when this first collection is successfully submitted, that service fee will be waived automatically. A sign-up alone does not reserve a spot.`
-                : `I understand this new batch records one ${processingFee} service fee. If I request a REWEAR Bag, it is included in that fee and no separate Bag fee is added. This fee is intended to be deducted from seller earnings when settlement is available, not charged to my card upfront.`}
+                : `I understand this new batch records one ${processingFee} service fee. If I request a Shikimomo Bag, it is included in that fee and no separate Bag fee is added. This fee is intended to be deducted from seller earnings when settlement is available, not charged to my card upfront.`}
             </label>
             <div className="terms-box">
               <b>Required terms for {categoryLabel(category)}</b>
@@ -542,13 +542,13 @@ function RequestDialog({
                 <>
                   <p>• Items must be clean, structurally sound, inspectable and suitable for resale.</p>
                   <p>• Acceptance depends on current category value requirements, condition and shipping feasibility. Restricted or uncertain items require review.</p>
-                  <p>• Seller information is preliminary. REWEAR determines listing details after physical inspection.</p>
+                  <p>• Seller information is preliminary. Shikimomo determines listing details after physical inspection.</p>
                 </>
               ) : fashionCategory ? (
                 <>
                   <p>• Individual listings normally require an approved resale value of at least {itemMinimum}. Lower-value eligible items may be combined into a bundle.</p>
                   <p>• Clothes must be freshly washed or cleaned as appropriate, hygienic, complete and in good wearable condition, without stains, tears, holes or significant damage. Disclose any flaws before pickup.</p>
-                  <p>• REWEAR inspects every item after collection and rejects any item that fails these conditions, even if the estimated batch total met {collectionMinimum}.</p>
+                  <p>• Shikimomo inspects every item after collection and rejects any item that fails these conditions, even if the estimated batch total met {collectionMinimum}.</p>
                   <p>• Accepted fashion items are listed for up to 90 days. Unsold item choices can be managed from your item operations page.</p>
                 </>
               ) : (
@@ -556,17 +556,17 @@ function RequestDialog({
                   <p>• Devices must power on, function properly and be free of serious physical damage unless disclosed for review.</p>
                   <p>• You must verify ownership. We may check identification, serial numbers or IMEI.</p>
                   <p>• Passwords, user accounts and activation locks must be removed before collection.</p>
-                  <p>• Our technicians test the device and REWEAR determines its resale value.</p>
+                  <p>• Our technicians test the device and Shikimomo determines its resale value.</p>
                 </>
               )}
-              <p>{pilotEnabled ? `• During the pilot, pickup appointments are offered on ${pickupDayText} only and confirmed by REWEAR.` : "• Pickup appointments depend on current service-area and scheduling availability."}</p>
+              <p>{pilotEnabled ? `• During the pilot, pickup appointments are offered on ${pickupDayText} only and confirmed by Shikimomo.` : "• Pickup appointments depend on current service-area and scheduling availability."}</p>
               <p>• Your commission is locked from the initial approved item price. Current tiers: {feeRules.commissionTiers.map((tier) => `${cad(tier.minCents)}${tier.maxCents === null ? "+" : `–${cad(tier.maxCents)}`}: ${tier.sellerBps / 100}%`).join("; ")} seller share.</p>
-              <p>• Category and subcategory details are intake information; REWEAR confirms final listing taxonomy after physical inspection.</p>
-              <p>• <Link href="/sell-with-rewear" target="_blank">Read acceptance, pricing, fees and earnings in the Seller Guide.</Link></p>
+              <p>• Category and subcategory details are intake information; Shikimomo confirms final listing taxonomy after physical inspection.</p>
+              <p>• <Link href="/sell-with-shikimomo" target="_blank">Read acceptance, pricing, fees and earnings in the Seller Guide.</Link></p>
             </div>
             <label className="check">
               <input name="condition_confirmed" value="accepted" required type="checkbox" />{" "}
-              I confirm my {categoryLabel(category)} items meet the cleaning, condition, ownership and minimum-value requirements, and understand REWEAR may reject items after inspection.
+              I confirm my {categoryLabel(category)} items meet the cleaning, condition, ownership and minimum-value requirements, and understand Shikimomo may reject items after inspection.
             </label>
             <label className="check">
               <input name="policy_accepted" value="accepted" required type="checkbox" />{" "}

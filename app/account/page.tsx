@@ -227,7 +227,7 @@ export default async function AccountPage({ searchParams }: Props) {
     <main className="account-shell">
       <header className="account-top">
         <Link href="/" className="brand">
-          REWEAR<span>.</span>
+          Shikimomo<span>.</span>
         </Link>
         <div className="account-user">
           <span>
@@ -341,7 +341,7 @@ export default async function AccountPage({ searchParams }: Props) {
             id: request.id,
             batchCode: request.batch_code,
             type:
-              request.request_type === "bag" ? "REWEAR Bag request" : "Own bag / box pickup",
+              request.request_type === "bag" ? "Shikimomo Bag request" : "Own bag / box pickup",
             category: titleCase(request.category),
             status: request.priority_pickup
               ? `${titleCase(request.status)} · Priority`

@@ -4,8 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Rewear",
-  description: "How Rewear collects, uses, protects and handles personal information.",
+  title: "Privacy Policy | Shikimomo",
+  description: "How Shikimomo collects, uses, protects and handles personal information.",
 };
 
 function Contact() {
@@ -14,7 +14,7 @@ function Contact() {
 
 export default function PrivacyPage() {
   return <main className="shipping-policy-page">
-    <header className="policy-header"><Link href="/" className="brand">REWEAR<span>.</span></Link><Link href="/account">My account</Link></header>
+    <header className="policy-header"><Link href="/" className="brand">Shikimomo<span>.</span></Link><Link href="/account">My account</Link></header>
     <article className="legal-policy">
       <div className="policy-hero"><p className="eyebrow dark">Privacy / Confidentialité</p><h1>Privacy Policy · Politique de confidentialité</h1><p>Effective September 25, 2026 · En vigueur le 25 septembre 2026</p></div>
 
@@ -24,7 +24,7 @@ export default function PrivacyPage() {
 
       <section><h2>Cookies and similar technologies · Témoins et technologies similaires</h2><p>Essential session and security technologies may be used to keep you signed in, protect forms and preserve cart or account functionality. Non-essential analytics or advertising technologies should not be enabled without the consent required by applicable law.</p></section>
       <section><h2>Changes · Modifications</h2><p>Material changes to this policy will be published with an updated effective date. Where required, additional notice or consent will be obtained.</p></section>
-      <Link className="policy-back" href="/"><ArrowLeft/> Back to Rewear</Link>
+      <Link className="policy-back" href="/"><ArrowLeft/> Back to Shikimomo</Link>
     </article>
   </main>;
 }
