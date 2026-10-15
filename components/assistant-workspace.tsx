@@ -652,7 +652,7 @@ export function AssistantWorkspace({ available = false, chatEnabled = true, voic
         {!messages.length && mode === "chat" && (
           <div className="assistant-welcome">
             <AssistantMark active={voice} />
-            <p>YOUR Shikimomo</p>
+            <p>{t("YOUR Shikimomo", "VOTRE Shikimomo")}</p>
             <h1>
               {t(
                 "What are you looking for?",

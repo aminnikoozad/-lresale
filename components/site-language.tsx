@@ -40,10 +40,10 @@ export function Localize({children}:{children:ReactNode}) {
   // An option without an explicit value submits its original label. Preserve it.
   if(element.type==="option" && props.value===undefined && typeof props.children==="string")changes.value=props.children;
   for(const key of attributes)if(typeof props[key]==="string")changes[key]=translate(locale,props[key] as string);
-  if(props.children!==undefined)changes.children=Children.map(props.children as ReactNode,visit);
+  if(props.children!==undefined)changes.children=Array.isArray(props.children)?Children.map(props.children as ReactNode,visit):visit(props.children as ReactNode);
   return cloneElement(element,changes);
  }
- return <>{Children.map(children,visit)}</>;
+ return <>{Array.isArray(children)?Children.map(children,visit):visit(children)}</>;
 }
 
 const originalText = new WeakMap<Node,{source:string;last:string}>();
