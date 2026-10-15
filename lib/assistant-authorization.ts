@@ -1,6 +1,6 @@
 import type { AssistantOperation } from "./assistant-contract";
 export type OwnershipRequirement = {
-  table: "items" | "bundles" | "collection_requests" | "orders";
+  table: "items" | "collection_requests" | "orders";
   id: string;
   ownerColumn: "owner_id" | "user_id" | "buyer_id";
   ownerId: string;
@@ -14,24 +14,12 @@ export async function authorizeAssistantOperation(
   if (!userId) return false;
   const f = op.fields;
   switch (op.name) {
-    case "approve_price":
-    case "auto_publish":
     case "unsold_preference":
       return (
         !!f.item_id &&
         owns({
           table: "items",
           id: f.item_id,
-          ownerColumn: "owner_id",
-          ownerId: userId,
-        })
-      );
-    case "approve_bundle":
-      return (
-        !!f.bundle_id &&
-        owns({
-          table: "bundles",
-          id: f.bundle_id,
           ownerColumn: "owner_id",
           ownerId: userId,
         })

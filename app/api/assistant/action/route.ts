@@ -92,7 +92,6 @@ export async function POST(req: NextRequest) {
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
       f[key] || "",
     );
-  const price = Number(f.expected_price);
   let error;
   switch (op.name) {
     case "favorite":
@@ -121,35 +120,6 @@ export async function POST(req: NextRequest) {
           : "cancel_own_pickup",
         { p_request_id: f.request_id },
       ));
-      break;
-    case "approve_price":
-    case "auto_publish":
-      if (
-        !uuid("item_id") ||
-        !Number.isInteger(price) ||
-        price < 1 ||
-        price > 100_000_000
-      )
-        break;
-      ({ error } = await supabase.rpc(
-        op.name === "approve_price"
-          ? "approve_item_pricing"
-          : "seller_schedule_auto_publish",
-        { target_item_id: f.item_id, expected_price: price },
-      ));
-      break;
-    case "approve_bundle":
-      if (
-        !uuid("bundle_id") ||
-        !Number.isInteger(price) ||
-        price < 1 ||
-        price > 100_000_000
-      )
-        break;
-      ({ error } = await supabase.rpc("approve_bundle_pricing", {
-        target_bundle_id: f.bundle_id,
-        expected_price: price,
-      }));
       break;
     case "unsold_preference":
       if (!uuid("item_id") || !["return", "donate"].includes(f.preference))

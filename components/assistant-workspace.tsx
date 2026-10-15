@@ -503,6 +503,9 @@ export function AssistantWorkspace() {
     }
   }
   async function execute(op: AssistantOperation) {
+    const allowed=sanitizeOperation(op);
+    if(!allowed)throw new Error("This action is not available in Smart Shopping.");
+    op=allowed;
     setError("");
     if (op.name === "add_to_bag") {
       const products = history.current.flatMap((m) => m.result?.products || []);
@@ -1116,10 +1119,11 @@ function OperationReview({
   fr: boolean;
   execute: (op: AssistantOperation) => Promise<void>;
 }) {
-  const op = sanitizeOperation(operation)!;
+  const op = sanitizeOperation(operation);
   const [done, setDone] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  if(!op)return null;
   return (
     <section className="assistant-review">
       <h3>{fr ? "Vérifiez avant de confirmer" : "Review before confirming"}</h3>

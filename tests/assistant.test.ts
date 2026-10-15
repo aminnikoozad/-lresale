@@ -200,7 +200,11 @@ test("customer operation gateway rejects administrative commands even with a sta
   }
   assert.equal(
     await authorizeAssistantOperation(
-      { name: "approve_price", fields: { item_id: "own-item" }, summary: "" },
+      {
+        name: "unsold_preference",
+        fields: { item_id: "own-item" },
+        summary: "",
+      },
       "customer",
       async (requirement) =>
         requirement.id === "own-item" && requirement.ownerId === "customer",
@@ -215,4 +219,48 @@ test("customer operation gateway rejects administrative commands even with a sta
     ),
     false,
   );
+});
+
+test("pricing, publishing and administrative operations are forbidden even for owned items and staff", async () => {
+  const { authorizeAssistantOperation } = await import(
+    "../lib/assistant-authorization.ts"
+  );
+  for (const name of [
+    "approve_price",
+    "approve_bundle",
+    "auto_publish",
+    "change_price",
+    "publish_item",
+    "unpublish_item",
+    "admin_approve_payment",
+    "approve_refund",
+    "manage_users",
+    "update_settings",
+    "edit_inventory",
+  ]) {
+    const op = {
+      name,
+      fields: {
+        item_id: "own-item",
+        bundle_id: "own-bundle",
+        expected_price: "1000",
+      },
+      summary: "",
+    };
+    assert.equal(sanitizeOperation(op), null, name);
+    let read = false;
+    assert.equal(
+      await authorizeAssistantOperation(op, "owner-also-admin", async () => {
+        read = true;
+        return true;
+      }),
+      false,
+      name,
+    );
+    assert.equal(
+      read,
+      false,
+      "Forbidden commands must be rejected before database access",
+    );
+  }
 });
