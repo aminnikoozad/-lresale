@@ -36,7 +36,7 @@ export default async function AdminPage() {
   return (
     <main className="ops-shell">
       <header className="ops-top">
-        <div><span className="brand">REWEAR<span>.</span></span><b>Admin</b></div>
+        <div><span className="brand">Shikimomo<span>.</span></span><b>Admin</b></div>
 
       </header>
 
@@ -45,7 +45,7 @@ export default async function AdminPage() {
           <div>
             <p className="eyebrow dark">Private administration</p>
             <h1>Admin Dashboard</h1>
-            <p>Customer support, AI training, pickup requests, inventory and privileged Rewear operations. This area is not linked from customer-facing pages.</p>
+            <p>Customer support, AI training, pickup requests, inventory and privileged Shikimomo operations. This area is not linked from customer-facing pages.</p>
           </div>
           <div className="security-chip">{access.has_aal2 ? "MFA verified" : "Signed in"} · {access.role}</div>
         </div>
@@ -66,7 +66,7 @@ export default async function AdminPage() {
             <div>
               <p className="eyebrow dark">Private Admin ↔ AI workspace</p>
               <h2>Chat with Bot / Teach the Bot</h2>
-              <p>Talk directly to the Rewear support AI, ask what it currently knows, test customer questions, teach a new answer or behavior, and review unanswered questions. Your chat does not become official customer-facing knowledge until an authorized admin explicitly approves the proposed change.</p>
+              <p>Talk directly to the Shikimomo support AI, ask what it currently knows, test customer questions, teach a new answer or behavior, and review unanswered questions. Your chat does not become official customer-facing knowledge until an authorized admin explicitly approves the proposed change.</p>
             </div>
             <AdminRouteLink permitted={permitted} href="/admin/ai-trainer">Open Bot Chat</AdminRouteLink>
           </div>

@@ -115,7 +115,7 @@ export function AdminLiveAlerts() {
           <Link href="/admin/operations#pickup-requests">Open Pickup Inbox</Link>
         </div>
         <p className="integration-note">
-          For iPhone background alerts when the Admin site is completely closed, Rewear will need a dedicated Web Push provider/VAPID connection. No private push key is stored in the browser or repository.
+          For iPhone background alerts when the Admin site is completely closed, Shikimomo will need a dedicated Web Push provider/VAPID connection. No private push key is stored in the browser or repository.
         </p>
       </section>
 

@@ -146,7 +146,7 @@ export default async function HomeInspectionPage({
     <main className="admin-items-shell">
       <header className="admin-items-top">
         <Link href="/" className="brand">
-          REWEAR.
+          Shikimomo.
         </Link>
 
       </header>
@@ -157,7 +157,7 @@ export default async function HomeInspectionPage({
             <h1>Home &amp; Decor</h1>
             <p>
               Receive, inspect, photograph and prepare each piece. Seller
-              information is preliminary; REWEAR determines final listing
+              information is preliminary; Shikimomo determines final listing
               details after physical inspection.
             </p>
           </div>

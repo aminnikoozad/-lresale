@@ -85,7 +85,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
     <main className="admin-items-shell">
       <header className="admin-items-top">
         <div>
-          <Link href="/" className="brand">REWEAR<span>.</span></Link>
+          <Link href="/" className="brand">Shikimomo<span>.</span></Link>
           <span className="admin-pill">Admin</span>
         </div>
 

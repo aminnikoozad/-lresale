@@ -23,7 +23,7 @@ export default async function AiTrainerPage() {
 
   return <main className="support-admin-shell">
     <header className="support-admin-top">
-      <div><Link href="/admin" className="support-brand">REWEAR<span>.</span></Link><b>AI Trainer</b></div>
+      <div><Link href="/admin" className="support-brand">Shikimomo<span>.</span></Link><b>AI Trainer</b></div>
 
     </header>
     <section className="support-admin-wrap">

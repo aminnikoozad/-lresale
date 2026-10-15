@@ -74,7 +74,7 @@ export default async function AdminOperationsPage({ searchParams }: Props) {
   return (
     <main className="ops-shell">
       <header className="ops-top">
-        <div><span className="brand">REWEAR<span>.</span></span><b>Admin</b></div>
+        <div><span className="brand">Shikimomo<span>.</span></span><b>Admin</b></div>
 
       </header>
 

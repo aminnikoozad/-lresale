@@ -4,7 +4,7 @@ export function HomeIntake() {
     <fieldset className="home-intake">
       <legend>About your Home &amp; Decor items</legend>
       <p>
-        Tell us what you know. REWEAR inspects, photographs and determines final
+        Tell us what you know. Shikimomo inspects, photographs and determines final
         listing information. Submission does not guarantee acceptance or pickup.
       </p>
       <label>

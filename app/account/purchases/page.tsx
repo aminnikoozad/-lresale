@@ -13,7 +13,7 @@ export default async function PurchasesPage() {
   return (
     <main className="account-shell buyer-account-page">
       <header className="account-top">
-        <Link href="/" className="brand">REWEAR<span>.</span></Link>
+        <Link href="/" className="brand">Shikimomo<span>.</span></Link>
         <Link href="/account" className="back-home"><ArrowLeft /> Selling dashboard</Link>
       </header>
       <BuyerAccountTools />

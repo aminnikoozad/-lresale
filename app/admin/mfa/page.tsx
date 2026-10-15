@@ -5,7 +5,7 @@ import { AdminMfaClient } from "./mfa-client";
 import "../../auth.css";
 
 export const metadata: Metadata = {
-  title: "Admin Verification | Rewear",
+  title: "Admin Verification | Shikimomo",
   robots: { index: false, follow: false, nocache: true },
 };
 
@@ -16,7 +16,7 @@ export default async function AdminMfaPage() {
   return (
     <main className="auth-page">
       <section className="auth-card">
-        <div className="brand">REWEAR<span>.</span></div>
+        <div className="brand">Shikimomo<span>.</span></div>
         <p className="eyebrow dark">Owner / Admin security</p>
         <h1>Verify your identity</h1>
         <p>Privileged Admin access requires an authenticator-app code in addition to your password.</p>

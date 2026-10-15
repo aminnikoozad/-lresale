@@ -12,9 +12,9 @@ export default async function ForgotPasswordPage({ searchParams }: Props) {
   const type = params.type === "success" ? "success" : "error";
 
   return <main className="auth-page"><section className="auth-card">
-    <Link href="/" className="brand">REWEAR<span>.</span></Link>
+    <Link href="/" className="brand">Shikimomo<span>.</span></Link>
     <h1>Reset your password</h1>
-    <p>Enter the email used for your Rewear account.</p>
+    <p>Enter the email used for your Shikimomo account.</p>
     {message && <div className={`auth-message ${type}`}>{message}</div>}
     <form className="auth-form" action={requestPasswordReset}>
       <label htmlFor="email">Email address<input id="email" name="email" type="email" autoComplete="email" required /></label>

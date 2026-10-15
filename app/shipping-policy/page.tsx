@@ -6,8 +6,8 @@ import { createPublicClient } from "@/lib/supabase/public";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "Shipping & Local Delivery | Rewear",
-  description: "Canada-wide Rewear shipping policy and Montréal local free-delivery policy.",
+  title: "Shipping & Local Delivery | Shikimomo",
+  description: "Canada-wide Shikimomo shipping policy and Montréal local free-delivery policy.",
 };
 
 type ShippingPolicy = {
@@ -46,12 +46,12 @@ export default async function ShippingPolicyPage() {
 
   return (
     <main className="shipping-policy-page">
-      <header className="policy-header"><Link href="/" className="brand">REWEAR<span>.</span></Link><Link href="/account">My account</Link></header>
+      <header className="policy-header"><Link href="/" className="brand">Shikimomo<span>.</span></Link><Link href="/account">My account</Link></header>
       <article className="legal-policy">
         <div className="policy-hero">
           <p className="eyebrow dark">Shopping delivery</p>
           <h1>Canada-wide delivery policy.</h1>
-          <p>Rewear&apos;s shipping policy is configured for delivery across Canada. Local delivery pricing depends on the verified delivery address.</p>
+          <p>Shikimomo&apos;s shipping policy is configured for delivery across Canada. Local delivery pricing depends on the verified delivery address.</p>
         </div>
 
         <section className="policy-highlight"><PackageCheck/><div><h2>Canada-wide availability</h2><p>{policy.canadaWideEnabled ? "Canada-wide delivery is enabled in the current shipping policy." : "Canada-wide delivery is temporarily disabled."}</p></div></section>
@@ -66,7 +66,7 @@ export default async function ShippingPolicyPage() {
         <section><h2>Address verification</h2><p>The final delivery option and fee are confirmed from the delivery address before an order is finalized. A city name alone is not enough to guarantee free local delivery.</p></section>
         <section><h2>Remote and oversized shipments</h2><p>Carrier availability, oversized parcels and remote destinations may require a different shipping service or additional review before an order is finalized.</p></section>
         <section><h2>Pickup and seller collection are separate</h2><p>This delivery policy applies to buyers receiving purchases. Seller pickup pricing and Bag / Box eligibility are governed by the separate Pickup Policy.</p></section>
-        <Link className="policy-back" href="/"><ArrowLeft/> Back to Rewear</Link>
+        <Link className="policy-back" href="/"><ArrowLeft/> Back to Shikimomo</Link>
       </article>
     </main>
   );

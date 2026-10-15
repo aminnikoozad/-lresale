@@ -3,7 +3,7 @@ import { siteConfig } from "@/lib/site-config";
 
 const publicRoutes = [
   "",
-  "/sell-with-rewear",
+  "/sell-with-shikimomo",
   "/pickup-policy",
   "/shipping-policy",
   "/privacy",

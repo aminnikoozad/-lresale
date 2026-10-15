@@ -46,7 +46,7 @@ export function PickupInbox({ requests, enabled }: { requests: PickupRequest[]; 
       <div className="ops-card-title">
         <div>
           <h2>Incoming pickup requests</h2>
-          <p>Each request is linked to the customer account, username and permanent Rewear customer code.</p>
+          <p>Each request is linked to the customer account, username and permanent Shikimomo customer code.</p>
         </div>
         <strong>{enabled ? `${newCount} new · ${requests.length} shown` : "Setup pending"}</strong>
       </div>

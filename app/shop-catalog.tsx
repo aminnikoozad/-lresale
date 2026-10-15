@@ -315,7 +315,7 @@ export function ShopCatalog({
       <div className="section-heading">
         <div>
           <p className="catalog-breadcrumb">All finds{activeCategory !== "all" ? ` / ${departmentLabel}` : ""}</p>
-          <p className="eyebrow dark">The REWEAR collection</p>
+          <p className="eyebrow dark">The Shikimomo collection</p>
           <h2>{activeCategory === "all" ? "Curated finds. Another life." : `Shop ${departmentLabel}`}</h2>
         </div>
         <p>
@@ -349,7 +349,7 @@ export function ShopCatalog({
         <>
           <p className="home-catalog-note">
             Selected decorative, vintage and collectible pieces, physically
-            inspected and listed by REWEAR. We handle the seller’s item,
+            inspected and listed by Shikimomo. We handle the seller’s item,
             photography and fulfilment.
           </p>
           <div className="home-collections" aria-label="Home collections">
@@ -662,11 +662,11 @@ function ProductGrid({
           {filtersActive
             ? "Try changing your search or removing a filter."
             : homeCategory
-              ? "Our team is preparing selected Home & Decor pieces. Explore other categories or offer a piece for REWEAR to review."
+              ? "Our team is preparing selected Home & Decor pieces. Explore other categories or offer a piece for Shikimomo to review."
               : departmentLabel ? `Check back for inspected ${departmentLabel.toLowerCase()} pieces, explore another department, or send us your own collection for review.` : "Our team is preparing inspected pieces. Check back soon or learn how to send us your own collection."}
         </p>
         {filtersActive ? <button type="button" onClick={clearFilters}>Clear search and filters</button> : null}
-        {!filtersActive ? <Link href="/sell-with-rewear">Explore selling with REWEAR</Link> : null}
+        {!filtersActive ? <Link href="/sell-with-shikimomo">Explore selling with Shikimomo</Link> : null}
       </div>
     );
   return (

@@ -36,12 +36,12 @@ const statusLabel: Record<Conversation["status"], string> = {
 };
 
 const suggestedQuestions = [
-  { label: "How does selling work?", question: "How does selling with Rewear work?" },
+  { label: "How does selling work?", question: "How does selling with Shikimomo work?" },
   { label: "What commission will I get?", question: "How much commission will I receive when my item sells?" },
   { label: "How do I request pickup?", question: "How do I request a pickup for my items?" },
   { label: "What items do you accept?", question: "What clothing, shoes, accessories and electronics do you accept?" },
   { label: "Check my item status", question: "What is the status of my item?" },
-  { label: "How does delivery work?", question: "How does Rewear delivery and shipping work?" },
+  { label: "How does delivery work?", question: "How does Shikimomo delivery and shipping work?" },
 ];
 
 export function SupportChat() {
@@ -190,10 +190,10 @@ function SupportChatSession() {
             <MessageCircle /> <span>Chat with us</span>
           </button>
         ) : (
-          <section className="support-chat-panel support-auth-panel" aria-label="Rewear support sign in">
+          <section className="support-chat-panel support-auth-panel" aria-label="Shikimomo support sign in">
             <header className="support-chat-head">
               <div>
-                <strong>REWEAR Support</strong>
+                <strong>Shikimomo Support</strong>
                 <span className="support-status">Sign in required</span>
               </div>
               <div className="support-head-actions">
@@ -204,7 +204,7 @@ function SupportChatSession() {
               <Bot />
               <p className="eyebrow dark">AI + Human Support</p>
               <h3>Support is available from the homepage.</h3>
-              <p>Sign in to start a secure conversation. Your chat history, item questions and pickup status stay connected to your own Rewear account.</p>
+              <p>Sign in to start a secure conversation. Your chat history, item questions and pickup status stay connected to your own Shikimomo account.</p>
               <div className="support-auth-actions">
                 <a className="support-auth-primary" href="/login">Sign in to chat</a>
                 <a className="support-auth-secondary" href="/signup">Create account</a>
@@ -321,7 +321,7 @@ function SupportChatSession() {
         <section className="support-chat-panel" aria-label="Customer support chat">
           <header className="support-chat-head">
             <div>
-              <strong>REWEAR Support</strong>
+              <strong>Shikimomo Support</strong>
               <span className={`support-status status-${active?.status ?? "ai"}`}>{active ? statusLabel[active.status] : "AI Assistant"}</span>
             </div>
             <div className="support-head-actions">
@@ -354,7 +354,7 @@ function SupportChatSession() {
                   <div className="support-welcome">
                     <Bot />
                     <h3>How can we help?</h3>
-                    <p>Choose a common question or type your own. The AI uses approved Rewear information and can hand off to Support when needed.</p>
+                    <p>Choose a common question or type your own. The AI uses approved Shikimomo information and can hand off to Support when needed.</p>
                     <div className="support-suggestions" aria-label="Suggested support questions">
                       {suggestedQuestions.map((item) => (
                         <button key={item.label} type="button" onClick={() => void startSuggestedQuestion(item.question)} disabled={sending}>
