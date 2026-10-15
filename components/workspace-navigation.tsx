@@ -27,7 +27,7 @@ export function WorkspaceNavigation({ title, links }: { title: string; links: Wo
       <nav aria-label={`${title} sections`}>
         {links.map((link) => <Link key={link.href} href={link.href} onClick={() => setExpandedAt(null)} aria-current={isWorkspaceLinkActive(pathname, link.href, links) ? "page" : undefined}>{link.label}</Link>)}
       </nav>
-      <div className="workspace-navigation-exit"><Link href="/">Back to shop</Link><form action={logout}><button type="submit"><LogOut aria-hidden="true" /> Sign out</button></form></div>
+      <div className="workspace-navigation-exit"><Link href="/shop">Back to shop</Link><form action={logout}><button type="submit"><LogOut aria-hidden="true" /> Sign out</button></form></div>
     </div>
   </header>}</Localize>;
 }

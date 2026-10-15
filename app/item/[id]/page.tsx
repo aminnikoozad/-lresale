@@ -104,7 +104,7 @@ export default async function ProductPage({ params }: Props) {
   return <Localize>{(
     <main className="product-page section-wrap">
       <div className="product-topbar">
-        <Link href="/#shop">
+        <Link href="/shop#shop">
           <ChevronLeft /> Back to shop
         </Link>
         <Link href="/cart">View bag</Link>
