@@ -29,6 +29,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!/services/local-ai/.env.example
 
 # generated server-only secrets
 /lib/generated/admin-rate-limit-salt.ts
@@ -45,3 +46,5 @@ next-env.d.ts
 /work/
 
 /supabase/.temp/
+
+*.tsbuildinfo

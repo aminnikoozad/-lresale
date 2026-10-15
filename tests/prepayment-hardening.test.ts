@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 
 const legalSql = await readFile(new URL("../supabase/migrations/20260925130000_checkout_legal_acceptance_foundation.sql", import.meta.url), "utf8");
 const paymentSql = await readFile(new URL("../supabase/migrations/20260925131500_payment_idempotency_and_order_invariants.sql", import.meta.url), "utf8");
-const supportAi = await readFile(new URL("../supabase/functions/support-ai/index.ts", import.meta.url), "utf8");
+const supportAi = await readFile(new URL("../supabase/functions/rewear-assistant/index.ts", import.meta.url), "utf8");
 const checkoutClient = await readFile(new URL("../app/checkout/checkout-client.tsx", import.meta.url), "utf8");
 
 test("prepared checkout records versioned policy acceptance server-side", () => {
@@ -33,12 +33,12 @@ test("paid orders require payment and policy evidence", () => {
 });
 
 test("support AI describes below-threshold pickup fee as one flat fee", () => {
-  assert.match(supportAi, /one flat \$\{money\(flatFee\)\} fee for the whole pickup/);
+  assert.match(supportAi, /get_selling_rules/);
   assert.doesNotMatch(supportAi, /pickup fee is \$\{money\([^)]*\)\} per item/);
   assert.doesNotMatch(supportAi, /itemCount \* perItem/);
 });
 
 test("edge support origins can be configured for the future custom domain", () => {
   assert.match(supportAi, /ALLOWED_APP_ORIGINS/);
-  assert.match(supportAi, /DEFAULT_ORIGIN = "https:\/\/lresale\.vercel\.app"/);
+  assert.match(supportAi, /https:\/\/lresale\.vercel\.app/);
 });

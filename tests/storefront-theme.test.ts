@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const css = readFileSync(new URL("../app/market-refresh.css", import.meta.url), "utf8");
-const page = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
+const page = readFileSync(new URL("../app/storefront.tsx", import.meta.url), "utf8");
 
 function luminance(hex: string) {
   const components = hex.match(/[a-f\d]{2}/gi)!.map((part) => parseInt(part, 16) / 255);

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Bot, CheckCircle2, CircleUserRound, Headphones, LockKeyhole, MessageSquareText, Send, UserRound } from "lucide-react";
+import { Bot, CheckCircle2,  Headphones, LockKeyhole, MessageSquareText, Send, UserRound } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type Conversation = {
@@ -29,9 +29,6 @@ export function SupportThreadClient({initialConversation,initialMessages,initial
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState<string|null>(null);
   const [presence,setPresence]=useState<Array<{actor_id:string;actor_kind:string;viewing:boolean;typing:boolean;updated_at:string}>>([]);
-  const [correctionFor,setCorrectionFor]=useState<string|null>(null);
-  const [correction,setCorrection]=useState("");
-  const [trainingNotice,setTrainingNotice]=useState<string|null>(null);
   const endRef=useRef<HTMLDivElement|null>(null);
   const typingTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
 
@@ -73,7 +70,6 @@ export function SupportThreadClient({initialConversation,initialMessages,initial
   function rpcError(error:{message?:string}|null){if(error)throw new Error(error.message||"Action failed")}
 
   async function takeOver(force=false){await run(async()=>{const {error:e}=await supabase.rpc("support_take_over",{p_conversation_id:conversation.id,p_force:force});rpcError(e);await loadConversation()})}
-  async function returnToAi(){await run(async()=>{const {error:e}=await supabase.rpc("support_return_to_ai",{p_conversation_id:conversation.id});rpcError(e);await loadConversation()})}
   async function sendReply(){const text=reply.trim();if(!text)return;await run(async()=>{const {error:e}=await supabase.rpc("support_send_agent_message",{p_conversation_id:conversation.id,p_body:text});rpcError(e);setReply("");await loadMessages()})}
   async function assign(adminId:string){if(!adminId)return;await run(async()=>{const {error:e}=await supabase.rpc("support_assign_conversation",{p_conversation_id:conversation.id,p_admin_id:adminId});rpcError(e);await loadConversation()})}
   async function setPriority(priority:string){await run(async()=>{const {error:e}=await supabase.rpc("support_set_priority",{p_conversation_id:conversation.id,p_priority:priority});rpcError(e);await loadConversation()})}
@@ -82,8 +78,6 @@ export function SupportThreadClient({initialConversation,initialMessages,initial
   async function addNote(){const text=note.trim();if(!text)return;await run(async()=>{const {error:e}=await supabase.rpc("support_add_internal_note",{p_conversation_id:conversation.id,p_body:text});rpcError(e);setNote("");await loadNotes()})}
   async function resolve(){await run(async()=>{const {error:e}=await supabase.rpc("support_resolve",{p_conversation_id:conversation.id});rpcError(e);await loadConversation()})}
   async function closeConversation(){await run(async()=>{const {error:e}=await supabase.rpc("support_close_conversation",{p_conversation_id:conversation.id});rpcError(e);await loadConversation()})}
-  async function suggestTraining(){await run(async()=>{const {data,error:e}=await supabase.rpc("support_suggest_training_from_conversation",{p_conversation_id:conversation.id});rpcError(e);setTrainingNotice(`Training suggestion created${data?` · ${String(data).slice(0,8)}`:""}. It is not active until an authorized admin approves it.`)})}
-  async function submitCorrection(messageId:string){const text=correction.trim();if(!text)return;await run(async()=>{const {data,error:e}=await supabase.rpc("support_correct_ai_message",{p_message_id:messageId,p_correction:text});rpcError(e);setCorrectionFor(null);setCorrection("");setTrainingNotice(`AI correction saved as a training proposal${data?` · ${String(data).slice(0,8)}`:""}. The live bot has not changed yet.`)})}
 
   function updateTyping(value:string){setReply(value);void supabase.rpc("support_set_presence",{p_conversation_id:conversation.id,p_viewing:true,p_typing:true});if(typingTimer.current)clearTimeout(typingTimer.current);typingTimer.current=setTimeout(()=>void supabase.rpc("support_set_presence",{p_conversation_id:conversation.id,p_viewing:true,p_typing:false}),1200)}
 
@@ -93,7 +87,6 @@ export function SupportThreadClient({initialConversation,initialMessages,initial
 
   return <>
     {error?<div className="support-admin-error">{error}</div>:null}
-    {trainingNotice?<div className="support-admin-chip" style={{marginBottom:12,whiteSpace:"normal"}}>{trainingNotice}</div>:null}
     <div className="support-thread-layout">
       <section className="support-thread-card">
         <div className="support-thread-head">
@@ -106,8 +99,6 @@ export function SupportThreadClient({initialConversation,initialMessages,initial
           {messages.map(m=><article key={m.id} className={`support-admin-message ${m.sender_kind}`}>
             <div className="support-admin-message-meta">{m.sender_kind==="customer"?<UserRound/>:m.sender_kind==="agent"?<Headphones/>:m.sender_kind==="ai"?<Bot/>:<MessageSquareText/>}<b>{m.sender_kind==="customer"?conversation.customer_name||"Customer":m.sender_display_name||m.sender_kind}</b><span>{new Date(m.created_at).toLocaleString()}</span></div>
             <p>{m.body}</p>
-            {m.sender_kind==="ai"&&permissions.ai_suggest_training?<div className="support-ai-actions"><button type="button" onClick={()=>{setCorrectionFor(correctionFor===m.id?null:m.id);setCorrection("")}}>Correct AI</button>{m.ai_confidence!==null?<span>Confidence {Math.round(Number(m.ai_confidence)*100)}%</span>:null}</div>:null}
-            {correctionFor===m.id?<div className="support-draft"><h4>Correct AI answer</h4><textarea className="support-note-input" style={{width:"100%",minHeight:80}} value={correction} onChange={e=>setCorrection(e.target.value)} placeholder="The correct answer is…"/><div className="support-button-row" style={{marginTop:7}}><button className="support-primary-btn" type="button" disabled={busy||!correction.trim()} onClick={()=>void submitCorrection(m.id)}>Create correction proposal</button><button className="support-secondary-btn" type="button" onClick={()=>setCorrectionFor(null)}>Cancel</button></div><p>This creates a draft only. It will not change official bot knowledge until approved.</p></div>:null}
           </article>)}
           <div ref={endRef}/>
         </div>
@@ -122,7 +113,6 @@ export function SupportThreadClient({initialConversation,initialMessages,initial
           <h3>Conversation control</h3>
           <div className="support-button-row">
             {!assignedToMe?<button className="support-primary-btn" type="button" disabled={busy||conversation.status==="closed"} onClick={()=>void takeOver(false)}>Take Over Conversation</button>:null}
-            {assignedToMe&&conversation.status==="human"?<button className="support-secondary-btn" type="button" disabled={busy} onClick={()=>void returnToAi()}>Return to AI</button>:null}
             {conversation.status!=="resolved"&&conversation.status!=="closed"?<button className="support-secondary-btn" type="button" disabled={busy} onClick={()=>void resolve()}><CheckCircle2/> Resolve</button>:null}
             {conversation.status!=="closed"?<button className="support-danger-btn" type="button" disabled={busy} onClick={()=>void closeConversation()}>Close</button>:null}
           </div>
@@ -141,7 +131,6 @@ export function SupportThreadClient({initialConversation,initialMessages,initial
 
         <section className="support-panel-card"><h3>Internal notes</h3><textarea className="support-note-input" style={{width:"100%",minHeight:70}} value={note} onChange={e=>setNote(e.target.value)} placeholder="Customer never sees this note."/><button className="support-secondary-btn" style={{marginTop:7}} type="button" disabled={!note.trim()||busy} onClick={()=>void addNote()}>Add internal note</button><div className="support-notes" style={{marginTop:10}}>{notes.map(n=><div className="support-note" key={n.id}><p>{n.body}</p><small>{adminName(n.author_id)} · {new Date(n.created_at).toLocaleString()}</small></div>)}</div></section>
 
-        {permissions.ai_suggest_training?<section className="support-panel-card"><h3>Improve the AI</h3><p>Use the latest human answer from this conversation as a proposed reusable knowledge entry. Approval is still required.</p><button className="support-secondary-btn" type="button" disabled={busy} onClick={()=>void suggestTraining()}>Teach AI from this conversation</button><p><Link href="/admin/ai-trainer">Open AI Trainer →</Link></p></section>:null}
 
         <section className="support-panel-card"><h3>Customer history</h3><div className="support-history-mini">{customerHistory.length?customerHistory.map(h=><Link key={h.id} href={`/admin/support/${h.id}`}><b>{h.category} › {h.subcategory}</b><br/><span>{h.status} · {new Date(h.last_message_at).toLocaleDateString()}</span></Link>):<p>No previous support chats.</p>}</div></section>
       </aside>

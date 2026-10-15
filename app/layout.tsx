@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { PickupConfirmationUi } from "@/components/pickup-confirmation-ui";
-import { SupportChat } from "@/components/support-chat";
+import { ExperienceSwitch } from "@/components/experience-switch";
 import { CartProvider } from "@/components/cart-store";
 import { siteConfig } from "@/lib/site-config";
 import "./globals.css";
@@ -13,8 +13,8 @@ import "./scheduling.css";
 import "./form.css";
 import "./shop.css";
 import "./logistics.css";
-import "./support-chat.css";
-import "./support-chat-suggestions.css";
+
+
 import "./premium-theme.css";
 import "./premium-components.css";
 import "./premium-flows.css";
@@ -23,6 +23,7 @@ import "./storefront.css";
 import "./checkout-readiness.css";
 import "./sellpy-theme.css";
 import "./market-refresh.css";
+import "./assistant.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk", display: "swap" });
@@ -47,7 +48,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body><CartProvider>{children}<PickupConfirmationUi /><SupportChat /></CartProvider></body>
+      <body><CartProvider>{children}<PickupConfirmationUi /><ExperienceSwitch /></CartProvider></body>
     </html>
   );
 }

@@ -1,4 +1,3 @@
-import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { adminNavigation } from "@/lib/workspace-navigation";
@@ -37,7 +36,7 @@ export default async function AdminPage() {
   return (
     <main className="ops-shell">
       <header className="ops-top">
-        <div><span className="brand"><BrandWordmark /></span><b>Admin</b></div>
+        <div><span className="brand">Shikimomo<span>.</span></span><b>Admin</b></div>
 
       </header>
 
@@ -46,7 +45,7 @@ export default async function AdminPage() {
           <div>
             <p className="eyebrow dark">Private administration</p>
             <h1>Admin Dashboard</h1>
-            <p>Customer support, AI training, pickup requests, inventory and privileged Shikimomo operations. This area is not linked from customer-facing pages.</p>
+            <p>Customer support, pickup requests, inventory and privileged Shikimomo operations. This area is not linked from customer-facing pages.</p>
           </div>
           <div className="security-chip">{access.has_aal2 ? "MFA verified" : "Signed in"} · {access.role}</div>
         </div>
@@ -54,7 +53,6 @@ export default async function AdminPage() {
         <section className="area-grid">
           {supportContext?.can_support ? <article className="active"><div><b>Support waiting</b><span>Human handoff queue</span></div><strong>{supportStats?.waiting ?? 0}</strong></article> : null}
           {supportContext?.can_support ? <article className="active"><div><b>Urgent support</b><span>Open urgent conversations</span></div><strong>{supportStats?.urgent ?? 0}</strong></article> : null}
-          {supportContext?.ai_view ? <article className="active"><div><b>AI training needed</b><span>Unanswered questions</span></div><strong>{supportStats?.unknown_open ?? 0}</strong></article> : null}
           {access.can_manage_pickups ? <article className="active"><div><b>New pickup requests</b><span>Waiting for review</span></div><strong>{newRequests.count ?? 0}</strong></article> : null}
           {itemAccess.data === true ? <article className="active"><div><b>Items</b><span>Inventory records</span></div><strong>{items.count ?? 0}</strong></article> : null}
           {access.can_manage_pickups || access.can_manage_shipping ? <article className="active"><div><b>Open pickup slots</b><span>Future active windows</span></div><strong>{slots.count ?? 0}</strong></article> : null}
@@ -62,30 +60,11 @@ export default async function AdminPage() {
 
         {access.can_manage_pickups ? <AdminLiveAlerts /> : null}
 
-        {supportContext?.ai_view ? (<section className="ops-card">
-          <div className="ops-card-title">
-            <div>
-              <p className="eyebrow dark">Private Admin ↔ AI workspace</p>
-              <h2>Chat with Bot / Teach the Bot</h2>
-              <p>Talk directly to the Shikimomo support AI, ask what it currently knows, test customer questions, teach a new answer or behavior, and review unanswered questions. Your chat does not become official customer-facing knowledge until an authorized admin explicitly approves the proposed change.</p>
-            </div>
-            <AdminRouteLink permitted={permitted} href="/admin/ai-trainer">Open Bot Chat</AdminRouteLink>
-          </div>
-          <div className="area-grid">
-            <article><div><b>Chat</b><span>Ask the bot what it knows and why it would answer or escalate.</span></div><AdminRouteLink permitted={permitted} href="/admin/ai-trainer">Start chat</AdminRouteLink></article>
-            <article><div><b>Teach</b><span>Give a new answer or behavior instruction and review the proposed structured change.</span></div><AdminRouteLink permitted={permitted} href="/admin/ai-trainer">Teach bot</AdminRouteLink></article>
-            <article><div><b>Review</b><span>See unanswered customer questions and training suggestions waiting for input.</span></div><AdminRouteLink permitted={permitted} href="/admin/ai-trainer">Review queue</AdminRouteLink></article>
-            <article><div><b>Test</b><span>Simulate a customer question without affecting a real support conversation.</span></div><AdminRouteLink permitted={permitted} href="/admin/ai-trainer">Test bot</AdminRouteLink></article>
-          </div>
-        </section>) : null}
-
         {supportContext?.can_support ? (<section className="ops-card">
-          <div className="ops-card-title"><div><h2>Customer Support OS</h2><p>AI handles approved repetitive questions; authenticated human support handles exceptions, disputes and sensitive cases.</p></div><strong>{supportStats?.total ?? 0} conversations</strong></div>
+          <div className="ops-card-title"><div><h2>Customer Support OS</h2><p>Authenticated human support handles exceptions, disputes and sensitive cases. The shopping assistant is available from the storefront.</p></div><strong>{supportStats?.total ?? 0} conversations</strong></div>
           <div className="area-grid">
-            <article><div><b>Support Inbox</b><span>Waiting, assigned, AI-handled, urgent, resolved and closed conversations.</span></div><AdminRouteLink permitted={permitted} href="/admin/support">Open</AdminRouteLink></article>
-            <article><div><b>AI Trainer</b><span>Private Admin-to-AI chat, controlled teaching, review and Test Bot.</span></div><AdminRouteLink permitted={permitted} href="/admin/ai-trainer">Open</AdminRouteLink></article>
+            <article><div><b>Support Inbox</b><span>Waiting, assigned, urgent, resolved and closed conversations.</span></div><AdminRouteLink permitted={permitted} href="/admin/support">Open</AdminRouteLink></article>
             <article><div><b>Support Settings</b><span>Availability, notification preferences and configurable business hours.</span></div><AdminRouteLink permitted={permitted} href="/admin/support/settings">Open</AdminRouteLink></article>
-            <article><div><b>Approved AI knowledge</b><span>Only approved policy knowledge is customer-facing.</span></div><AdminRouteLink permitted={permitted} href="/admin/ai-trainer">{supportStats?.kb_approved ?? 0} approved</AdminRouteLink></article>
           </div>
         </section>) : null}
 

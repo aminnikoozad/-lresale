@@ -1,0 +1,46 @@
+name: rewear-local-ai
+services:
+  download:
+    profiles: [install]
+    build: .
+    user: "0:0"
+    environment:
+      HF_HUB_OFFLINE: "0"
+      MODEL_ROOT: /models
+    command: [python, download_models.py]
+    volumes: ["./models:/models"]
+  llama:
+    # Pin this to the tested image digest after hardware validation.
+    image: ghcr.io/ggml-org/llama.cpp:server
+    command: ["--model", "/models/llm/Qwen3-8B-Q4_K_M.gguf", "--alias", "rewear-local", "--host", "0.0.0.0", "--port", "8080", "--jinja", "--ctx-size", "16384", "--parallel", "1", "--threads", "4"]
+    volumes: ["./models:/models:ro"]
+    networks: [private-ai]
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+  inference:
+    build: .
+    environment:
+      SELF_HOSTED_AI_TOKEN: ${SELF_HOSTED_AI_TOKEN:?Set a random private token of at least 32 characters}
+      LLAMA_HOST: llama
+      MODEL_ROOT: /models
+      AI_CPU_THREADS: "4"
+    volumes: ["./models:/models:ro"]
+    networks: [private-ai]
+    depends_on: [llama]
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+  tls:
+    image: caddy:2.10.2
+    environment:
+      AI_DOMAIN: ${AI_DOMAIN:?Set your AI subdomain}
+    ports: ["443:443", "80:80"]
+    volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro", "caddy-data:/data", "caddy-config:/config"]
+    networks: [default, private-ai]
+    depends_on: [inference]
+    restart: unless-stopped
+volumes:
+  caddy-data:
+  caddy-config:
+networks:
+  private-ai:
+    internal: true
