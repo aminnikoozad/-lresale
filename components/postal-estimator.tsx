@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { postalCode, postalMessage, validPostal, type PostalQuote } from "@/lib/postal";
@@ -11,10 +13,10 @@ export function PostalEstimator({ itemIds, destination, onSelect }: { itemIds: s
   const [entered,setEntered]=useState("");
   const postal=postalCode(destination??entered);
   const cartKey=[...itemIds].sort().join(",");
-  return <section className="postal-estimator" aria-label="Postal shipping calculator"><h3>Postal delivery · Canada</h3><p>Sending outside Montréal? Calculate Canada Post rates from the packed items and destination. Eligible local delivery is reviewed separately.</p>
+  return <Localize>{<section className="postal-estimator" aria-label="Postal shipping calculator"><h3>Postal delivery · Canada</h3><p>Sending outside Montréal? Calculate Canada Post rates from the packed items and destination. Eligible local delivery is reviewed separately.</p>
     {destination===undefined?<label>Destination postal code<Input value={entered} onChange={e=>setEntered(e.target.value)} autoComplete="postal-code" maxLength={7} placeholder="K1A 0B1"/></label>:null}
     <QuotePanel key={`${postal}:${cartKey}`} itemIds={itemIds} postal={postal} onSelect={onSelect}/>
-  </section>;
+  </section>}</Localize>;
 }
 function QuotePanel({itemIds,postal,onSelect}:{itemIds:string[];postal:string;onSelect?: (selection:PostalSelection|null)=>void}) {
   const [quote,setQuote]=useState<PostalQuote|null>(null);
@@ -40,10 +42,10 @@ function QuotePanel({itemIds,postal,onSelect}:{itemIds:string[];postal:string;on
     } catch {if(current===sequence.current)setQuote({status:"unavailable"});}
     finally {if(current===sequence.current)setLoading(false);}
   }
-  return <div>
+  return <Localize>{<div>
     <Button type="button" variant="outline" onClick={calculate} disabled={loading||!itemIds.length}>{loading?"Getting postal rates…":"Calculate Canada Post shipping"}</Button>
     {quote?.status==="ok"?<div role="status"><p>{quote.packageCount} separately packed parcel(s). Rates include carrier surcharges and shipping taxes.</p>
       <div className="postal-options">{quote.rates?.map(rate=><label key={rate.serviceCode}>{onSelect?<input type="radio" name="postal_service" value={rate.serviceCode} checked={selected===rate.serviceCode} onChange={()=>{setSelected(rate.serviceCode);onSelect({quoteId:quote.quoteId!,serviceCode:rate.serviceCode,totalCents:rate.totalCents,postalCode:quote.postalCode!,expiresAt:quote.expiresAt!});}}/>:null}<span><b>{rate.serviceName}</b><small>{rate.transitDays!==null?`Estimated ${rate.transitDays} business days after mailing` : "Delivery timing confirmed by carrier"}</small></span><strong>{money(rate.totalCents)}</strong></label>)}</div>
       <small>Quote valid for 10 minutes. Packing or destination changes require a new quote. No postage is purchased here.</small></div>:quote?<p role="status">{postalMessage(quote.status)} {quote.status==="login_required"?<Link href="/login">Sign in</Link>:null}</p>:null}
-  </div>;
+  </div>}</Localize>;
 }

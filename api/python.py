@@ -39,7 +39,7 @@ def calculate_commission(initial_price: Decimal, sale_price: Decimal | None = No
 
 
 class handler(BaseHTTPRequestHandler):
-    server_version = "Rewear"
+    server_version = "Shikimomo"
     sys_version = ""
 
     def send_json(self, status: int, payload: dict) -> None:
@@ -63,7 +63,7 @@ class handler(BaseHTTPRequestHandler):
         if initial_price is None:
             self.send_json(200, {
                 "ok": True,
-                "service": "Rewear Python API",
+                "service": "Shikimomo Python API",
                 "message": "Python backend is running",
                 "example": "/api/python?initial_price=275&sale_price=220",
             })

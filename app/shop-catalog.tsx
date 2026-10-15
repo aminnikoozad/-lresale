@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import {
   HOME_COLLECTIONS,
@@ -303,7 +305,7 @@ export function ShopCatalog({
     </>
   );
 
-  return (
+  return <Localize>{(
     <section id="shop" className="shop-catalog section-wrap">
       <div className="catalog-hash-anchors" aria-hidden="true">
         {labels
@@ -459,7 +461,7 @@ export function ShopCatalog({
         ))}
       </Tabs>
     </section>
-  );
+  )}</Localize>;
 }
 
 function toggle(
@@ -522,7 +524,7 @@ function FilterPanel({
     minPrice ||
     maxPrice ||
     extraActiveCount > 0;
-  return (
+  return <Localize>{(
     <>
       <div className="filter-title">
         <span>
@@ -596,7 +598,7 @@ function FilterPanel({
         onToggle={(value) => toggle(setters.setPatterns, value)}
       />
     </>
-  );
+  )}</Localize>;
 }
 
 function FilterGroup({
@@ -611,7 +613,7 @@ function FilterGroup({
   onToggle: (value: string) => void;
 }) {
   if (!values.length) return null;
-  return (
+  return <Localize>{(
     <fieldset className="filter-group">
       <legend>{title}</legend>
       {values.map((value) => (
@@ -625,7 +627,7 @@ function FilterGroup({
         </label>
       ))}
     </fieldset>
-  );
+  )}</Localize>;
 }
 
 function ProductGrid({
@@ -643,13 +645,13 @@ function ProductGrid({
   loadError: boolean;
   clearFilters: () => void;
 }) {
-  if (loadError) return <div className="catalog-empty catalog-unavailable" role="status">
+  if (loadError) return <Localize>{<div className="catalog-empty catalog-unavailable" role="status">
     <h3>We couldn’t load the collection</h3>
     <p>Please try again in a moment. Your filters are saved in this page’s address.</p>
     <button type="button" onClick={() => window.location.reload()}>Try again</button>
-  </div>;
+  </div>}</Localize>;
   if (!products.length)
-    return (
+    return <Localize>{(
       <div className="catalog-empty">
         <h3>
           {filtersActive
@@ -668,8 +670,8 @@ function ProductGrid({
         {filtersActive ? <button type="button" onClick={clearFilters}>Clear search and filters</button> : null}
         {!filtersActive ? <Link href="/sell-with-shikimomo">Explore selling with Shikimomo</Link> : null}
       </div>
-    );
-  return (
+    )}</Localize>;
+  return <Localize>{(
     <div className="catalog-grid">
       {products.map((product) => {
         const cartItem = {
@@ -707,7 +709,7 @@ function ProductGrid({
             <div className="shop-card-copy">
               <small>{product.brand}</small>
               <Link href={`/item/${product.id}`}>
-                <h3>{product.name}</h3>
+                <h3 translate="no">{product.name}</h3>
               </Link>
               <span>
                 {product.subcategory
@@ -729,5 +731,5 @@ function ProductGrid({
         );
       })}
     </div>
-  );
+  )}</Localize>;
 }

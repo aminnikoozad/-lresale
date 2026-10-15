@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -118,17 +120,17 @@ export function AdminMfaClient() {
   }
 
   if (mode === "loading") {
-    return (
+    return <Localize>{(
       <div className="mfa-box" aria-live="polite">
         <p>Preparing secure verification…</p>
         <small>This normally takes only a few seconds.</small>
       </div>
-    );
+    )}</Localize>;
   }
 
   if (mode === "error") {
     const sessionExpired = error.toLowerCase().includes("session") || error.toLowerCase().includes("sign in again");
-    return (
+    return <Localize>{(
       <div className="mfa-box" role="alert">
         <h2>Verification setup needs another try</h2>
         <div className="auth-message error">{error}</div>
@@ -148,10 +150,10 @@ export function AdminMfaClient() {
           )}
         </div>
       </div>
-    );
+    )}</Localize>;
   }
 
-  return (
+  return <Localize>{(
     <div className="mfa-box">
       {mode === "enroll" ? (
         <>
@@ -196,5 +198,5 @@ export function AdminMfaClient() {
         </button>
       </form>
     </div>
-  );
+  )}</Localize>;
 }

@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AssistantMark } from "./assistant-mark";
@@ -11,10 +13,9 @@ export function ExperienceSwitch() {
     path.startsWith("/secure-admin")
   )
     return null;
-  return (
-    <Link className="experience-switch" href="/assistant">
+  return <Localize>{(
+    <Link className="experience-switch" href="/assistant" aria-label="Smart Shopping" title="Smart Shopping">
       <AssistantMark />
-      <span>Ask Shikimomo · Parler à Shikimomo</span>
     </Link>
-  );
+  )}</Localize>;
 }

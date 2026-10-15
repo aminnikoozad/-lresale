@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { AuthCaptcha } from "@/components/auth-captcha";
 import { AuthHumanCheck } from "@/components/auth-human-check";
@@ -13,7 +15,7 @@ export default async function SignUpPage({ searchParams }: Props) {
   const params = await searchParams;
   const phoneRequired = isPhoneVerificationRequired();
   const message = typeof params.message === "string" ? params.message : null;
-  return <main className="auth-page"><section className="auth-card">
+  return <Localize>{<main className="auth-page"><section className="auth-card">
     <Link href="/" className="brand"><BrandWordmark /></Link>
     <h1>Create your account.</h1>
     <p>Track collections, items, earnings and your Shikimomo balance securely.</p>
@@ -33,5 +35,5 @@ export default async function SignUpPage({ searchParams }: Props) {
     </form>
     <p className="auth-switch">Already have an account? <Link href="/login">Sign in</Link></p>
     <Link className="auth-back" href="/">← Back to marketplace</Link>
-  </section></main>;
+  </section></main>}</Localize>;
 }

@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
@@ -24,7 +26,7 @@ type CartContextValue = {
   has: (id: string) => boolean;
 };
 
-const STORAGE_KEY = "rewear-cart-v1";
+const STORAGE_KEY = "shikimomo-cart-v1";
 const CartContext = createContext<CartContextValue | null>(null);
 
 function sanitize(value: unknown): CartItem[] {
@@ -64,7 +66,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const timer = window.setTimeout(() => {
       let restored: CartItem[] = [];
       try {
-        const raw = window.localStorage.getItem(STORAGE_KEY);
+        const raw = window.localStorage.getItem(STORAGE_KEY) ?? window.localStorage.getItem("rewear-cart-v1");
         restored = raw ? sanitize(JSON.parse(raw)) : [];
       } catch {
         restored = [];
@@ -99,11 +101,11 @@ export function useCart() {
 
 export function CartNavLink() {
   const { items } = useCart();
-  return (
+  return <Localize>{(
     <Link href="/cart" className="cart-nav-link" aria-label={`Shopping bag with ${items.length} items`}>
       <ShoppingBag />
       <span>Bag</span>
       {items.length > 0 ? <b>{items.length}</b> : null}
     </Link>
-  );
+  )}</Localize>;
 }

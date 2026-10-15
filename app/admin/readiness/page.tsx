@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import Link from "next/link";
 import { CheckCircle2, CircleAlert, ExternalLink, ShieldCheck } from "lucide-react";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -116,7 +118,7 @@ export default async function AdminReadinessPage() {
 
   const automaticReady = publicConfig.ready && checks.filter((check) => !check.manual).every((check) => check.ok);
 
-  return (
+  return <Localize>{(
     <main className="admin-page-shell">
       <div className="admin-page-header">
         <div>
@@ -156,5 +158,5 @@ export default async function AdminReadinessPage() {
         <p><ExternalLink /> Do not add live provider keys until these tests exist and pass.</p>
       </section>
     </main>
-  );
+  )}</Localize>;
 }

@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { AuthCaptcha } from "@/components/auth-captcha";
 import { AuthHumanCheck } from "@/components/auth-human-check";
@@ -12,7 +14,7 @@ export default async function ForgotPasswordPage({ searchParams }: Props) {
   const message = typeof params.message === "string" ? params.message : null;
   const type = params.type === "success" ? "success" : "error";
 
-  return <main className="auth-page"><section className="auth-card">
+  return <Localize>{<main className="auth-page"><section className="auth-card">
     <Link href="/" className="brand"><BrandWordmark /></Link>
     <h1>Reset your password</h1>
     <p>Enter the email used for your Shikimomo account.</p>
@@ -24,5 +26,5 @@ export default async function ForgotPasswordPage({ searchParams }: Props) {
       <button className="auth-submit" type="submit">Send reset link</button>
     </form>
     <Link className="auth-back" href="/login">← Back to sign in</Link>
-  </section></main>;
+  </section></main>}</Localize>;
 }

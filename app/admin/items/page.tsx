@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import {CustomerPicker} from "@/components/customer-picker";
@@ -82,7 +84,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
   const collectionRequestId = typeof params.collection_request_id === "string" ? params.collection_request_id : "";
   const intakeCustomer = customers.find((customer) => customer.user_id === ownerDefault);
 
-  return (
+  return <Localize>{(
     <main className="admin-items-shell">
       <header className="admin-items-top">
         <div>
@@ -294,5 +296,5 @@ export default async function AdminItemsPage({ searchParams }: Props) {
         </section>
       </section>
     </main>
-  );
+  )}</Localize>;
 }

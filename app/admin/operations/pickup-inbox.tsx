@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import Link from "next/link";
 import { updatePickupRequestStatus } from "./actions";
 
@@ -41,7 +43,7 @@ function label(value: string) {
 export function PickupInbox({ requests, enabled }: { requests: PickupRequest[]; enabled: boolean }) {
   const newCount = requests.filter((request) => request.status === "submitted").length;
 
-  return (
+  return <Localize>{(
     <section className="ops-card" id="pickup-requests">
       <div className="ops-card-title">
         <div>
@@ -109,5 +111,5 @@ export function PickupInbox({ requests, enabled }: { requests: PickupRequest[]; 
         </div>
       ) : <p className="empty">No pickup requests yet.</p>}
     </section>
-  );
+  )}</Localize>;
 }

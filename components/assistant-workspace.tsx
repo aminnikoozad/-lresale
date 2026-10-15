@@ -1,4 +1,7 @@
 "use client";
+
+import { BrandWordmark } from "./brand-wordmark";
+import { useLocale } from "./site-language";
 import { useRouter } from "next/navigation";
 import { PendingSubmitButton } from "./pending-submit-button";
 import { CustomerSupport } from "./customer-support";
@@ -44,14 +47,15 @@ const money = (v: number, fr: boolean) =>
     style: "currency",
     currency: "CAD",
   }).format(v / 100);
-export function AssistantWorkspace({ available = false }: { available?: boolean }) {
+export function AssistantWorkspace({ available = false, chatEnabled = true, voiceEnabled = true, memoryEnabled = true, noticeEn = "", noticeFr = "" }: { available?: boolean; chatEnabled?: boolean; voiceEnabled?: boolean; memoryEnabled?: boolean; noticeEn?: string; noticeFr?: string }) {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
   const cart = useCart();
   const [mode, setMode] = useState<"chat" | "voice">("chat");
   const voiceAttempt = useRef(0);
-  const [fr, setFr] = useState(false),
-    [messages, setMessages] = useState<AssistantMessage[]>([]),
+  const { locale } = useLocale();
+  const fr = locale === "fr";
+  const [messages, setMessages] = useState<AssistantMessage[]>([]),
     [text, setText] = useState(""),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
@@ -60,7 +64,7 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
     [connecting, setConnecting] = useState(false),
     [muted, setMuted] = useState(false),
     [settings, setSettings] = useState(false),
-    [memory, setMemory] = useState(true),
+    [memory, setMemory] = useState(memoryEnabled),
     [prefs, setPrefs] = useState<Record<string, string>>({}),
     [identity, setIdentity] = useState<string | null>(null),
     [alerts, setAlerts] = useState<
@@ -106,13 +110,13 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
       identityRef.current = id;
       setIdentity(id);
       setPrefs({});
-      setMemory(true);
+      setMemory(memoryEnabled);
       setMessages([]);
       setAlerts([]);
       history.current = [];
       try {
         const saved = sessionStorage.getItem(
-          `rewear-assistant:${id || "guest"}`,
+          `shikimomo-assistant:${id || "guest"}`,
         );
         if (saved) {
           const parsed = JSON.parse(saved);
@@ -130,7 +134,7 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
             );
         }
       } catch {}
-      if (id)
+      if (id && memoryEnabled)
         void supabase
           .from("assistant_preferences")
           .select("preferences,enabled")
@@ -139,12 +143,11 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
           .then(({ data }) => {
             if (active && identityRef.current === id && data) {
               setPrefs(data.preferences || {});
-              setMemory(data.enabled);
+              setMemory(memoryEnabled && data.enabled);
             }
           });
     };
     void supabase.auth.getUser().then(({ data }) => {
-      setFr(new URLSearchParams(location.search).get("lang") === "fr");
       restore(data.user?.id || null);
     });
     const {
@@ -157,12 +160,12 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
       active = false;
       subscription.unsubscribe();
     };
-  }, [supabase, stopVoice]);
+  }, [supabase, stopVoice, memoryEnabled]);
   useEffect(() => {
     try {
       if (messages.length)
         sessionStorage.setItem(
-          `rewear-assistant:${identity || "guest"}`,
+          `shikimomo-assistant:${identity || "guest"}`,
           JSON.stringify(messages.slice(-40)),
         );
     } catch {}
@@ -272,7 +275,7 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
     }
   }
   async function send(value = text, fromVoice = false) {
-    if (!available) return;
+    if (!available || (fromVoice ? !voiceEnabled : !chatEnabled)) return;
     if ((!value.trim() && !image) || (busyRef.current && !fromVoice)) return;
     requestAbort.current?.abort();
     const abort = new AbortController(); requestAbort.current = abort;
@@ -299,6 +302,7 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
     try {
       const result = await invoke({
         messages: next,
+        channel: fromVoice ? "voice" : "chat",
         language: fr ? "fr" : "en",
         image: attachment,
         bag: bag.current.map((p) => ({ id: p.id, name: p.name })),
@@ -315,7 +319,7 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
   }
   useEffect(() => { voiceSend.current = (value) => { void send(value, true); }; });
   async function startVoice() {
-    if (!available) return;
+    if (!available || !voiceEnabled) return;
     if (connecting || voiceRef.current) return;
     setMode("voice"); setConnecting(true); setError("");
     const attempt = ++voiceAttempt.current;
@@ -468,17 +472,10 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
     <main className="assistant-shell" lang={fr ? "fr" : "en"}>
       <header className="assistant-header">
         <Link href="/" className="brand">
-          Shikimomo
+          <BrandWordmark />
         </Link>
         <div>
-          <button
-            onClick={() => {
-              stopVoice();
-              setFr(!fr);
-            }}
-          >
-            {fr ? "EN" : "FR"}
-          </button>
+
           <button
             onClick={() => setSettings(!settings)}
             aria-label={t("Settings", "Réglages")}
@@ -508,7 +505,8 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
           <label>
             <input
               type="checkbox"
-              checked={memory}
+              checked={memoryEnabled && memory}
+              disabled={!memoryEnabled}
               onChange={async (e) => {
                 setMemory(e.target.checked);
                 if (identity)
@@ -544,7 +542,7 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
               setMessages([]);
               history.current = [];
               sessionStorage.removeItem(
-                `rewear-assistant:${identity || "guest"}`,
+                `shikimomo-assistant:${identity || "guest"}`,
               );
             }}
           >
@@ -578,6 +576,7 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
       )}
       {!available && <section className="assistant-availability" role="status">
         <strong>{t("Smart Shopping is not active yet", "L’achat intelligent n’est pas encore activé")}</strong>
+        {(fr ? noticeFr : noticeEn) && <p translate="no">{fr ? noticeFr : noticeEn}</p>}
         <p>{t("Chat and live voice will be available once our shopping assistant is connected. You can browse the shop and use your account now.", "Le clavardage et la voix en direct seront disponibles une fois notre assistant connecté. Vous pouvez déjà parcourir la boutique et utiliser votre compte.")}</p>
         <Link href="/shop">{t("Enter website", "Entrer sur le site")}</Link>
         <Link href="/account">{t("My account", "Mon compte")}</Link>
@@ -638,7 +637,7 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
                   )}
             </p>
             <button
-              disabled={!available || connecting}
+              disabled={!available || !voiceEnabled || connecting}
               onClick={() => (voice ? stopVoice() : void startVoice())}
             >
               {voice ? <MicOff size={19} /> : <Mic size={19} />}
@@ -678,7 +677,7 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
                   "Où en sont mes articles?",
                 ),
               ].map((s) => (
-                <button key={s} onClick={() => void send(s)} disabled={!available || busy}>
+                <button key={s} onClick={() => void send(s)} disabled={!available || !chatEnabled || busy}>
                   {s}
                   <ArrowUpRight size={16} />
                 </button>
@@ -707,7 +706,7 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
             >
               {m.role === "assistant" && <AssistantMark active={busy} />}
               <div className="assistant-message-content">
-                <p>{m.text}</p>
+                <p translate="no">{m.text}</p>
                 {m.result?.products?.length ? (
                   <ProductCards
                     products={m.result.products}
@@ -837,7 +836,7 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
           />
           </>}
           <textarea
-            disabled={!available}
+            disabled={!available || !chatEnabled}
             value={text}
             onChange={(e) => setText(e.target.value)}
             maxLength={3000}
@@ -857,7 +856,7 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
           <button
             type="button"
             className={voice ? "voice-active" : ""}
-            disabled={!available || connecting}
+            disabled={!available || !voiceEnabled || connecting}
             onClick={() => (voice ? stopVoice() : void startVoice())}
             aria-label={
               voice
@@ -873,7 +872,7 @@ export function AssistantWorkspace({ available = false }: { available?: boolean 
           <button
             type="submit"
             className="assistant-send"
-            disabled={!available || busy || (!text.trim() && !image)}
+            disabled={!available || !chatEnabled || busy || (!text.trim() && !image)}
             aria-label={t("Send", "Envoyer")}
           >
             <Send size={20} />

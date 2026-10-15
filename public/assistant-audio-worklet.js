@@ -1,6 +1,6 @@
 // Audio never goes to browser speech-recognition services. Only bounded PCM
 // utterances are sent to our own same-origin transport after explicit mic start.
-class RewearAudioProcessor extends AudioWorkletProcessor {
+class ShikimomoAudioProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
     this.frame = [];
@@ -59,4 +59,4 @@ class RewearAudioProcessor extends AudioWorkletProcessor {
     this.active = false; this.speech = []; this.loud = 0; this.quiet = 0;
   }
 }
-registerProcessor("rewear-audio", RewearAudioProcessor);
+registerProcessor("shikimomo-audio", ShikimomoAudioProcessor);

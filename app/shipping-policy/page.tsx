@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -45,7 +47,7 @@ export default async function ShippingPolicyPage() {
     ? `${money(policy.nonlocalFlatFeeCents)} flat shipping fee`
     : "a shipping fee calculated for the destination and parcel";
 
-  return (
+  return <Localize>{(
     <main className="shipping-policy-page">
       <header className="policy-header"><Link href="/" className="brand"><BrandWordmark /></Link><Link href="/account">My account</Link></header>
       <article className="legal-policy">
@@ -70,5 +72,5 @@ export default async function ShippingPolicyPage() {
         <Link className="policy-back" href="/"><ArrowLeft/> Back to Shikimomo</Link>
       </article>
     </main>
-  );
+  )}</Localize>;
 }

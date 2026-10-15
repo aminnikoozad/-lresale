@@ -1,6 +1,6 @@
 # Canada Post rating and four weight bands
 
-Adds to REWEAR's existing managed-resale checkout. No label purchases, buyer charges, seller payouts or commission changes. Canadian domestic destinations only. The existing seller-pickup and verified Montréal local-delivery rules remain separate.
+Adds to Shikimomo's existing managed-resale checkout. No label purchases, buyer charges, seller payouts or commission changes. Canadian domestic destinations only. The existing seller-pickup and verified Montréal local-delivery rules remain separate.
 
 ## Weight groups
 

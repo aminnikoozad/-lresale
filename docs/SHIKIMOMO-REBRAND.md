@@ -8,7 +8,7 @@ Visible branding, accessibility labels, support response source, metadata, a web
 
 - Package name/lockfile, cart and recovery storage keys, CSS animation names, RPC names, database fields and item/customer codes remain unchanged to protect compatibility and existing sessions/data.
 - Historical migrations, schema history, audits and test fixtures remain intact.
-- Existing favicon is an abstract symbol with no REWEAR text; unchanged.
+- Existing favicon is an abstract symbol with no Shikimomo text; unchanged.
 - Existing enrolled MFA factors retain their names; newly enrolled factors show Shikimomo.
 - Auth redirect fallback and Supabase function CORS origins remain unchanged pending explicit approval of security-sensitive origin changes.
 
@@ -18,7 +18,7 @@ Before relying on sign-up, recovery or cross-origin support from the new domain,
 
 There are no tracked outbound email templates or sender display-name settings on main. In Supabase/custom SMTP/provider configuration, change sender display name and email template branding to Shikimomo while retaining the verified sender address until a Shikimomo sending domain is authenticated. Verify SPF/DKIM/DMARC and mailboxes before changing sender/support/privacy addresses; do not invent new addresses. Runtime configuration is not changed by this PR.
 
-Stored approved support knowledge and historical notifications may still contain REWEAR. Review current knowledge through its normal approval flow; do not rewrite historical migrations/messages. Support edge-function source copy changes require the existing separate function deployment workflow.
+Stored approved support knowledge and historical notifications may still contain Shikimomo. Review current knowledge through its normal approval flow; do not rewrite historical migrations/messages. Support edge-function source copy changes require the existing separate function deployment workflow.
 
 No DNS changes, payment changes, migrations, credentials, live support data, auth settings or unrelated application behavior are part of this release.
 

@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -10,14 +12,14 @@ export const metadata: Metadata = {
 };
 
 function Contact() {
-  return <p><strong>{siteConfig.privacyOfficerTitle}</strong><br />{siteConfig.businessName}{siteConfig.privacyEmail ? <><br /><a href={`mailto:${siteConfig.privacyEmail}`}>{siteConfig.privacyEmail}</a></> : null}{siteConfig.businessAddress ? <><br />{siteConfig.businessAddress}</> : null}{siteConfig.businessPhone ? <><br />{siteConfig.businessPhone}</> : null}</p>;
+  return <Localize>{<p><strong>{siteConfig.privacyOfficerTitle}</strong><br />{siteConfig.businessName}{siteConfig.privacyEmail ? <><br /><a href={`mailto:${siteConfig.privacyEmail}`}>{siteConfig.privacyEmail}</a></> : null}{siteConfig.businessAddress ? <><br />{siteConfig.businessAddress}</> : null}{siteConfig.businessPhone ? <><br />{siteConfig.businessPhone}</> : null}</p>}</Localize>;
 }
 
 export default function PrivacyPage() {
-  return <main className="shipping-policy-page">
+  return <Localize>{<main className="shipping-policy-page">
     <header className="policy-header"><Link href="/" className="brand"><BrandWordmark /></Link><Link href="/account">My account</Link></header>
     <article className="legal-policy">
-      <div className="policy-hero"><p className="eyebrow dark">Privacy / Confidentialité</p><h1>Privacy Policy · Politique de confidentialité</h1><p>Effective September 25, 2026 · En vigueur le 25 septembre 2026</p></div>
+      <div className="policy-hero"><p className="eyebrow dark">Privacy / Confidentialité</p><h1>Privacy Policy</h1><p>Effective September 25, 2026</p></div>
 
       <section lang="fr"><h2>Français</h2><p>Nous recueillons seulement les renseignements personnels raisonnablement nécessaires pour exploiter la plateforme, notamment les renseignements de compte et de contact, les adresses de collecte ou de livraison, les renseignements sur les articles, les commandes, les communications avec le soutien et les données techniques de sécurité.</p><h3>Utilisation</h3><p>Ces renseignements servent notamment à créer et sécuriser les comptes, organiser les collectes et livraisons, traiter les commandes, calculer les montants applicables, communiquer avec vous, prévenir la fraude et les abus, respecter nos obligations légales et améliorer le service.</p><h3>Partage</h3><p>Nous pouvons communiquer les renseignements nécessaires à des fournisseurs qui nous aident à fournir le service, par exemple l’hébergement, l’authentification, l’envoi de courriels, le transport, le soutien technique et, une fois activé, le traitement des paiements. Nous ne vendons pas les renseignements personnels.</p><h3>Conservation et sécurité</h3><p>Nous limitons l’accès aux renseignements selon les rôles et appliquons des mesures techniques et administratives adaptées. Les renseignements sont conservés seulement aussi longtemps que nécessaire pour les fins prévues, la sécurité, la résolution de litiges et les obligations légales.</p><h3>Vos droits</h3><p>Vous pouvez demander l’accès ou la rectification de vos renseignements personnels et communiquer avec la personne responsable de leur protection. Selon la loi applicable, vous pouvez aussi demander le retrait d’un consentement ou la cessation de certaines utilisations.</p><h3>Responsable</h3><Contact /></section>
 
@@ -27,5 +29,5 @@ export default function PrivacyPage() {
       <section><h2>Changes · Modifications</h2><p>Material changes to this policy will be published with an updated effective date. Where required, additional notice or consent will be obtained.</p></section>
       <Link className="policy-back" href="/"><ArrowLeft/> Back to Shikimomo</Link>
     </article>
-  </main>;
+  </main>}</Localize>;
 }

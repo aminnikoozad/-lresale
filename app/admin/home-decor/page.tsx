@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import Image from "next/image";
@@ -143,7 +145,7 @@ export default async function HomeInspectionPage({
       {fieldLabel(key)}
     </label>
   );
-  return (
+  return <Localize>{(
     <main className="admin-items-shell">
       <header className="admin-items-top">
         <Link href="/" className="brand">
@@ -484,5 +486,5 @@ export default async function HomeInspectionPage({
         ) : null}
       </div>
     </main>
-  );
+  )}</Localize>;
 }

@@ -1,3 +1,4 @@
+import { loadSmartShopSettings } from "@/lib/smart-shop-settings";
 import { authorizeAssistantOperation } from "@/lib/assistant-authorization";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
@@ -6,6 +7,8 @@ import { isPhoneVerificationRequired } from "@/lib/canadian-phone";
 export async function POST(req: NextRequest) {
   if (req.headers.get("origin") !== req.nextUrl.origin)
     return NextResponse.json({ error: "Origin not allowed" }, { status: 403 });
+  const settings = await loadSmartShopSettings();
+  if (!settings.enabled || (!settings.chat_enabled && !settings.voice_enabled)) return NextResponse.json({ code: "assistant_paused", error: "Smart Shopping is not active yet" }, { status: 503 });
   const supabase = await createClient();
   const {
     data: { user },

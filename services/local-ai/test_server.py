@@ -76,7 +76,7 @@ class GatewayTests(unittest.TestCase):
         self.assertEqual(captured[0][0], "/v1/chat/completions")
         self.assertNotIn("response_format", captured[0][1])
         self.assertNotIn("url", captured[0][1])
-        self.assertEqual(captured[0][1]["model"], "rewear-local")
+        self.assertEqual(captured[0][1]["model"], "shikimomo-local")
         engine.chat({"messages": [{"role": "tool", "content": "verified products"}], "tools": [{"type": "function"}]})
         self.assertNotIn("tools", captured[1][1])
         self.assertEqual(captured[1][1]["response_format"], {"type": "json_object"})

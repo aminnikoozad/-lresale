@@ -1,5 +1,7 @@
+
+import { Localize } from "@/components/site-language";
 export default function AccountLoading() {
-  return (
+  return <Localize>{(
     <main className="page-skeleton" aria-label="Loading customer account">
       <div className="skeleton-header"><div className="skeleton-brand" /><div className="skeleton-line" style={{ width: 120 }} /></div>
       <div style={{ maxWidth: 1240, margin: "42px auto 0" }}>
@@ -11,5 +13,5 @@ export default function AccountLoading() {
         <div className="skeleton-box" style={{ height: 360, marginTop: 22 }} />
       </div>
     </main>
-  );
+  )}</Localize>;
 }

@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -98,17 +100,17 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
   };
 
   if (!checkoutItems.length) {
-    return (
+    return <Localize>{(
       <section className="cart-empty">
         <h1>Your checkout is empty</h1>
         <p>Return to your bag and choose at least one available item.</p>
         <Button asChild><Link href="/cart">Back to bag</Link></Button>
       </section>
-    );
+    )}</Localize>;
   }
 
   if (orderId) {
-    return (
+    return <Localize>{(
       <section className="checkout-result">
         <div className="checkout-progress" aria-label="Checkout progress">
           <div className="done"><span><Check /></span><b>Bag</b></div>
@@ -133,10 +135,10 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
         </div>
         <Button asChild><Link href="/account/purchases">View My Purchases</Link></Button>
       </section>
-    );
+    )}</Localize>;
   }
 
-  return (
+  return <Localize>{(
     <div className="checkout-page-shell">
       <div className="checkout-progress" aria-label="Checkout progress">
         <div className="done"><span><Check /></span><b>Bag</b></div>
@@ -214,5 +216,5 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
         </aside>
       </div>
     </div>
-  );
+  )}</Localize>;
 }

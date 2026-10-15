@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -27,7 +29,7 @@ export default async function PickupPolicyPage() {
   const waivedServiceFee = formatCadFromCents(launchOffer.waivedServiceFeeCents);
   const missLimit = rules.pickupRules.suspendFreePickupAfterMisses;
 
-  return <main className="pickup-policy-page">
+  return <Localize>{<main className="pickup-policy-page">
     <header className="policy-header"><Link href="/" className="brand"><BrandWordmark /></Link><Link href="/account">My account</Link></header>
     <article className="legal-policy">
       <div className="policy-hero"><p className="eyebrow dark">Customer policy</p><h1>Pickup &amp; Intake Fee Policy</h1><p>Pickup and the regular batch service fee are shown before a new collection request is submitted. Active promotional waivers are applied automatically at successful submission.</p><small>Updated September 25, 2026</small></div>
@@ -58,5 +60,5 @@ export default async function PickupPolicyPage() {
 
       <Link className="policy-back" href="/"><ArrowLeft/> Back to Shikimomo</Link>
     </article>
-  </main>;
+  </main>}</Localize>;
 }

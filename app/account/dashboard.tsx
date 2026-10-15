@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import { HomeIntake } from "@/components/home-intake";
 import {
@@ -136,7 +138,7 @@ export function Dashboard({
 }: Props) {
   const activeCategoryLabels = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value)).map((entry) => entry.label).join(", ");
   const showLaunchOffer = launchOffer.active && launchOffer.eligible;
-  return (
+  return <Localize>{(
     <div className="dashboard">
       <section className="welcome">
         <div>
@@ -260,7 +262,7 @@ export function Dashboard({
                   >
                     <header>
                       <div>
-                        <h3>{item.name}</h3>
+                        <h3 translate="no">{item.name}</h3>
                         <span>
                           <i
                             className={`status ${item.status.toLowerCase().replaceAll(" ", "-")}`}
@@ -363,7 +365,7 @@ export function Dashboard({
         <Link href="/sell-with-shikimomo">Read the full seller guide →</Link>
       </section>
     </div>
-  );
+  )}</Localize>;
 }
 
 function RequestDialog({
@@ -407,7 +409,7 @@ function RequestDialog({
   const processingFee = cad(feeRules.processingFeeCents);
   const launchEligible = launchOffer.active && launchOffer.eligible;
 
-  return (
+  return <Localize>{(
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant={type === "bag" ? "default" : "outline"}>{icon}{label}</Button>
@@ -584,5 +586,5 @@ function RequestDialog({
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )}</Localize>;
 }

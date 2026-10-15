@@ -1,4 +1,6 @@
 "use client";
+import { Localize } from "@/components/site-language";
+
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -136,7 +138,7 @@ export function BuyerAccountTools() {
     await load(false);
   };
 
-  return (
+  return <Localize>{(
     <section className="buyer-tools dashboard">
       <div className="buyer-tools-heading">
         <div><p className="eyebrow dark">Buyer account</p><h2>Saved items, alerts and purchases</h2></div>
@@ -149,7 +151,7 @@ export function BuyerAccountTools() {
             <h3><Heart /> Favorites</h3>
             {favorites.length ? favorites.map((favorite) => {
               const item = catalogMap.get(favorite.item_id);
-              return <article className="buyer-row" key={favorite.item_id}><div>{item ? <Link href={`/item/${favorite.item_id}`}><b>{item.name}</b></Link> : <b>Saved item</b>}<span>{item ? `${item.brand} · ${cad(item.price_cents)}` : "This item is no longer publicly listed."}</span></div><button type="button" onClick={() => removeFavorite(favorite.item_id)}>Remove</button></article>;
+              return <article className="buyer-row" key={favorite.item_id}><div>{item ? <Link href={`/item/${favorite.item_id}`}><b translate="no">{item.name}</b></Link> : <b>Saved item</b>}<span>{item ? `${item.brand} · ${cad(item.price_cents)}` : "This item is no longer publicly listed."}</span></div><button type="button" onClick={() => removeFavorite(favorite.item_id)}>Remove</button></article>;
             }) : <p className="buyer-empty">Items you save with the heart button will appear here.</p>}
           </section>
 
@@ -196,7 +198,7 @@ export function BuyerAccountTools() {
                     const eligible = order.status === "delivered" && order.payment_status === "paid" && !existingReturn;
                     return (
                       <div className="purchase-item" key={item.id}>
-                        <div>{catalogMap.has(item.item_id) ? <Link href={`/item/${item.item_id}`}><b>{item.brand} · {item.item_name}</b></Link> : <b>{item.brand} · {item.item_name}</b>}<span>{item.size ? `Size ${item.size} · ` : ""}{cad(item.unit_price_cents)}</span></div>
+                        <div>{catalogMap.has(item.item_id) ? <Link href={`/item/${item.item_id}`}><b translate="no">{item.brand} · {item.item_name}</b></Link> : <b translate="no">{item.brand} · {item.item_name}</b>}<span>{item.size ? `Size ${item.size} · ` : ""}{cad(item.unit_price_cents)}</span></div>
                         {existingReturn ? (
                           <span className="return-status"><RotateCcw /> Return: {title(existingReturn.status)}</span>
                         ) : eligible ? (
@@ -221,5 +223,5 @@ export function BuyerAccountTools() {
         </div>
       )}
     </section>
-  );
+  )}</Localize>;
 }

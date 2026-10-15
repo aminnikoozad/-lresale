@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { requireAdmin } from "@/lib/admin-auth";
 import { changeAdminPassword, signOutAllAdminSessions } from "./actions";
@@ -13,7 +15,7 @@ export default async function AdminSecurityPage({ searchParams }: Props) {
   const message = typeof params.message === "string" ? params.message : null;
   const type = params.type === "error" ? "error" : "success";
 
-  return (
+  return <Localize>{(
     <main className="ops-shell">
       <header className="ops-top">
         <div><span className="brand"><BrandWordmark /></span><b>Admin</b></div>
@@ -70,5 +72,5 @@ export default async function AdminSecurityPage({ searchParams }: Props) {
         </section>
       </section>
     </main>
-  );
+  )}</Localize>;
 }

@@ -38,7 +38,7 @@ export class SelfHostedVoice {
     await this.context.audioWorklet.addModule("/assistant-audio-worklet.js");
     if (this.closed) return;
     this.source = this.context.createMediaStreamSource(stream);
-    this.node = new AudioWorkletNode(this.context, "rewear-audio");
+    this.node = new AudioWorkletNode(this.context, "shikimomo-audio");
     this.node.port.onmessage = (event) => {
       if (this.closed) return;
       if (event.data.type === "speech_start") {

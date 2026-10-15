@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { requireAdmin } from "@/lib/admin-auth";
 import { CATALOG_CATEGORIES } from "@/lib/catalog-taxonomy";
@@ -91,7 +93,7 @@ export default async function PilotDashboard({ searchParams }: Props) {
       ]
     : [];
 
-  return (
+  return <Localize>{(
     <main className="ops-shell">
       <header className="ops-top">
         <div><span className="brand"><BrandWordmark /></span><b>Admin</b></div>
@@ -219,5 +221,5 @@ export default async function PilotDashboard({ searchParams }: Props) {
         </section>
       </section>
     </main>
-  );
+  )}</Localize>;
 }

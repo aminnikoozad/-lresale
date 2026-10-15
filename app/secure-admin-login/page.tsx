@@ -1,3 +1,5 @@
+
+import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { AuthCaptcha } from "@/components/auth-captcha";
 import { AuthHumanCheck } from "@/components/auth-human-check";
@@ -15,7 +17,7 @@ type Props = { searchParams: Promise<Record<string, string | string[] | undefine
 export default async function SecureAdminLogin({ searchParams }: Props) {
   const params = await searchParams;
   const message = typeof params.message === "string" ? params.message : null;
-  return (
+  return <Localize>{(
     <main className="auth-page">
       <section className="auth-card">
         <div className="brand"><BrandWordmark /></div>
@@ -37,5 +39,5 @@ export default async function SecureAdminLogin({ searchParams }: Props) {
         <small>Authorized accounts must complete multi-factor authentication before privileged actions are allowed.</small>
       </section>
     </main>
-  );
+  )}</Localize>;
 }
