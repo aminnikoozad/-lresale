@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { AuthCaptcha } from "@/components/auth-captcha";
 import { AuthHumanCheck } from "@/components/auth-human-check";
 import Link from "next/link";
@@ -12,7 +13,7 @@ export default async function ForgotPasswordPage({ searchParams }: Props) {
   const type = params.type === "success" ? "success" : "error";
 
   return <main className="auth-page"><section className="auth-card">
-    <Link href="/" className="brand">Shikimomo<span>.</span></Link>
+    <Link href="/" className="brand"><BrandWordmark /></Link>
     <h1>Reset your password</h1>
     <p>Enter the email used for your Shikimomo account.</p>
     {message && <div className={`auth-message ${type}`}>{message}</div>}

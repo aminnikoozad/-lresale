@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -23,7 +24,7 @@ export default async function AiTrainerPage() {
 
   return <main className="support-admin-shell">
     <header className="support-admin-top">
-      <div><Link href="/admin" className="support-brand">Shikimomo<span>.</span></Link><b>AI Trainer</b></div>
+      <div><Link href="/admin" className="support-brand"><BrandWordmark /></Link><b>AI Trainer</b></div>
 
     </header>
     <section className="support-admin-wrap">

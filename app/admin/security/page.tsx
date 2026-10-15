@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { requireAdmin } from "@/lib/admin-auth";
 import { changeAdminPassword, signOutAllAdminSessions } from "./actions";
 import "../operations/operations.css";
@@ -15,7 +16,7 @@ export default async function AdminSecurityPage({ searchParams }: Props) {
   return (
     <main className="ops-shell">
       <header className="ops-top">
-        <div><span className="brand">Shikimomo<span>.</span></span><b>Admin</b></div>
+        <div><span className="brand"><BrandWordmark /></span><b>Admin</b></div>
 
       </header>
 

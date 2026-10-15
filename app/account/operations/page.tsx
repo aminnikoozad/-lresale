@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -71,7 +72,7 @@ export default async function SellerOperationsPage({ searchParams }: Props) {
   return (
     <main className="seller-ops-shell">
       <header className="seller-ops-top">
-        <Link href="/" className="brand">Shikimomo<span>.</span></Link>
+        <Link href="/" className="brand"><BrandWordmark /></Link>
         <nav><Link href="/account">Selling dashboard</Link><Link href="/sell-with-shikimomo">Seller guide</Link><Link href="/account/purchases">Purchases</Link></nav>
       </header>
       <section className="seller-ops-wrap">

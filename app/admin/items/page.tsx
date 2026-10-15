@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import {CustomerPicker} from "@/components/customer-picker";
 import { redirect } from "next/navigation";
@@ -85,7 +86,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
     <main className="admin-items-shell">
       <header className="admin-items-top">
         <div>
-          <Link href="/" className="brand">Shikimomo<span>.</span></Link>
+          <Link href="/" className="brand"><BrandWordmark /></Link>
           <span className="admin-pill">Admin</span>
         </div>
 

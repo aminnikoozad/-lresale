@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { AuthCaptcha } from "@/components/auth-captcha";
 import { AuthHumanCheck } from "@/components/auth-human-check";
 import Link from "next/link";
@@ -13,7 +14,7 @@ export default async function SignUpPage({ searchParams }: Props) {
   const phoneRequired = isPhoneVerificationRequired();
   const message = typeof params.message === "string" ? params.message : null;
   return <main className="auth-page"><section className="auth-card">
-    <Link href="/" className="brand">Shikimomo<span>.</span></Link>
+    <Link href="/" className="brand"><BrandWordmark /></Link>
     <h1>Create your account.</h1>
     <p>Track collections, items, earnings and your Shikimomo balance securely.</p>
     {message && <div className="auth-message error">{message}</div>}

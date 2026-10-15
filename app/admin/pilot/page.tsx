@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { requireAdmin } from "@/lib/admin-auth";
 import { CATALOG_CATEGORIES } from "@/lib/catalog-taxonomy";
 import { loadPilotSettings } from "@/lib/pilot-settings";
@@ -93,7 +94,7 @@ export default async function PilotDashboard({ searchParams }: Props) {
   return (
     <main className="ops-shell">
       <header className="ops-top">
-        <div><span className="brand">Shikimomo<span>.</span></span><b>Admin</b></div>
+        <div><span className="brand"><BrandWordmark /></span><b>Admin</b></div>
 
       </header>
 

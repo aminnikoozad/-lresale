@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -89,7 +90,7 @@ export default async function ProcessingPage({ searchParams }: Props) {
   return (
     <main className="processing-shell">
       <header className="processing-top">
-        <div><Link href="/" className="brand">Shikimomo<span>.</span></Link><b>Operations</b></div>
+        <div><Link href="/" className="brand"><BrandWordmark /></Link><b>Operations</b></div>
 
       </header>
 

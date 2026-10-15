@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -16,5 +17,5 @@ export default async function SupportSettingsPage(){
   ]);
   const context=Array.isArray(contextData)?contextData[0]:contextData;if(!context?.can_support)notFound();
   const {data:managedAdmins}=context.role==="owner"?await supabase.rpc("support_admin_manage_list"):{data:null};
-  return <main className="support-admin-shell"><header className="support-admin-top"><div><Link href="/admin" className="support-brand">Shikimomo<span>.</span></Link><b>Support Settings</b></div></header><section className="support-admin-wrap"><div className="support-admin-heading"><div><p className="eyebrow dark">Support operations</p><h1>Availability & Notifications</h1><p>Set your support status, personal notification preferences and configurable support hours. Core support does not depend on SMS, WhatsApp or Telegram.</p></div><div className="support-admin-chip">MFA verified · {access.role}</div></div><SupportSettingsClient userId={context.user_id} displayName={context.display_name} initialAvailability={context.availability_status} initialPreferences={prefs} initialHours={hours??[]}/>{context.role==="owner"?<SupportAdminManagement initialAdmins={managedAdmins??[]}/>:null}</section></main>
+  return <main className="support-admin-shell"><header className="support-admin-top"><div><Link href="/admin" className="support-brand"><BrandWordmark /></Link><b>Support Settings</b></div></header><section className="support-admin-wrap"><div className="support-admin-heading"><div><p className="eyebrow dark">Support operations</p><h1>Availability & Notifications</h1><p>Set your support status, personal notification preferences and configurable support hours. Core support does not depend on SMS, WhatsApp or Telegram.</p></div><div className="support-admin-chip">MFA verified · {access.role}</div></div><SupportSettingsClient userId={context.user_id} displayName={context.display_name} initialAvailability={context.availability_status} initialPreferences={prefs} initialHours={hours??[]}/>{context.role==="owner"?<SupportAdminManagement initialAdmins={managedAdmins??[]}/>:null}</section></main>
 }

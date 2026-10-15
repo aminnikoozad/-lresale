@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { AuthCaptcha } from "@/components/auth-captcha";
 import { AuthHumanCheck } from "@/components/auth-human-check";
 import type { Metadata } from "next";
@@ -17,7 +18,7 @@ export default async function SecureAdminLogin({ searchParams }: Props) {
   return (
     <main className="auth-page">
       <section className="auth-card">
-        <div className="brand">Shikimomo<span>.</span></div>
+        <div className="brand"><BrandWordmark /></div>
         <p className="eyebrow dark">Restricted staff access</p>
         <h1>Admin sign in</h1>
         <p>This page is for authorized Shikimomo administrators only.</p>

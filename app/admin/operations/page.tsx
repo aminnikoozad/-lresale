@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
 import { createPickupSlot, togglePickupSlot, toggleServiceArea, updateReminderSettings, updateShippingSettings } from "./actions";
@@ -74,7 +75,7 @@ export default async function AdminOperationsPage({ searchParams }: Props) {
   return (
     <main className="ops-shell">
       <header className="ops-top">
-        <div><span className="brand">Shikimomo<span>.</span></span><b>Admin</b></div>
+        <div><span className="brand"><BrandWordmark /></span><b>Admin</b></div>
 
       </header>
 

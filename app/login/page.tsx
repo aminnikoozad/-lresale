@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { AuthCaptcha } from "@/components/auth-captcha";
 import { AuthHumanCheck } from "@/components/auth-human-check";
@@ -14,7 +15,7 @@ export default async function LoginPage({ searchParams }: Props) {
   const message = typeof params.message === "string" ? params.message : null;
   const type = params.type === "success" ? "success" : "error";
   return <main className="auth-page"><section className="auth-card">
-    <Link href="/" className="brand">Shikimomo<span>.</span></Link>
+    <Link href="/" className="brand"><BrandWordmark /></Link>
     <h1>Welcome back.</h1>
     <p>Sign in to follow your items, requests and available balance.</p>
     {message && <div className={`auth-message ${type}`}>{message}</div>}

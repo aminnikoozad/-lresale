@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import { RecoveryForm } from "./recovery-form";
 import { PASSWORD_REQUIREMENTS_TEXT } from "@/lib/password-policy";
@@ -10,7 +11,7 @@ export default async function UpdatePasswordPage({ searchParams }: Props) {
   const message = typeof params.message === "string" ? params.message : null;
 
   return <main className="auth-page"><section className="auth-card">
-    <Link href="/" className="brand">Shikimomo<span>.</span></Link>
+    <Link href="/" className="brand"><BrandWordmark /></Link>
     <h1>Choose a new password</h1>
     <p>{PASSWORD_REQUIREMENTS_TEXT}</p>
     {message && <div className="auth-message error">{message}</div>}
