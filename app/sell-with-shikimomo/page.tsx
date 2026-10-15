@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Camera, CheckCircle2, CircleDollarSign, PackageCheck, SearchCheck, Truck } from "lucide-react";
@@ -33,7 +34,7 @@ export default async function SellWithRewearPage() {
   return (
     <main className="seller-guide-shell">
       <header className="seller-guide-top">
-        <Link href="/" className="brand">Shikimomo<span>.</span></Link>
+        <Link href="/" className="brand"><BrandWordmark /></Link>
         <nav><Link href="/#shop">Shop</Link><Link href="/pickup-policy">Pickup policy</Link><Link href="/account">My account</Link></nav>
       </header>
 
@@ -109,7 +110,7 @@ export default async function SellWithRewearPage() {
 
       <section className="guide-cta"><div><p className="eyebrow">Ready?</p><h2>Know the rules before the pickup.</h2><p>Your account shows the regular {serviceFee} batch service fee and any separate flat low-value pickup transportation fee before you submit.{launchOffer.active ? " If the launch waiver is successfully claimed, the service fee on that batch becomes $0 automatically." : ""}</p></div><Link href="/account">Arrange collection <ArrowRight /></Link></section>
 
-      <footer className="seller-guide-footer"><Link href="/" className="brand">Shikimomo<span>.</span></Link><div><Link href="/pickup-policy">Pickup policy</Link><Link href="/shipping-policy">Shipping policy</Link><Link href="/account">Customer account</Link></div></footer>
+      <footer className="seller-guide-footer"><Link href="/" className="brand"><BrandWordmark /></Link><div><Link href="/pickup-policy">Pickup policy</Link><Link href="/shipping-policy">Shipping policy</Link><Link href="/account">Customer account</Link></div></footer>
     </main>
   );
 }

@@ -237,3 +237,8 @@
 .workspace-menu-toggle{display:none}.admin-workspace .ops-top,.admin-workspace .admin-items-top,.admin-workspace .support-admin-top{position:static!important}
 @media(max-width:800px){.workspace-menu-toggle{display:flex;align-items:center;gap:8px;border:1px solid #ddd;border-radius:4px;background:#fff;color:#242424;min-height:40px;padding:8px 12px;font:inherit;font-size:.8rem}.workspace-menu-toggle svg{width:16px}.workspace-navigation-panel{display:none}.workspace-navigation-panel[data-open="true"]{display:flex;flex-direction:column}.workspace-navigation nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;gap:5px}.workspace-navigation nav a{min-height:44px}.workspace-navigation-exit{border-top:1px solid #eee;width:100%;padding-top:10px;justify-content:space-between}}
 .menu-restricted{display:block;color:#666;font-size:.75rem;line-height:1.5}.workspace-navigation button:disabled{opacity:.6;cursor:wait}
+
+/* Shared two-tone wordmark; typography and surrounding palette stay unchanged. */
+.shikimomo-wordmark { display:inline-block; white-space:nowrap; }
+.shikimomo-wordmark > b { color:#242424; font:inherit; letter-spacing:inherit; }
+.shikimomo-wordmark > b > em { color:#37654f; font:inherit; letter-spacing:inherit; }

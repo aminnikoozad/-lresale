@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -16,7 +17,7 @@ export default async function AdminMfaPage() {
   return (
     <main className="auth-page">
       <section className="auth-card">
-        <div className="brand">Shikimomo<span>.</span></div>
+        <div className="brand"><BrandWordmark /></div>
         <p className="eyebrow dark">Owner / Admin security</p>
         <h1>Verify your identity</h1>
         <p>Privileged Admin access requires an authenticator-app code in addition to your password.</p>

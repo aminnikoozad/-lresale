@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import { ArrowLeft, LogOut, UserRound } from "lucide-react";
 import { redirect } from "next/navigation";
@@ -227,7 +228,7 @@ export default async function AccountPage({ searchParams }: Props) {
     <main className="account-shell">
       <header className="account-top">
         <Link href="/" className="brand">
-          Shikimomo<span>.</span>
+          <BrandWordmark />
         </Link>
         <div className="account-user">
           <span>

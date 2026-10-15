@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
@@ -146,7 +147,7 @@ export default async function HomeInspectionPage({
     <main className="admin-items-shell">
       <header className="admin-items-top">
         <Link href="/" className="brand">
-          Shikimomo.
+          <BrandWordmark />
         </Link>
 
       </header>

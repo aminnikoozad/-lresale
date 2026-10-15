@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { adminNavigation } from "@/lib/workspace-navigation";
@@ -36,7 +37,7 @@ export default async function AdminPage() {
   return (
     <main className="ops-shell">
       <header className="ops-top">
-        <div><span className="brand">Shikimomo<span>.</span></span><b>Admin</b></div>
+        <div><span className="brand"><BrandWordmark /></span><b>Admin</b></div>
 
       </header>
 

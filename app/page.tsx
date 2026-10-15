@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 export const metadata = { alternates: { canonical: "/" } };
 
 import { connection } from "next/server";
@@ -110,7 +111,7 @@ export default async function Home() {
       <a className="market-skip-link" href="#shop">Skip to the shop</a>
       <div className="market-announcement">Shikimomo · Managed secondhand in Montréal</div>
       <header className="site-header market-header">
-        <Link href="/" className="brand" aria-label="Shikimomo home">Shikimomo<span>.</span></Link>
+        <Link href="/" className="brand" aria-label="Shikimomo home"><BrandWordmark /></Link>
         <form className="market-header-search" action="/#shop" method="get" role="search">
           <Search aria-hidden="true" />
           <input type="search" name="q" aria-label="Search the Shikimomo catalog" placeholder="Search brands or pieces" />
@@ -185,7 +186,7 @@ export default async function Home() {
       <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Company-managed shopping</p><h2>Listings are prepared and reviewed by Shikimomo.</h2><p>{pilot.enabled ? "During the pilot, only the categories enabled in Pilot Settings are accepted and published." : "Shikimomo reviews accepted items before publication."} If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
 
       <footer>
-        <div className="brand">Shikimomo<span>.</span></div>
+        <div className="brand"><BrandWordmark /></div>
         <p>{pilot.enabled ? `${navCategories.map((entry) => entry.label).join(" · ")} pilot` : "Women · Men · Kids · Shoes · Accessories · Electronics · Home & Decor"}</p>
         <div className="footer-links">
           <Link href="/sell-with-shikimomo">Seller guide</Link>

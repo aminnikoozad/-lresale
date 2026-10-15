@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -37,7 +38,7 @@ export default async function SupportConversationPage({ params }: { params: Prom
   return (
     <main className="support-admin-shell">
       <header className="support-admin-top">
-        <div><Link href="/admin" className="support-brand">Shikimomo<span>.</span></Link><b>Support</b></div>
+        <div><Link href="/admin" className="support-brand"><BrandWordmark /></Link><b>Support</b></div>
 
       </header>
       <section className="support-admin-wrap">

@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, MapPin, PackageCheck, Truck } from "lucide-react";
@@ -46,7 +47,7 @@ export default async function ShippingPolicyPage() {
 
   return (
     <main className="shipping-policy-page">
-      <header className="policy-header"><Link href="/" className="brand">Shikimomo<span>.</span></Link><Link href="/account">My account</Link></header>
+      <header className="policy-header"><Link href="/" className="brand"><BrandWordmark /></Link><Link href="/account">My account</Link></header>
       <article className="legal-policy">
         <div className="policy-hero">
           <p className="eyebrow dark">Shopping delivery</p>

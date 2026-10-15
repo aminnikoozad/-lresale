@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -13,7 +14,7 @@ export default async function PurchasesPage() {
   return (
     <main className="account-shell buyer-account-page">
       <header className="account-top">
-        <Link href="/" className="brand">Shikimomo<span>.</span></Link>
+        <Link href="/" className="brand"><BrandWordmark /></Link>
         <Link href="/account" className="back-home"><ArrowLeft /> Selling dashboard</Link>
       </header>
       <BuyerAccountTools />

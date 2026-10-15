@@ -1,3 +1,4 @@
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { safeRedirectPath } from "@/lib/safe-redirect";
 import Link from "next/link";
@@ -28,7 +29,7 @@ export default async function VerifyPhonePage({ searchParams }: Props) {
   const savedPhone = profile?.phone ?? "";
 
   return <main className="auth-page"><section className="auth-card">
-    <Link href="/" className="brand">Shikimomo<span>.</span></Link>
+    <Link href="/" className="brand"><BrandWordmark /></Link>
     <h1>Verify your phone.</h1>
     <p>Only Canadian phone numbers can be used to activate a Shikimomo account.</p>
     {message?<div className={`auth-message ${type}`}>{message}</div>:null}
