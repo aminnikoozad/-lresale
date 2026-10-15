@@ -5,6 +5,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { scheduleAutoPublish, setUnsoldPreference } from "../operations-actions";
+import { acceptTeamPricing } from "../pricing-actions";
 import "./operations.css";
 
 export const dynamic = "force-dynamic";
@@ -62,9 +63,10 @@ export default async function SellerOperationsPage({ searchParams }: Props) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/account/operations");
 
-  const [{ data, error }, params] = await Promise.all([
+  const [{ data, error }, params, mandate] = await Promise.all([
     supabase.rpc("seller_operations_snapshot"),
     searchParams,
+    supabase.rpc("my_team_pricing_mandate"),
   ]);
   if (error || !data) throw new Error("Item operations could not be loaded.");
   const items = ((data as Snapshot).items ?? []);
@@ -84,6 +86,18 @@ export default async function SellerOperationsPage({ searchParams }: Props) {
           <p>See where each item is in the Shikimomo process, review pricing, schedule publishing, and decide what should happen if it does not sell.</p>
         </div>
         {message ? <div className={`seller-ops-message ${type}`}>{message}</div> : null}
+
+        {!mandate.error && mandate.data ? <section className="seller-review-box">
+          <div><h2>Pricing by Shikimomo</h2>
+            <p>After inspection, Shikimomo sets the price and locks your commission tier. With your one-time authorization, each item can be published without a separate price approval. You can follow prices and earnings in your account.</p>
+            <p>Previously locked prices and commission tiers stay unchanged. This authorization covers your current unapproved items and future items, including bundles.</p>
+            <Link href="/seller-terms">Read the seller terms</Link>
+          </div>
+          {mandate.data.accepted ? <p>Team pricing authorized.</p> : <form action={acceptTeamPricing}>
+            <label><input type="checkbox" name="pricing_mandate" value="accepted" required /> I authorize Shikimomo to set and manage selling prices after inspection under the seller terms.</label>
+            <button type="submit">Authorize team pricing</button>
+          </form>}
+        </section> : null}
 
         {items.length ? <div className="seller-ops-list">{items.map((item) => {
           const needsReview = item.stage === "seller_review" && item.initialPriceCents != null && !item.autoPublishAt;
@@ -117,7 +131,7 @@ export default async function SellerOperationsPage({ searchParams }: Props) {
                 </section>
               ) : null}
 
-              {needsReview ? (
+              {needsReview && mandate.data?.accepted ? <p>Shikimomo will finalize this price after inspection. No separate price approval is needed.</p> : needsReview ? (
                 <section className="seller-review-box">
                   <div><h3>Ready for your review</h3><p>Approve the displayed initial price and locked commission, then Shikimomo will publish this item automatically after the review window.</p></div>
                   <form action={scheduleAutoPublish}>

@@ -5,6 +5,7 @@ import { CheckCircle2, CircleAlert, ExternalLink, ShieldCheck } from "lucide-rea
 import { requireAdmin } from "@/lib/admin-auth";
 import { postalReadiness } from "@/lib/postal-server";
 import { publicLaunchReadiness, siteConfig } from "@/lib/site-config";
+import { assistantHostConfig } from "@/lib/assistant-host";
 
 export const dynamic = "force-dynamic";
 
@@ -79,10 +80,10 @@ export default async function AdminReadinessPage() {
       detail: "Production carrier credentials, secure quote storage, and an enabled origin in Postal Shipping are required. Credential presence does not prove a live rate works.",
     },
     {
-      label: "Supabase Edge Function AI support",
-      ok: false,
+      label: "Smart Shopping — deferred",
+      ok: Boolean(assistantHostConfig(process.env)),
       manual: true,
-      detail: "If AI support is advertised, verify the deployed support-ai Edge Function, its OPENAI_API_KEY in Supabase, and a successful support response. A Vercel environment variable cannot verify Edge Function configuration. AI support is not required to prepare checkout.",
+      detail: "Smart Shopping is deferred until the owner-hosted infrastructure is ready. Keep it marked Coming soon. It is not a blocker for the standard store or team support; do not enable it based on configuration alone.",
     },
     {
       label: "Supabase leaked-password protection",
@@ -141,6 +142,19 @@ export default async function AdminReadinessPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section className="admin-panel">
+        <h2>Complete the operating setup</h2>
+        <p>Configuration presence does not prove a successful customer transaction. Finish the checks below with a test account before inviting customers.</p>
+        <ul>
+          <li><Link href="/support">Contact &amp; support</Link>: publish a working support email, phone, business address, privacy contact and support hours. Customers locked out of their account need a direct contact.</li>
+          <li><Link href="/admin/operations">Collection operations</Link>: configure active service areas, pickup windows and capacity, then verify a customer can book a collection.</li>
+          <li><Link href="/admin/items">Item pricing</Link>: apply the team pricing migration, verify the seller’s one-time authorization, record physical inspection, finalize pricing and publish with photos. Existing locked commission tiers must remain unchanged.</li>
+          <li><Link href="/admin/postal">Postal shipping</Link>: if offering national shipping, configure Canada Post production credentials, the verified shipping origin and packed parcels; test a real rate before offering the service.</li>
+          <li><Link href="/admin/orders">Orders &amp; returns</Link>: agree the return window, return destination, refund authority, seller payout method and release timing. A pending wallet balance is not a completed payout.</li>
+        </ul>
+        <p>Indexing is handled separately. Deferred Smart Shopping and payment-provider activation do not replace these store operations checks.</p>
       </section>
 
       <section className="admin-panel">

@@ -71,7 +71,7 @@ export default async function SellWithShikimomoPage() {
           <li><Truck /><b>1. Pickup</b><p>Request a Shikimomo Bag or use your own bag/box and book an available pickup window.</p></li>
           <li><SearchCheck /><b>2. Inspection</b><p>We identify every item, check condition and decide whether it is suitable for resale.</p></li>
           <li><Camera /><b>3. Photography & pricing</b><p>Accepted items are photographed, prepared and priced by Shikimomo.</p></li>
-          <li><CheckCircle2 /><b>4. Seller review</b><p>You review the initial price and your commission before the item is published.</p></li>
+          <li><CheckCircle2 /><b>4. Pricing & publication</b><p>Shikimomo sets the price after inspection. Accept the team pricing terms once in your account so each item can be published without a separate price approval.</p></li>
           <li><PackageCheck /><b>5. Listing & sale</b><p>We publish the item, manage the buyer and track the item through the selling period.</p></li>
           <li><CircleDollarSign /><b>6. Earnings</b><p>Your seller share and applicable batch fees remain visible in your account.</p></li>
         </ol>
@@ -86,7 +86,7 @@ export default async function SellWithShikimomoPage() {
         </div>
 
         <div className="commission-wrap">
-          <div><h3>How much you keep</h3><p>Your commission tier is based on the item’s initial approved price and stays locked after you approve it.</p></div>
+          <div><h3>How much you keep</h3><p>Your commission tier is based on the item’s initial approved price and stays locked when pricing is finalized.</p></div>
           <div className="commission-table" role="table" aria-label="Seller commission tiers">
             <div className="commission-row head" role="row"><span>Initial approved price</span><span>You keep</span></div>
             {rules.commissionTiers.map((tier) => <div className="commission-row" role="row" key={`${tier.minCents}-${tier.maxCents ?? "plus"}`}><span>{tierPriceLabel(tier)}</span><strong>{tier.sellerBps / 100}%</strong></div>)}
