@@ -29,7 +29,7 @@ export default async function SellWithShikimomoPage() {
     loadLaunchSellerOffer(supabase),
     loadPilotSettings(supabase),
   ]);
-  const acceptingCategories = activePilotCategories(pilot).map((entry) => entry.label).join(", ");
+  const acceptingCategories = activePilotCategories(pilot).map((entry, index) => <span key={entry.value}>{index > 0 ? ", " : ""}{entry.label}</span>);
   const serviceFee = formatCadFromCents(rules.pickupRules.processingFeeCents);
   const freePickupThreshold = formatCadFromCents(rules.pickupRules.freePickupThresholdCents);
   const lowValueFee = formatCadFromCents(rules.pickupRules.lowValuePickupItemFeeCents);
@@ -54,14 +54,14 @@ export default async function SellWithShikimomoPage() {
         <section className="guide-section" id="launch-offer">
           <div className="guide-heading">
             <p className="eyebrow dark">Launch offer</p>
-            <h2>First {launchOffer.maxClaims} sellers: your first {waivedServiceFee} batch service fee is waived.</h2>
+            <h2>{`First ${launchOffer.maxClaims} sellers: your first ${waivedServiceFee} batch service fee is waived.`}</h2>
             <p>{launchOffer.remaining} spots remain. A sign-up alone does not reserve a place. The offer is claimed only when an eligible seller successfully submits their first collection request.</p>
           </div>
           <div className="accept-grid">
-            <article className="good"><h3>What is waived</h3><ul><li>The regular {serviceFee} batch service fee on your first successful collection request.</li><li>A Shikimomo Bag remains included when the request meets the Bag eligibility rules.</li><li>Each seller can receive the launch waiver only once.</li></ul></article>
-            <article className="avoid"><h3>What is not waived</h3><ul><li>{`The flat ${lowValueFee} pickup transportation fee still applies when the pickup’s estimated resale value is below ${freePickupThreshold}.`}</li><li>Creating an account does not consume or reserve one of the {launchOffer.maxClaims} spots.</li><li>After claim #{launchOffer.maxClaims}, the regular {serviceFee} batch service fee applies automatically.</li></ul></article>
+            <article className="good"><h3>What is waived</h3><ul><li>{`The regular ${serviceFee} batch service fee on your first successful collection request.`}</li><li>A Shikimomo Bag remains included when the request meets the Bag eligibility rules.</li><li>Each seller can receive the launch waiver only once.</li></ul></article>
+            <article className="avoid"><h3>What is not waived</h3><ul><li>{`The flat ${lowValueFee} pickup transportation fee still applies when the pickup’s estimated resale value is below ${freePickupThreshold}.`}</li><li>{`Creating an account does not consume or reserve one of the ${launchOffer.maxClaims} spots.`}</li><li>{`After claim #${launchOffer.maxClaims}, the regular ${serviceFee} batch service fee applies automatically.`}</li></ul></article>
           </div>
-          <p className="guide-note">Eligibility is finalized at successful submission because multiple sellers can submit at the same time. The database prevents more than {launchOffer.maxClaims} launch waivers.</p>
+          <p className="guide-note">{`Eligibility is finalized at successful submission because multiple sellers can submit at the same time. The database prevents more than ${launchOffer.maxClaims} launch waivers.`}</p>
         </section>
       ) : null}
 

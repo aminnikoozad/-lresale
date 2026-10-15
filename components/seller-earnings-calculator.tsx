@@ -55,7 +55,7 @@ export function SellerEarningsCalculator({
           <div><span>Your share from this item</span><b>{cad(result.sellerShareCents)}</b></div>
           <div><span>Batch service fee</span><b>− {cad(processingFeeCents)}</b></div>
           <div className="calculator-total"><span>Conservative example net</span><strong>{cad(result.conservativeNetCents)}</strong></div>
-          <small>The {cad(processingFeeCents)} fee is charged once per batch, not once per item, and includes a Shikimomo Bag if you request one. This conservative example assumes this is the only item in the batch that sells.</small>
+          <small>{`The ${cad(processingFeeCents)} fee is charged once per batch, not once per item, and includes a Shikimomo Bag if you request one. This conservative example assumes this is the only item in the batch that sells.`}</small>
         </div>
       ) : (
         <p className="calculator-warning">Enter an estimated sale price of at least {cad(minimumItemValueCents)} for an individual listing estimate.</p>
