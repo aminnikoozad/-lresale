@@ -50,3 +50,8 @@ Local runtime dependencies installed from `requirements.lock`. Piper generated a
 
 ## Production shell release — 2026-10-15
 The owner authorized publication of the interface before hardware activation. The storefront preserves current Shikimomo branding. The server renders Smart Shopping unavailable unless its private owner-host configuration exists; chat submissions and microphone starts are disabled in that state, with links to the shop and account. This release does not activate AI or retire legacy deployed Edge functions. End-to-end model and voice validation remains pending.
+
+## Inline team support and search audit — 2026-10-15
+Smart Shopping has its own visible Support button that opens the existing private team conversation component inline. It works independently of the unavailable AI service. Opening it stops live voice; guest login returns to `/assistant`. Contact details and account-recovery help remain available on `/support`.
+
+Synthetic inventory tests explicitly cover six, seven and eight same-size matches, with wrong-size and wrong-department distractors. The search function returns every exact match in these cases, but caps each call at eight. The deployed response pipeline lets the model choose up to eight inventory IDs, so it does not guarantee rendering every matching search result. More-than-eight browsing and deterministic complete result selection are not implemented by this UI change. Voice/model end-to-end behavior still requires the owner's inference host. Supabase function inspection was denied by the connector during this audit.

@@ -6,9 +6,11 @@ import Link from "next/link";
 export function CustomerSupport({
   userId,
   fr,
+  loginReturnTo = "/support",
 }: {
   userId: string | null;
   fr: boolean;
+  loginReturnTo?: "/support" | "/assistant";
 }) {
   const [supabase] = useState(() => createClient());
   const [threads, setThreads] = useState<
@@ -77,7 +79,7 @@ export function CustomerSupport({
   }, [supabase, selected, loadMessages]);
   if (!userId)
     return (
-      <Link href="/login?next=%2Fsupport">
+      <Link href={`/login?next=${encodeURIComponent(loginReturnTo)}`}>
         {fr
           ? "Connectez-vous pour contacter l’équipe"
           : "Sign in to contact the team"}
