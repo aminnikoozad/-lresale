@@ -195,8 +195,8 @@ export async function createAdminItem(formData: FormData) {
 
   revalidatePath("/admin/items");
   revalidatePath("/admin/operations");
-  revalidatePath("/account");
-  revalidatePath("/account/operations");
+  revalidatePath("/account", "layout");
+  revalidatePath("/account/seller/items");
   revalidatePath("/");
   if (category === "home_decor") redirect(`/admin/home-decor?item=${itemId}`);
   redirect(itemsMessage("Item added to the customer account successfully.", "success"));
@@ -264,8 +264,8 @@ export async function reviewAdminItem(formData: FormData) {
   }
 
   revalidatePath("/admin/items");
-  revalidatePath("/account");
-  revalidatePath("/account/operations");
+  revalidatePath("/account", "layout");
+  revalidatePath("/account/seller/items");
   redirect(itemsMessage(action === "reject" ? "Item rejected with seller-visible reason and evidence." : "Item review saved.", "success"));
 }
 
@@ -295,7 +295,7 @@ export async function publishAdminItem(formData: FormData) {
   }
 
   revalidatePath("/admin/items");
-  revalidatePath("/account");
+  revalidatePath("/account", "layout");
   revalidatePath("/");
   redirect(itemsMessage("Item published to the live shop.", "success"));
 }
@@ -310,8 +310,8 @@ export async function finalizeTeamItemPricing(formData: FormData) {
   const { error } = await supabase.rpc("admin_finalize_team_item_pricing", { target_item_id: itemId, expected_price: price });
   if (error) redirect(itemsMessage("Pricing could not be finalized. Check the seller authorization, physical inspection, current price and MFA.", "error"));
   revalidatePath("/admin/items");
-  revalidatePath("/account");
-  revalidatePath("/account/operations");
+  revalidatePath("/account", "layout");
+  revalidatePath("/account/seller/items");
   redirect(itemsMessage("Team pricing finalized. Add listing photos and publish when ready.", "success"));
 }
 
@@ -323,7 +323,7 @@ export async function finalizeTeamBundlePricing(formData: FormData) {
   const { error } = await supabase.rpc("admin_finalize_team_bundle_pricing", { target_bundle_id: bundleId, expected_price: price });
   if (error) redirect(itemsMessage("Bundle pricing could not be finalized. Check seller authorization, inspection of every item, current price and MFA.", "error"));
   revalidatePath("/admin/items");
-  revalidatePath("/account");
+  revalidatePath("/account", "layout");
   redirect(itemsMessage("Bundle pricing finalized and commission locked.", "success"));
 }
 
@@ -355,6 +355,6 @@ export async function createAdminBundle(formData: FormData) {
   }
 
   revalidatePath("/admin/items");
-  revalidatePath("/account");
+  revalidatePath("/account", "layout");
   redirect(itemsMessage("Bundle created. Finalize team pricing if the seller has authorized it; otherwise seller approval is required.", "success"));
 }

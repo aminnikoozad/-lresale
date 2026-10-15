@@ -1,12 +1,29 @@
-
+import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Localize } from "@/components/site-language";
-import Link from 'next/link';
-import {redirect} from 'next/navigation';
-import {createClient} from '@/lib/supabase/server';
-import {changeUsername} from './actions';
-import '../../auth.css';
-export default async function Profile({searchParams}:{searchParams:Promise<{message?:string}>}){
- const s=await createClient();const {data:{user}}=await s.auth.getUser();if(!user)redirect('/login?next=/account/profile');
- const [{data:p},{data:updates,error},{data:credits},params]=await Promise.all([s.from('profiles').select('username').eq('id',user.id).single(),s.from('customer_account_updates').select('id,body,created_at').eq('customer_id',user.id).eq('customer_visible',true).order('created_at',{ascending:false}).limit(100),s.from('wallet_transactions').select('amount_cents').eq('user_id',user.id).eq('transaction_type','sale_credit').eq('status','pending'),searchParams]);
- return <Localize>{<main className="auth-page"><section className="auth-card"><Link href="/account">← Account</Link><h1>Profile &amp; messages</h1><p>Your username helps our team identify your items. Changing it does not change item ownership or earnings.</p>{params.message&&<p role="status">{params.message}</p>}<form action={changeUsername} className="auth-form"><label>Username<input name="username" defaultValue={p?.username??''} pattern="[a-z0-9][a-z0-9._]{2,29}" minLength={3} maxLength={30} required autoCapitalize="none"/></label><small>3–30 lowercase letters, numbers, dots or underscores.</small><button>Save username</button></form><h2>Pending sale earnings</h2><p>{new Intl.NumberFormat("en-CA",{style:"currency",currency:"CAD"}).format((credits??[]).reduce((sum,c)=>sum+c.amount_cents,0)/100)} awaiting settlement review. This is not an available bank payout.</p><h2>Messages from Shikimomo</h2>{error?<p>Messages could not be loaded.</p>:updates?.length?updates.map(n=><article key={n.id}><p style={{whiteSpace:'pre-wrap'}}>{n.body}</p><small>{new Date(n.created_at).toLocaleString('en-CA')}</small></article>):<p>No account messages yet.</p>}</section></main>}</Localize>;
+import { createClient } from "@/lib/supabase/server";
+import { changeUsername } from "./actions";
+import "../../auth.css";
+
+export default async function Profile({searchParams}:{searchParams:Promise<{message?:string}>}) {
+  const supabase = await createClient();
+  const {data:{user}} = await supabase.auth.getUser();
+  if (!user) redirect("/login?next=/account/profile");
+  const [{data:profile,error},params] = await Promise.all([
+    supabase.from("profiles").select("username").eq("id",user.id).single(), searchParams,
+  ]);
+  return <Localize><main className="account-shared-page">
+    <p className="eyebrow dark">Shared account settings</p><h1>Profile &amp; security</h1>
+    <p>Your profile belongs to one account and is shared between buying and selling.</p>
+    <section className="account-shared-card"><h2>Account details</h2>
+      <p translate="no">{user.email}</p>
+      {params.message ? <p role="status">{params.message}</p> : null}
+      {error ? <p role="alert">Your profile could not be loaded. Please try again.</p> : <form action={changeUsername} className="auth-form">
+        <label>Username<input name="username" defaultValue={profile?.username??""} pattern="[a-z0-9][a-z0-9._]{2,29}" minLength={3} maxLength={30} required autoCapitalize="none" /></label>
+        <small>3–30 lowercase letters, numbers, dots or underscores.</small><button type="submit">Save username</button>
+      </form>}
+    </section>
+    <section className="account-shared-card"><h2>Password &amp; security</h2><p>Use a password recovery link sent to your account email to reset your password.</p><Link href="/forgot-password">Recover my password</Link></section>
+    <section className="account-shared-card"><h2>Messages &amp; support</h2><p>Your conversations stay available whichever account workspace you use.</p><Link href="/account/messages">Open messages &amp; support</Link></section>
+  </main></Localize>;
 }

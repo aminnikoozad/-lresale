@@ -18,7 +18,7 @@ export default async function SignUpPage({ searchParams }: Props) {
   return <Localize>{<main className="auth-page"><section className="auth-card">
     <Link href="/" className="brand"><BrandWordmark /></Link>
     <h1>Create your account.</h1>
-    <p>Track collections, items, earnings and your Shikimomo balance securely.</p>
+    <p>One account to shop, track purchases and manage the items you sell.</p>
     {message && <div className="auth-message error">{message}</div>}
     <form className="auth-form" action={signup}>
       <label htmlFor="full_name">Full name<input id="full_name" name="full_name" type="text" minLength={2} maxLength={100} autoComplete="name" required /></label>

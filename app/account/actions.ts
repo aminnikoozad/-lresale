@@ -18,7 +18,7 @@ function value(formData: FormData, key: string) {
 
 function accountMessage(message: string, type: "success" | "error") {
   const params = new URLSearchParams({ message, type });
-  return `/account?${params.toString()}`;
+  return `/account/seller?${params.toString()}`;
 }
 
 function cad(cents: number) {
@@ -37,7 +37,7 @@ export async function createCollectionRequest(formData: FormData) {
 
   const mandate = await supabase.rpc("my_team_pricing_mandate");
   if (!mandate.error && mandate.data && !mandate.data.accepted) {
-    redirect("/account/operations?type=error&message=Review%20and%20accept%20the%20team%20pricing%20terms%20before%20booking%20a%20collection.");
+    redirect("/account/seller/items?type=error&message=Review%20and%20accept%20the%20team%20pricing%20terms%20before%20booking%20a%20collection.");
   }
 
   const [rules, pilot] = await Promise.all([

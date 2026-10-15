@@ -6,7 +6,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 
 function notice(message: string): never {
   revalidatePath("/admin/orders");
-  revalidatePath("/account/purchases");
+  revalidatePath("/account/buyer");
   redirect(`/admin/orders?${new URLSearchParams({ message })}`);
 }
 

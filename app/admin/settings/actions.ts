@@ -181,7 +181,7 @@ export async function updateSellingRules(formData: FormData) {
   }
 
   revalidatePath("/");
-  revalidatePath("/account");
+  revalidatePath("/account", "layout");
   revalidatePath("/pickup-policy");
   revalidatePath("/admin/settings");
   redirect(messageUrl("Selling rules saved and versioned successfully.", "success"));

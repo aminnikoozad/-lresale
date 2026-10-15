@@ -142,11 +142,11 @@ export function Dashboard({
     <div className="dashboard">
       <section className="welcome">
         <div>
-          <p className="eyebrow dark">Customer dashboard</p>
+          <p className="eyebrow dark">Seller account</p>
           <h1>Welcome, {name}.</h1>
           <div className="customer-identifiers" aria-label="Customer identifiers">
             <span>@{username}</span>
-            <Link href="/account/profile">Profile &amp; messages</Link>
+            <Link href="/account/profile">Profile &amp; security</Link>
           </div>
           <p>
             See your balance, follow every item and arrange your next
@@ -347,7 +347,7 @@ export function Dashboard({
       <section className="consignment-status">
         <div className="end-choice">
           <b>Item timeline &amp; unsold preferences</b>
-          <Link href="/account/operations">Manage item operations →</Link>
+          <Link href="/account/seller/items">Manage item operations →</Link>
           <small>Track processing, review deadlines, automatic publishing, Last Chance and choose Return or Donate / Reuse for unsold items.</small>
         </div>
       </section>

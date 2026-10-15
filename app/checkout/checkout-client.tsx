@@ -133,7 +133,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
           <ShieldCheck />
           <div><b>What is already ready</b><span>Buyer identity, selected inventory, server-verified prices, delivery details and the accepted policy versions are attached to this order.</span></div>
         </div>
-        <Button asChild><Link href="/account/purchases">View My Purchases</Link></Button>
+        <Button asChild><Link href="/account/buyer">View My Purchases</Link></Button>
       </section>
     )}</Localize>;
   }

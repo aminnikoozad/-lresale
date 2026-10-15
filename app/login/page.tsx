@@ -19,7 +19,7 @@ export default async function LoginPage({ searchParams }: Props) {
   return <Localize>{<main className="auth-page"><section className="auth-card">
     <Link href="/" className="brand"><BrandWordmark /></Link>
     <h1>Welcome back.</h1>
-    <p>Sign in to follow your items, requests and available balance.</p>
+    <p>Sign in to shop, track orders or manage the items you sell.</p>
     {message && <div className={`auth-message ${type}`}>{message}</div>}
     <form className="auth-form" action={login}>
       <input type="hidden" name="next" value={next} />

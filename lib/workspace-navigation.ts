@@ -9,12 +9,21 @@ export type MenuAccess = {
   has_aal2?: boolean;
 };
 export const accountNavigation: WorkspaceLink[] = [
-  { href: "/account", label: "Selling dashboard" },
-  { href: "/account/operations", label: "Item tracking" },
-  { href: "/account/purchases", label: "Purchases & saved" },
-  { href: "/account/profile", label: "Profile & messages" },
-  { href: "/support", label: "Contact & support" },
+  { href: "/account", label: "Choose workspace" },
+  { href: "/account/buyer", label: "Buyer account" },
+  { href: "/account/buyer/delivery", label: "Delivery details" },
+  { href: "/account/seller", label: "Selling dashboard" },
+  { href: "/account/seller/items", label: "Item tracking" },
+  { href: "/account/seller/earnings", label: "Earnings & settlement" },
+  { href: "/account/profile", label: "Profile & security" },
+  { href: "/account/messages", label: "Messages & support" },
 ];
+export function accountNavigationFor(mode: "buyer" | "seller" | null): WorkspaceLink[] {
+  const paths = mode === "seller"
+    ? ["/account/seller", "/account/seller/items", "/account/seller/earnings"]
+    : mode === "buyer" ? ["/account/buyer", "/account/buyer/delivery"] : ["/account"];
+  return accountNavigation.filter(link => paths.includes(link.href) || ["/account/profile", "/account/messages"].includes(link.href));
+}
 export function adminNavigation(access: MenuAccess): WorkspaceLink[] {
   return [
     { href: "/admin", label: "Dashboard" },

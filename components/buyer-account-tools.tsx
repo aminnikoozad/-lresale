@@ -145,9 +145,9 @@ export function BuyerAccountTools() {
         {unread > 0 ? <Button type="button" variant="outline" onClick={markAlertsRead}><Bell /> Mark {unread} read</Button> : null}
       </div>
       {message ? <div className="success-banner">{message}</div> : null}
-      {loading ? <div className="empty-box"><p>Loading buyer account…</p></div> : loadError ? <div className="empty-box" role="alert"><p>{loadError}</p><Button type="button" onClick={() => void load()}>Try again</Button><Link href="/login?next=%2Faccount%2Fpurchases">Sign in</Link></div> : (
+      {loading ? <div className="empty-box"><p>Loading buyer account…</p></div> : loadError ? <div className="empty-box" role="alert"><p>{loadError}</p><Button type="button" onClick={() => void load()}>Try again</Button><Link href="/login?next=%2Faccount%2Fbuyer">Sign in</Link></div> : (
         <div className="buyer-tools-grid">
-          <section className="buyer-panel">
+          <section className="buyer-panel" id="saved">
             <h3><Heart /> Favorites</h3>
             {favorites.length ? favorites.map((favorite) => {
               const item = catalogMap.get(favorite.item_id);
@@ -160,7 +160,7 @@ export function BuyerAccountTools() {
             {alerts.length ? alerts.map((alert) => <article className={`buyer-row ${alert.read_at ? "" : "unread"}`} key={alert.id}><div>{catalogMap.has(alert.item_id) ? <Link href={`/item/${alert.item_id}`}><b>{catalogMap.get(alert.item_id)?.name}</b></Link> : <b>Item no longer listed</b>}<span>{cad(alert.old_price_cents)} → <strong>{cad(alert.new_price_cents)}</strong> · {date(alert.created_at)}</span></div></article>) : <p className="buyer-empty">Price drops for saved items will appear here automatically.</p>}
           </section>
 
-          <section className="buyer-panel purchases-panel">
+          <section className="buyer-panel purchases-panel" id="orders">
             <h3><PackageCheck /> My Purchases</h3>
             {orders.length ? orders.map((order) => {
               const items = orderItems.filter((item) => item.order_id === order.id);

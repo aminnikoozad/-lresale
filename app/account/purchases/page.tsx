@@ -1,25 +1,6 @@
-
-import { Localize } from "@/components/site-language";
-import { BrandWordmark } from "@/components/brand-wordmark";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { BuyerAccountTools } from "@/components/buyer-account-tools";
-import { createClient } from "@/lib/supabase/server";
+import { legacyAccountDestination } from "@/lib/account-workspaces";
 
-export const dynamic = "force-dynamic";
-
-export default async function PurchasesPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login?next=/account/purchases");
-  return <Localize>{(
-    <main className="account-shell buyer-account-page">
-      <header className="account-top">
-        <Link href="/" className="brand"><BrandWordmark /></Link>
-        <Link href="/account" className="back-home"><ArrowLeft /> Selling dashboard</Link>
-      </header>
-      <BuyerAccountTools />
-    </main>
-  )}</Localize>;
+export default async function LegacyPurchases({ searchParams }: {searchParams: Promise<Record<string, string | string[] | undefined>>}) {
+  redirect(legacyAccountDestination("/account/buyer", await searchParams));
 }

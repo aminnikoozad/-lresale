@@ -54,7 +54,7 @@ export async function createPickupSlot(formData: FormData) {
   } catch {
     redirect(message("Pickup slot could not be created. Check the time, area and capacity.", "error"));
   }
-  revalidatePath("/account");
+  revalidatePath("/account", "layout");
   revalidatePath("/admin/operations");
   redirect(message("Pickup slot created.", "success"));
 }
@@ -65,7 +65,7 @@ export async function togglePickupSlot(formData: FormData) {
   const active = text(formData, "active") === "true";
   const { error } = await supabase.rpc("admin_set_pickup_slot_active", { p_slot_id: slotId, p_active: active });
   if (error) redirect(message("Pickup slot could not be updated.", "error"));
-  revalidatePath("/account");
+  revalidatePath("/account", "layout");
   revalidatePath("/admin/operations");
   redirect(message(`Pickup slot ${active ? "activated" : "paused"}.`, "success"));
 }
@@ -76,7 +76,7 @@ export async function toggleServiceArea(formData: FormData) {
   const active = text(formData, "active") === "true";
   const { error } = await supabase.rpc("admin_set_service_area_active", { p_area_id: areaId, p_active: active });
   if (error) redirect(message("Service area could not be updated.", "error"));
-  revalidatePath("/account");
+  revalidatePath("/account", "layout");
   revalidatePath("/admin/operations");
   redirect(message(`Service area ${active ? "activated" : "paused"}.`, "success"));
 }
@@ -100,7 +100,7 @@ export async function updatePickupRequestStatus(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/operations");
-  revalidatePath("/account");
+  revalidatePath("/account", "layout");
   redirect(message("Pickup request status updated.", "success", "pickup-requests"));
 }
 
