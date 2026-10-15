@@ -130,6 +130,7 @@ export default async function Home() {
         <a href="#shop">All finds</a>
         {navCategories.map((entry) => <a key={entry.value} href={`#${entry.value}`}>{entry.label}</a>)}
         <Link href="/sell-with-shikimomo" className="market-how-link">How it works <ArrowRight aria-hidden="true" /></Link>
+        <Link href="/support">Contact &amp; support</Link>
       </nav>
 
       {launchOffer.active ? (
@@ -191,6 +192,7 @@ export default async function Home() {
         <div className="brand"><BrandWordmark /></div>
         <p>{pilot.enabled ? `${navCategories.map((entry) => entry.label).join(" · ")} pilot` : "Women · Men · Kids · Shoes · Accessories · Electronics · Home & Decor"}</p>
         <div className="footer-links">
+          <Link href="/support">Contact &amp; support</Link>
           <Link href="/sell-with-shikimomo">Seller guide</Link>
           <Link href="/seller-terms">Seller terms</Link>
           <Link href="/pickup-policy">Pickup policy</Link>

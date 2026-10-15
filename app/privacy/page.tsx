@@ -1,3 +1,4 @@
+import { localizedMetadata } from "@/lib/localized-metadata";
 
 import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
@@ -6,10 +7,12 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 
-export const metadata: Metadata = {
+export function generateMetadata(): Promise<Metadata> {
+  return localizedMetadata({
   title: "Privacy Policy | Shikimomo",
   description: "How Shikimomo collects, uses, protects and handles personal information.",
-};
+}, {"title": "Politique de confidentialité", "description": "Comment Shikimomo recueille, utilise et protège les renseignements personnels."});
+}
 
 function Contact() {
   return <Localize>{<p><strong>{siteConfig.privacyOfficerTitle}</strong><br />{siteConfig.businessName}{siteConfig.privacyEmail ? <><br /><a href={`mailto:${siteConfig.privacyEmail}`}>{siteConfig.privacyEmail}</a></> : null}{siteConfig.businessAddress ? <><br />{siteConfig.businessAddress}</> : null}{siteConfig.businessPhone ? <><br />{siteConfig.businessPhone}</> : null}</p>}</Localize>;

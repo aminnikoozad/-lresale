@@ -1,3 +1,4 @@
+import { localizedMetadata } from "@/lib/localized-metadata";
 
 import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
@@ -10,10 +11,12 @@ import { loadLaunchSellerOffer } from "@/lib/launch-offer";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+export function generateMetadata(): Promise<Metadata> {
+  return localizedMetadata({
   title: "Pickup & Missed Pickup Policy | Shikimomo",
   description: "Shikimomo pickup fees, batch service fee, Bag eligibility, confirmation and missed pickup policy.",
-};
+}, {"title": "Politique de collecte et frais", "description": "Frais de collecte Shikimomo, frais de service du lot, admissibilité au sac, confirmation et collectes manquées."});
+}
 
 export default async function PickupPolicyPage() {
   const supabase = createPublicClient();
@@ -35,7 +38,7 @@ export default async function PickupPolicyPage() {
       <div className="policy-hero"><p className="eyebrow dark">Customer policy</p><h1>Pickup &amp; Intake Fee Policy</h1><p>Pickup and the regular batch service fee are shown before a new collection request is submitted. Active promotional waivers are applied automatically at successful submission.</p><small>Updated September 25, 2026</small></div>
 
       {launchOffer.active ? (
-        <section className="policy-highlight"><BadgeCheck/><div><h2>Launch Offer — First {launchOffer.maxClaims} Sellers</h2><p>The first {launchOffer.maxClaims} eligible sellers to successfully submit their <strong>first collection request</strong> receive a waiver of the regular <strong>{waivedServiceFee} batch service fee</strong> on that first batch. {launchOffer.remaining} launch spots currently remain.</p><p><strong>Creating an account does not reserve or consume a spot.</strong> A spot is claimed only when the first collection request is successfully saved. Each seller can claim the offer once, and previous collection requests make that seller ineligible for a later claim.</p><p>The offer has no scheduled calendar end date. It ends automatically when claim #{launchOffer.maxClaims} is used. After that, the regular {serviceFee} batch service fee applies to all new batches. The flat {lowValuePickupFee} pickup transportation fee for pickups below {threshold} is separate and is not waived.</p></div></section>
+        <section className="policy-highlight"><BadgeCheck/><div><h2>Launch Offer — First {launchOffer.maxClaims} Sellers</h2><p>The first {launchOffer.maxClaims} eligible sellers to successfully submit their <strong>first collection request</strong> receive a waiver of the regular <strong>{waivedServiceFee} batch service fee</strong> on that first batch. {launchOffer.remaining} launch spots currently remain.</p><p><strong>Creating an account does not reserve or consume a spot.</strong> A spot is claimed only when the first collection request is successfully saved. Each seller can claim the offer once, and previous collection requests make that seller ineligible for a later claim.</p><p>{`The offer has no scheduled calendar end date. It ends automatically when claim #${launchOffer.maxClaims} is used. After that, the regular ${serviceFee} batch service fee applies to all new batches. The flat ${lowValuePickupFee} pickup transportation fee for pickups below ${threshold} is separate and is not waived.`}</p></div></section>
       ) : null}
 
       <section className="policy-highlight"><Truck/><div><h2>{threshold}+ Free Priority Pickup</h2><p>When the estimated combined resale value of your pickup is <strong>{threshold} CAD or more</strong>, the transportation portion of pickup is free and the request receives priority handling.</p><p>A regular <strong>{serviceFee} batch service fee</strong> applies once per new batch unless an active promotion validly waives it. It covers processing and includes a Shikimomo Bag if you request one.</p></div></section>
@@ -44,7 +47,7 @@ export default async function PickupPolicyPage() {
 
       <section className="policy-highlight"><BadgeCheck/><div><h2>Shikimomo Bag vs. Your Own Bag / Box</h2><p>A Shikimomo Bag request is available when the submitted items have an estimated combined resale value of at least <strong>{bagMinimum}</strong>.</p><p>The Shikimomo Bag is <strong>included in the same regular {serviceFee} batch service fee</strong>. There is no separate Bag charge. You may also use your own suitable bag or box. When an eligible promotion waives the batch service fee, there is still no separate Bag charge.</p></div></section>
 
-      <section><h2>{serviceFee} Regular Batch Service Fee</h2><p>Each new collection batch normally records one <strong>{serviceFee}</strong> service fee, not one processing fee plus another Bag fee. The same regular {serviceFee} total applies whether you request a Shikimomo Bag or use your own suitable bag/box.</p><p>The fee is intended to be deducted from seller earnings when settlement is available rather than charged to a payment card upfront. The fee or any valid waiver is snapshotted on the batch when the request is created, so a later policy change does not rewrite an older batch.</p></section>
+      <section><h2>{serviceFee} Regular Batch Service Fee</h2><p>{`Each new collection batch normally records one ${serviceFee} service fee, not one processing fee plus another Bag fee. The same regular ${serviceFee} total applies whether you request a Shikimomo Bag or use your own suitable bag/box.`}</p><p>The fee is intended to be deducted from seller earnings when settlement is available rather than charged to a payment card upfront. The fee or any valid waiver is snapshotted on the batch when the request is created, so a later policy change does not rewrite an older batch.</p></section>
 
       <section><h2>Pickup Confirmation</h2><p>Customers may receive a reminder approximately 24 hours before pickup and a second reminder closer to the pickup window. A pickup must be confirmed before Shikimomo dispatches it.</p><ul><li>Confirmed → eligible for dispatch.</li><li>Cancelled or rescheduled before dispatch → not treated as a missed pickup.</li><li>Not confirmed → Shikimomo does not dispatch the pickup.</li></ul></section>
 

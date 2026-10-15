@@ -1,3 +1,4 @@
+import { localizedMetadata } from "@/lib/localized-metadata";
 
 import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
@@ -6,7 +7,9 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 
-export const metadata: Metadata = { title: "Terms of Use | Shikimomo", description: "Terms governing use of the Shikimomo marketplace." };
+export function generateMetadata(): Promise<Metadata> {
+  return localizedMetadata({ title: "Terms of Use | Shikimomo", description: "Terms governing use of the Shikimomo marketplace." }, {"title": "Conditions d’utilisation", "description": "Conditions d’utilisation de la plateforme Shikimomo."});
+}
 
 export default function TermsPage() {
   return <Localize>{<main className="shipping-policy-page"><header className="policy-header"><Link href="/" className="brand"><BrandWordmark /></Link><Link href="/account">My account</Link></header><article className="legal-policy">

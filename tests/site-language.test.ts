@@ -50,3 +50,17 @@ test('asChild controls retain exactly one React element after localization',()=>
  assert.match(render('fr',tree),/href="\/shop"/);
  assert.match(render('en',tree),/Enter website/);
 });
+
+test('French customer copy uses articles, available places and fixed fees without changing amounts',()=>{
+ assert.equal(translate('fr','items'),'articles');
+ assert.equal(translate('fr','spots.'),'places.');
+ assert.equal(translate('fr','Nothing live here yet'),'Aucun article en vente pour le moment');
+ assert.equal(translate('fr','You send the pieces.'),'Vous nous confiez vos articles.');
+ const fee=translate('fr','The flat $5 pickup transportation fee still applies when the pickup’s estimated resale value is below $100.');
+ assert.equal(fee,'Les frais fixes de transport de collecte de $5 s’appliquent toujours lorsque la valeur de revente estimée est inférieure à $100.');
+ const consent=translate('fr','I understand this new batch records one $12 service fee. If I request a Shikimomo Bag, it is included in that fee and no separate Bag fee is added. This fee is intended to be deducted from seller earnings when settlement is available, not charged to my card upfront.');
+ assert.match(consent,/\$12/);assert.match(consent,/sans supplément/);assert.match(consent,/plutôt qu’à être facturés à l’avance sur ma carte/);
+ const policy=translate('fr','The offer has no scheduled calendar end date. It ends automatically when claim #100 is used. After that, the regular $12 batch service fee applies to all new batches. The flat $5 pickup transportation fee for pickups below $100 is separate and is not waived.');
+ assert.match(policy,/place no 100/);assert.match(policy,/\$12/);assert.match(policy,/\$5/);assert.match(policy,/\$100/);assert.match(policy,/ne sont pas exonérés/);
+ assert.doesNotMatch(policy,/ZXQ|undefined/);
+});

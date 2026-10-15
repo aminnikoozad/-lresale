@@ -1,3 +1,4 @@
+import { localizedMetadata } from "@/lib/localized-metadata";
 
 import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
@@ -8,10 +9,12 @@ import { BAND_NAMES } from "@/lib/postal";
 import { createPublicClient } from "@/lib/supabase/public";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = {
+export function generateMetadata(): Promise<Metadata> {
+  return localizedMetadata({
   title: "Shipping & Local Delivery | Shikimomo",
   description: "Canada-wide Shikimomo shipping policy and Montréal local free-delivery policy.",
-};
+}, {"title": "Expédition et livraison locale", "description": "Politique de livraison Shikimomo au Canada et de livraison locale gratuite à Montréal."});
+}
 
 type ShippingPolicy = {
   canadaWideEnabled: boolean;

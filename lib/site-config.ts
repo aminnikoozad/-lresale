@@ -25,6 +25,8 @@ export const siteConfig = {
   privacyEmail: clean(process.env.NEXT_PUBLIC_PRIVACY_EMAIL, 254),
   businessAddress: clean(process.env.NEXT_PUBLIC_BUSINESS_ADDRESS, 300),
   businessPhone: clean(process.env.NEXT_PUBLIC_BUSINESS_PHONE, 40),
+  supportHoursEn: clean(process.env.NEXT_PUBLIC_SUPPORT_HOURS_EN, 300),
+  supportHoursFr: clean(process.env.NEXT_PUBLIC_SUPPORT_HOURS_FR, 300),
   privacyOfficerTitle: clean(process.env.NEXT_PUBLIC_PRIVACY_OFFICER_TITLE, 120) || "Privacy Officer / Responsable de la protection des renseignements personnels",
 };
 
