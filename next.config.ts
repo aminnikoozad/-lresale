@@ -14,7 +14,7 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${supabaseOrigin}`,
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com https://api.openai.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://challenges.cloudflare.com",
   "media-src 'self' blob:",
   "upgrade-insecure-requests",
 ].join("; ");

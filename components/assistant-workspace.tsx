@@ -35,13 +35,10 @@ import {
 } from "@/lib/assistant-stylist";
 import { createCollectionRequest } from "@/app/account/actions";
 
-type VoiceConnection = {
-  pc: RTCPeerConnection;
-  stream: MediaStream;
-  audio: HTMLAudioElement;
-  channel: RTCDataChannel;
-  timer?: ReturnType<typeof setTimeout>;
-};
+import { SelfHostedVoice } from "@/lib/assistant-voice";
+
+// Photo search stays hidden until a local vision model is configured and tested.
+const imageSearchEnabled = false;
 const money = (v: number, fr: boolean) =>
   new Intl.NumberFormat(fr ? "fr-CA" : "en-CA", {
     style: "currency",
@@ -75,7 +72,10 @@ export function AssistantWorkspace() {
     >([]);
   const history = useRef(messages),
     bag = useRef(cart.items),
-    voiceRef = useRef<VoiceConnection | null>(null),
+    voiceRef = useRef<SelfHostedVoice | null>(null),
+    voiceSend = useRef<(value: string) => void>(() => {}),
+    requestAbort = useRef<AbortController | null>(null),
+    turn = useRef(0),
     busyRef = useRef(false),
     file = useRef<HTMLInputElement>(null),
     end = useRef<HTMLDivElement>(null),
@@ -92,15 +92,8 @@ export function AssistantWorkspace() {
     voiceAttempt.current += 1;
     const v = voiceRef.current;
     voiceRef.current = null;
-    if (v) {
-      clearTimeout(v.timer);
-      v.channel.close();
-      v.pc.close();
-      v.stream.getTracks().forEach((track) => track.stop());
-      v.audio.pause();
-      v.audio.srcObject = null;
-      voiceRef.current = null;
-    }
+    v?.stop();
+    if (v) { requestAbort.current?.abort(); turn.current++; busyRef.current = false; setBusy(false); }
     setVoice(false);
     setConnecting(false);
   }, []);
@@ -229,13 +222,16 @@ export function AssistantWorkspace() {
       active = false;
     };
   }, [identity, supabase]);
-  async function invoke(body: Record<string, unknown>) {
+  async function invoke(body: Record<string, unknown>, signal?: AbortSignal) {
     const response = await fetch("/api/assistant", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      signal,
     });
     const data = await response.json();
+    if (data?.code === "image_not_supported")
+      throw new Error(t("Please describe the item in words; photo matching is not enabled on this local model.", "Décrivez l’article : la recherche par photo n’est pas activée sur ce modèle local."));
     if (!response.ok || data?.error)
       throw new Error(
         t(
@@ -275,28 +271,11 @@ export function AssistantWorkspace() {
       });
     }
   }
-  async function send(value = text) {
-    if (busyRef.current || (!value.trim() && !image)) return;
-    if (voiceRef.current?.channel.readyState === "open" && !image) {
-      const channel = voiceRef.current.channel;
-      channel.send(
-        JSON.stringify({
-          type: "conversation.item.create",
-          item: {
-            type: "message",
-            role: "user",
-            content: [{ type: "input_text", text: value.trim() }],
-          },
-        }),
-      );
-      channel.send(JSON.stringify({ type: "response.create" }));
-      setMessages((m) => [
-        ...m,
-        { id: crypto.randomUUID(), role: "user", text: value.trim() },
-      ]);
-      setText("");
-      return;
-    }
+  async function send(value = text, fromVoice = false) {
+    if ((!value.trim() && !image) || (busyRef.current && !fromVoice)) return;
+    requestAbort.current?.abort();
+    const abort = new AbortController(); requestAbort.current = abort;
+    const currentTurn = ++turn.current;
     busyRef.current = true;
     setBusy(true);
     setError("");
@@ -323,188 +302,43 @@ export function AssistantWorkspace() {
         image: attachment,
         bag: bag.current.map((p) => ({ id: p.id, name: p.name })),
         visible_items: latestVisibleProducts<AssistantProduct>(history.current),
-      });
+      }, abort.signal);
+      if (abort.signal.aborted || currentTurn !== turn.current) return;
       await accept(result, requester);
+      if (voiceRef.current) void voiceRef.current.speak(result.reply);
     } catch (e) {
-      setError((e as Error).message);
+      if (!abort.signal.aborted && currentTurn === turn.current) setError((e as Error).message);
     } finally {
-      busyRef.current = false;
-      setBusy(false);
+      if (currentTurn === turn.current) { busyRef.current = false; setBusy(false); }
     }
   }
+  useEffect(() => { voiceSend.current = (value) => { void send(value, true); }; });
   async function startVoice() {
     if (connecting || voiceRef.current) return;
-    setMode("voice");
+    setMode("voice"); setConnecting(true); setError("");
     const attempt = ++voiceAttempt.current;
-    setConnecting(true);
-    setError("");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true },
-      });
-      if (attempt !== voiceAttempt.current) {
-        stream.getTracks().forEach((track) => track.stop());
-        return;
-      }
-      const pc = new RTCPeerConnection();
-      const audio = document.createElement("audio");
-      audio.autoplay = true;
-      audio.muted = muted;
-      const channel = pc.createDataChannel("oai-events");
-      const connection: VoiceConnection = { pc, audio, stream, channel };
-      voiceRef.current = connection;
-      pc.ontrack = (event) => {
-        audio.srcObject = event.streams[0];
-        void audio
-          .play()
-          .catch(() =>
-            setError(
-              t(
-                "Tap the sound button to enable audio.",
-                "Touchez le bouton du son pour activer l’audio.",
-              ),
-            ),
-          );
-      };
-      pc.onconnectionstatechange = () => {
-        if (["failed", "disconnected", "closed"].includes(pc.connectionState))
-          stopVoice();
-      };
-      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-      channel.onmessage = (event) => {
-        void (async () => {
-          if (voiceRef.current !== connection) return;
-          const e = JSON.parse(event.data);
-          if (
-            e.type ===
-              "conversation.item.input_audio_transcription.completed" &&
-            e.transcript
-          ) {
-            setMessages((m) => [
-              ...m,
-              {
-                id: e.item_id || crypto.randomUUID(),
-                role: "user",
-                text: e.transcript,
-              },
-            ]);
-          }
-          if (
-            e.type === "response.output_audio_transcript.done" &&
-            e.transcript
-          ) {
-            setMessages((m) => [
-              ...m,
-              {
-                id: crypto.randomUUID(),
-                role: "assistant",
-                text: e.transcript,
-              },
-            ]);
-          }
-          if (e.type === "response.function_call_arguments.done") {
-            try {
-              const requester = identityRef.current;
-              const args = JSON.parse(e.arguments);
-              const result = await invoke({
-                request: String(args.request || ""),
-                messages: history.current.slice(-12),
-                bag: bag.current.map((p) => ({ id: p.id, name: p.name })),
-                visible_items: latestVisibleProducts<AssistantProduct>(
-                  history.current,
-                ),
-                language: fr ? "fr" : "en",
-              });
-              if (voiceRef.current !== connection) return;
-              await accept(result, requester);
-              if (channel.readyState === "open") {
-                channel.send(
-                  JSON.stringify({
-                    type: "conversation.item.create",
-                    item: {
-                      type: "function_call_output",
-                      call_id: e.call_id,
-                      output: JSON.stringify(result),
-                    },
-                  }),
-                );
-                channel.send(JSON.stringify({ type: "response.create" }));
-              }
-            } catch {
-              if (channel.readyState === "open") {
-                channel.send(
-                  JSON.stringify({
-                    type: "conversation.item.create",
-                    item: {
-                      type: "function_call_output",
-                      call_id: e.call_id,
-                      output: JSON.stringify({
-                        error:
-                          "Store request failed. Do not claim success; ask the customer to retry.",
-                      }),
-                    },
-                  }),
-                );
-                channel.send(JSON.stringify({ type: "response.create" }));
-              }
-            }
-          }
-          if (e.type === "error")
-            setError(
-              t(
-                "Voice had a problem. You can continue typing.",
-                "Un problème vocal est survenu. Vous pouvez écrire.",
-              ),
-            );
-        })().catch(() =>
-          setError(t("Please try again.", "Veuillez réessayer.")),
-        );
-      };
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      const data = await invoke({
-        mode: "voice",
-        sdp: offer.sdp,
-        language: fr ? "fr" : "en",
-      });
-      if (voiceRef.current !== connection) return;
-      await pc.setRemoteDescription({ type: "answer", sdp: data.sdp });
-      setVoice(true);
-      setConnecting(false);
-      connection.timer = setTimeout(() => {
+    const connection = new SelfHostedVoice({
+      language: fr ? "fr" : "en",
+      onTranscript: (value) => { if (voiceRef.current === connection) voiceSend.current(value); },
+      onInterrupt: () => {
+        requestAbort.current?.abort(); turn.current++;
+        busyRef.current = false; setBusy(false);
+      },
+      onError: () => { if (voiceRef.current === connection) setError(t("Voice had a problem. You can continue typing.", "Un problème vocal est survenu. Vous pouvez écrire.")); },
+      onTimeout: () => {
         stopVoice();
-        setError(
-          t(
-            "Voice paused after 10 minutes. Start again whenever you like.",
-            "La voix est en pause après 10 minutes. Vous pouvez la relancer.",
-          ),
-        );
-      }, 600000);
-      channel.onopen = () => {
-        channel.send(
-          JSON.stringify({
-            type: "conversation.item.create",
-            item: {
-              type: "message",
-              role: "user",
-              content: [
-                {
-                  type: "input_text",
-                  text: `Continue this conversation in ${fr ? "French" : "English"}. Recent context: ${JSON.stringify(history.current.slice(-10).map((m) => ({ role: m.role, text: m.text })))}`,
-                },
-              ],
-            },
-          }),
-        );
-      };
+        setError(t("Voice paused after 10 minutes. Start again whenever you like.", "La voix est en pause après 10 minutes. Vous pouvez la relancer."));
+      },
+    });
+    connection.audio.muted = muted; voiceRef.current = connection;
+    try {
+      await connection.start();
+      if (attempt !== voiceAttempt.current || voiceRef.current !== connection) { connection.stop(); return; }
+      setVoice(true); setConnecting(false);
     } catch {
+      if (voiceRef.current !== connection) return;
       stopVoice();
-      setError(
-        t(
-          "Voice could not start. Check microphone permission, or use text chat.",
-          "La voix n’a pas démarré. Vérifiez le micro ou utilisez le clavardage.",
-        ),
-      );
+      setError(t("Voice is unavailable. Check microphone permission, or continue typing.", "La voix est indisponible. Vérifiez le micro ou continuez par écrit."));
     }
   }
   async function execute(op: AssistantOperation) {
@@ -937,7 +771,10 @@ export function AssistantWorkspace() {
               onClick={() => {
                 const next = !muted;
                 setMuted(next);
-                if (voiceRef.current) voiceRef.current.audio.muted = next;
+                if (voiceRef.current) {
+                  voiceRef.current.audio.muted = next;
+                  if (next) voiceRef.current.interrupt();
+                }
               }}
               aria-label={t(
                 "Toggle spoken replies",
@@ -969,6 +806,7 @@ export function AssistantWorkspace() {
             void send();
           }}
         >
+          {imageSearchEnabled && <>
           <button
             type="button"
             onClick={() => file.current?.click()}
@@ -989,6 +827,7 @@ export function AssistantWorkspace() {
               e.target.value = "";
             }}
           />
+          </>}
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}

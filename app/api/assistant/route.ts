@@ -55,7 +55,6 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         mode: body.mode,
         language: body.language,
-        sdp: body.sdp,
         messages: body.messages,
         request: body.request,
         image: body.image,
