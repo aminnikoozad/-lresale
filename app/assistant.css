@@ -121,6 +121,40 @@
   width: 100%;
   height: 100%;
 }
+/* A quiet greeting only on the home page's Smart Shopping choice. */
+.experience-option.assistant-option > .assistant-mark {
+  animation: smart-choice-greet 5.6s ease-in-out infinite;
+}
+.experience-option.assistant-option > .assistant-mark .assistant-mark-eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: smart-choice-blink 5.6s ease-in-out infinite;
+}
+.experience-option.assistant-option > .assistant-mark .assistant-mark-smile {
+  transform-box: fill-box;
+  transform-origin: center top;
+  animation: smart-choice-smile 5.6s ease-in-out infinite;
+}
+@keyframes smart-choice-greet {
+  0%, 35%, 100% { transform: translateY(0) rotate(0deg); }
+  12% { transform: translateY(-2px) rotate(-4deg); }
+  23% { transform: translateY(-2px) rotate(3deg); }
+}
+@keyframes smart-choice-blink {
+  0%, 42%, 47%, 100% { transform: scaleY(1); }
+  44%, 45% { transform: scaleY(.08); }
+}
+@keyframes smart-choice-smile {
+  0%, 8%, 38%, 100% { transform: scale(1); }
+  18%, 27% { transform: scale(1.18, 1.35); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .experience-option.assistant-option > .assistant-mark,
+  .experience-option.assistant-option > .assistant-mark .assistant-mark-eyes,
+  .experience-option.assistant-option > .assistant-mark .assistant-mark-smile {
+    animation: none;
+  }
+}
 .assistant-mark[data-active="true"] {
   animation: assistant-breathe 1.8s ease-in-out infinite;
 }
