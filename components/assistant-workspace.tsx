@@ -29,6 +29,10 @@ import {
   type AssistantProduct,
   type AssistantResult,
 } from "@/lib/assistant-contract";
+import {
+  sanitizeShoppingPreferences,
+  latestVisibleProducts,
+} from "@/lib/assistant-stylist";
 import { createCollectionRequest } from "@/app/account/actions";
 
 type VoiceConnection = {
@@ -258,7 +262,10 @@ export function AssistantWorkspace() {
       result.preferences &&
       Object.keys(result.preferences).length
     ) {
-      const next = { ...prefs, ...result.preferences };
+      const next = {
+        ...prefs,
+        ...sanitizeShoppingPreferences(result.preferences),
+      };
       setPrefs(next);
       await supabase.from("assistant_preferences").upsert({
         user_id: identity,
@@ -315,9 +322,7 @@ export function AssistantWorkspace() {
         language: fr ? "fr" : "en",
         image: attachment,
         bag: bag.current.map((p) => ({ id: p.id, name: p.name })),
-        visible_items: history.current
-          .flatMap((m) => m.result?.products || [])
-          .slice(-8),
+        visible_items: latestVisibleProducts<AssistantProduct>(history.current),
       });
       await accept(result, requester);
     } catch (e) {
@@ -405,9 +410,9 @@ export function AssistantWorkspace() {
                 request: String(args.request || ""),
                 messages: history.current.slice(-12),
                 bag: bag.current.map((p) => ({ id: p.id, name: p.name })),
-                visible_items: history.current
-                  .flatMap((m) => m.result?.products || [])
-                  .slice(-8),
+                visible_items: latestVisibleProducts<AssistantProduct>(
+                  history.current,
+                ),
                 language: fr ? "fr" : "en",
               });
               if (voiceRef.current !== connection) return;
@@ -503,9 +508,10 @@ export function AssistantWorkspace() {
     }
   }
   async function execute(op: AssistantOperation) {
-    const allowed=sanitizeOperation(op);
-    if(!allowed)throw new Error("This action is not available in Smart Shopping.");
-    op=allowed;
+    const allowed = sanitizeOperation(op);
+    if (!allowed)
+      throw new Error("This action is not available in Smart Shopping.");
+    op = allowed;
     setError("");
     if (op.name === "add_to_bag") {
       const products = history.current.flatMap((m) => m.result?.products || []);
@@ -1123,7 +1129,7 @@ function OperationReview({
   const [done, setDone] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
-  if(!op)return null;
+  if (!op) return null;
   return (
     <section className="assistant-review">
       <h3>{fr ? "Vérifiez avant de confirmer" : "Review before confirming"}</h3>

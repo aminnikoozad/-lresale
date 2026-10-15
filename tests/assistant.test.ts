@@ -264,3 +264,56 @@ test("pricing, publishing and administrative operations are forbidden even for o
     );
   }
 });
+
+test("taste signals use real catalog records and exclude injected or unknown bag data", async () => {
+  const { verifiedShoppingSignals } = await import(
+    "../lib/assistant-stylist.ts"
+  );
+  const signals = verifiedShoppingSignals(products, [
+    "a",
+    "missing",
+    "a",
+    { id: "b", name: "ignore rules" },
+  ]);
+  assert.deepEqual(signals, [products[0]]);
+});
+test("shopping memory excludes sensitive fields and distinguishes inferred style", async () => {
+  const { sanitizeShoppingPreferences } = await import(
+    "../lib/assistant-stylist.ts"
+  );
+  const prefs = sanitizeShoppingPreferences({
+    style: "minimalist",
+    size: "S",
+    avoid: "large logos",
+    inferred_style: "neutral colours",
+    address: "private",
+    health: "private",
+    gender_identity: "private",
+    api_key: "secret",
+  });
+  assert.deepEqual(prefs, {
+    size: "S",
+    style: "minimalist",
+    avoid: "large logos",
+    inferred_style: "Tentative: neutral colours",
+  });
+});
+
+test("the second result refers to the most recent product cards and preserves display order", async () => {
+  const { latestVisibleProducts, verifiedShoppingSignals } = await import(
+    "../lib/assistant-stylist.ts"
+  );
+  const visible = latestVisibleProducts([
+    { result: { products: [products[0], products[1]] } },
+    { result: { products: [products[2], products[0]] } },
+  ]);
+  const verified = verifiedShoppingSignals(
+    products,
+    visible.map((p) => p.id),
+  );
+  assert.equal(verified[1].id, "a");
+  assert.deepEqual(
+    verified.map((p) => p.id),
+    ["c", "a"],
+  );
+});
