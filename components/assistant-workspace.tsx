@@ -1,6 +1,7 @@
 "use client";
 
 import { BrandWordmark } from "./brand-wordmark";
+import { CustomerSupport } from "./customer-support";
 import { useLocale } from "./site-language";
 import { useRouter } from "next/navigation";
 import { PendingSubmitButton } from "./pending-submit-button";
@@ -63,6 +64,7 @@ export function AssistantWorkspace({ available = false, chatEnabled = true, voic
     [connecting, setConnecting] = useState(false),
     [muted, setMuted] = useState(false),
     [settings, setSettings] = useState(false),
+    [supportOpen, setSupportOpen] = useState(false),
     [memory, setMemory] = useState(memoryEnabled),
     [prefs, setPrefs] = useState<Record<string, string>>({}),
     [identity, setIdentity] = useState<string | null>(null),
@@ -474,7 +476,15 @@ export function AssistantWorkspace({ available = false, chatEnabled = true, voic
           <BrandWordmark />
         </Link>
         <div>
-
+          <button
+            type="button"
+            aria-controls="assistant-team-support"
+            aria-expanded={supportOpen}
+            onClick={() => { stopVoice(); setSupportOpen(!supportOpen); }}
+          >
+            <MessageCircle size={18} aria-hidden="true" />
+            {t("Support", "Soutien")}
+          </button>
           <button
             onClick={() => setSettings(!settings)}
             aria-label={t("Settings", "Réglages")}
@@ -492,6 +502,12 @@ export function AssistantWorkspace({ available = false, chatEnabled = true, voic
           </Link>
         </div>
       </header>
+      {supportOpen && <section id="assistant-team-support" className="assistant-settings assistant-team-support" aria-labelledby="assistant-team-title">
+        <div className="assistant-team-heading"><h2 id="assistant-team-title">{t("Contact the Shikimomo team", "Communiquez avec l’équipe Shikimomo")}</h2><button type="button" aria-label={t("Close support", "Fermer le soutien")} onClick={() => setSupportOpen(false)}><X size={18} aria-hidden="true" /></button></div>
+        <p>{t("Send a private message to our team without leaving Smart Shopping. Replies may not be immediate.", "Envoyez un message privé à notre équipe sans quitter l’achat intelligent. La réponse peut ne pas être immédiate.")}</p>
+        <CustomerSupport key={identity || "guest"} userId={identity} fr={fr} loginReturnTo="/assistant" />
+        <Link href="/support">{t("Contact details and account help", "Coordonnées et aide pour votre compte")}</Link>
+      </section>}
       {settings && (
         <aside className="assistant-settings">
           <h2>{t("Your assistant", "Votre assistant")}</h2>

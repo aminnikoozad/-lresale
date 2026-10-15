@@ -33,6 +33,19 @@ const products = [
     priceCents: 1000,
   },
 ];
+for (const count of [6, 7, 8]) {
+  test(`a size request returns all ${count} exact matches without wrong-size items`, () => {
+    const matching = Array.from({ length: count }, (_, i) => ({ ...products[0], id: `match-${i}` }));
+    const result = searchAssistantInventory([...matching, products[1], products[2]], { query: "t-shirt", category: "women", size: "small", color: "noir" });
+    assert.equal(result.exact.length, count);
+    assert.deepEqual(new Set(result.exact.map(r => r.product.id)), new Set(matching.map(p => p.id)));
+    assert.equal(result.alternatives.length, 0);
+  });
+}
+test("inventory search currently returns at most eight exact matches per call", () => {
+  const matching = Array.from({ length: 12 }, (_, i) => ({ ...products[0], id: `match-${i}` }));
+  assert.equal(searchAssistantInventory(matching, { size: "S" }).exact.length, 8);
+});
 test("French requests and named sizes find exact inventory without mixing alternatives", () => {
   const result = searchAssistantInventory(products, {
     query: "t-shirt",
