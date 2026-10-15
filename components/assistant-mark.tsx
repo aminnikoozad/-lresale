@@ -9,7 +9,15 @@ export function AssistantMark({ active = false }: { active?: boolean }) {
           strokeLinejoin="round"
         />
         <path
-          d="M24 29v5m17-5v5M28 40c3 2 6 2 9 0"
+          className="assistant-mark-eyes"
+          d="M24 29v5m17-5v5"
+          stroke="#37654f"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+        <path
+          className="assistant-mark-smile"
+          d="M28 40c3 2 6 2 9 0"
           stroke="#37654f"
           strokeWidth="3"
           strokeLinecap="round"
