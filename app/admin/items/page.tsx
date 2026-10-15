@@ -8,7 +8,7 @@ import { AdminItemTaxonomyFields } from "@/components/admin-item-taxonomy-fields
 import { activePilotCategories, loadPilotSettings } from "@/lib/pilot-settings";
 import { createClient } from "@/lib/supabase/server";
 import { formatCadFromCents, loadSellingRules } from "@/lib/business-rules";
-import { createAdminBundle, createAdminItem, publishAdminItem, reviewAdminItem } from "./actions";
+import { createAdminBundle, createAdminItem, publishAdminItem, reviewAdminItem, finalizeTeamItemPricing, finalizeTeamBundlePricing } from "./actions";
 import "./items.css";
 
 export const dynamic = "force-dynamic";
@@ -71,7 +71,13 @@ export default async function AdminItemsPage({ searchParams }: Props) {
 
   if (permissionResult.error || !permissionResult.data) redirect("/account");
 
-  const itemResult = await supabase.rpc("admin_item_list_v4");
+  const [itemResult, mandateResult, pendingBundlesResult] = await Promise.all([
+    supabase.rpc("admin_item_list_v4"),
+    supabase.rpc("admin_team_pricing_mandates"),
+    supabase.rpc("admin_pending_team_bundles"),
+  ]);
+  const teamPricingOwners = new Set<string>(Array.isArray(mandateResult.data) ? mandateResult.data : []);
+  const pendingTeamBundles = (pendingBundlesResult.data ?? []) as Array<{id: string; title: string; price: number}>;
   const customers = (customerResult.data ?? []) as Customer[];
   const items = (itemResult.data ?? []) as AdminItem[];
   const candidates = items.filter(
@@ -214,7 +220,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                 </label>
               )) : <p className="empty-note">No eligible bundle candidates yet.</p>}
             </div>
-            <button className="primary-action" type="submit" disabled={candidates.length < 2}>Create bundle & request seller approval</button>
+            <button className="primary-action" type="submit" disabled={candidates.length < 2}>Create bundle</button>
           </form>
         </section>
 
@@ -223,6 +229,13 @@ export default async function AdminItemsPage({ searchParams }: Props) {
             <div><h2>Inventory</h2><p>Every record shows who owns it, its pickup source, catalog attributes and live listing state.</p></div>
             <strong>{items.length} records</strong>
           </div>
+          {pendingTeamBundles.map(bundle => <form className="review-form" action={finalizeTeamBundlePricing} key={bundle.id}>
+            <h3>{bundle.title}</h3>
+            <p>Team pricing authorized. Every included item must have a recorded inspection.</p>
+            <input type="hidden" name="bundle_id" value={bundle.id} />
+            <input type="hidden" name="expected_price" value={bundle.price} />
+            <button type="submit">Finalize bundle pricing</button>
+          </form>)}
           <div className="admin-item-list">
             {items.length ? items.filter(item=>!ownerDefault||item.owner_id===ownerDefault).map((item) => (
               <article className="admin-item-row" key={item.item_id}>
@@ -246,7 +259,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                   <div><dt>Photos</dt><dd>{item.photo_urls?.length ?? 0}</dd></div>
                   <div><dt>Pickup request</dt><dd>{item.collection_request_id ? `${item.collection_request_id.slice(0, 8)}…` : "—"}</dd></div>
                   <div><dt>Seller share</dt><dd>{item.seller_bps == null ? "Not locked" : `${item.seller_bps / 100}%`}</dd></div>
-                  <div><dt>Seller approval</dt><dd>{item.seller_approved_at ? "Approved / locked" : "Pending"}</dd></div>
+                  <div><dt>Pricing</dt><dd>{item.seller_approved_at ? "Finalized / locked" : "Pending"}</dd></div>
                   <div><dt>Shop</dt><dd>{item.status === "listed" ? "LIVE" : "Not live"}</dd></div>
                 </dl>
 
@@ -255,6 +268,13 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                     {item.photo_urls.map((url, index) => <a href={url} target="_blank" rel="noreferrer" key={url}>Photo {index + 1}</a>)}
                   </div>
                 ) : <p className="form-note">Add at least one photo before publishing this item.</p>}
+
+                {teamPricingOwners.has(item.owner_id) && !item.seller_approved_at && ["accepted", "waiting_for_seller_approval"].includes(item.status) && item.initial_price_cents != null ? <form className="review-form" action={finalizeTeamItemPricing}>
+                  <input type="hidden" name="item_id" value={item.item_id} />
+                  <input type="hidden" name="expected_price" value={item.initial_price_cents} />
+                  <p>The seller authorized team pricing. Finalize the inspected item’s price and commission, then publish it without a separate seller approval.</p>
+                  <button type="submit">Finalize team pricing</button>
+                </form> : null}
 
                 {item.category === "home_decor" ? (
                   <p className="locked-note">Use the <Link href="/admin/home-decor">Home &amp; Decor inspection workflow</Link> for acceptance and publication.</p>
@@ -288,7 +308,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                     <button type="submit">Publish to Shop</button>
                   </form>
                 ) : (
-                  <p className="locked-note">Seller approved the price. Add a listing photo before publishing.</p>
+                  <p className="locked-note">Pricing is finalized. Add a listing photo before publishing.</p>
                 )}
               </article>
             )) : <p className="empty-note">No items have been added yet.</p>}

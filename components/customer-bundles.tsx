@@ -20,7 +20,7 @@ function titleCase(value: string) {
   return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-export async function CustomerBundles() {
+export async function CustomerBundles({ teamPricingAccepted = false }: { teamPricingAccepted?: boolean }) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -55,7 +55,7 @@ export async function CustomerBundles() {
           <h2>Your bundles</h2>
           <p>
             Lower-value eligible items may be grouped into one sellable bundle.
-            Review the bundle price and commission before it goes live.
+            Follow the bundle price and your commission in your account.
           </p>
         </div>
       </div>
@@ -129,7 +129,7 @@ export async function CustomerBundles() {
                   <dd>{finalEarnings != null ? money(finalEarnings) : "—"}</dd>
                 </div>
               </dl>
-              {requiresApproval ? (
+              {requiresApproval && teamPricingAccepted ? <p>Shikimomo will finalize this bundle’s price after inspection. No separate price approval is needed.</p> : requiresApproval ? (
                 <div className="pricing-approval">
                   <p>
                     By approving, you accept this bundle’s initial price and

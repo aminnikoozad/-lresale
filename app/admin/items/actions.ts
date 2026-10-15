@@ -300,6 +300,33 @@ export async function publishAdminItem(formData: FormData) {
   redirect(itemsMessage("Item published to the live shop.", "success"));
 }
 
+export async function finalizeTeamItemPricing(formData: FormData) {
+  const supabase = await authorizedClient();
+  const itemId = text(formData, "item_id");
+  const price = Number(text(formData, "expected_price"));
+  if (!itemId || !Number.isInteger(price) || price < 1 || price > 100_000_000) {
+    redirect(itemsMessage("Check the item and price.", "error"));
+  }
+  const { error } = await supabase.rpc("admin_finalize_team_item_pricing", { target_item_id: itemId, expected_price: price });
+  if (error) redirect(itemsMessage("Pricing could not be finalized. Check the seller authorization, physical inspection, current price and MFA.", "error"));
+  revalidatePath("/admin/items");
+  revalidatePath("/account");
+  revalidatePath("/account/operations");
+  redirect(itemsMessage("Team pricing finalized. Add listing photos and publish when ready.", "success"));
+}
+
+export async function finalizeTeamBundlePricing(formData: FormData) {
+  const supabase = await authorizedClient();
+  const bundleId = text(formData, "bundle_id");
+  const price = Number(text(formData, "expected_price"));
+  if (!bundleId || !Number.isInteger(price) || price < 1 || price > 100_000_000) redirect(itemsMessage("Check the bundle and price.", "error"));
+  const { error } = await supabase.rpc("admin_finalize_team_bundle_pricing", { target_bundle_id: bundleId, expected_price: price });
+  if (error) redirect(itemsMessage("Bundle pricing could not be finalized. Check seller authorization, inspection of every item, current price and MFA.", "error"));
+  revalidatePath("/admin/items");
+  revalidatePath("/account");
+  redirect(itemsMessage("Bundle pricing finalized and commission locked.", "success"));
+}
+
 export async function createAdminBundle(formData: FormData) {
   const supabase = await authorizedClient();
   const ownerId = text(formData, "owner_id");
@@ -329,5 +356,5 @@ export async function createAdminBundle(formData: FormData) {
 
   revalidatePath("/admin/items");
   revalidatePath("/account");
-  redirect(itemsMessage("Bundle created and sent for seller price approval.", "success"));
+  redirect(itemsMessage("Bundle created. Finalize team pricing if the seller has authorized it; otherwise seller approval is required.", "success"));
 }

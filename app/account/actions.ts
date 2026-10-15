@@ -35,6 +35,11 @@ export async function createCollectionRequest(formData: FormData) {
   if (!user) redirect("/login");
   if (isPhoneVerificationRequired() && !user.phone_confirmed_at) redirect("/verify-phone");
 
+  const mandate = await supabase.rpc("my_team_pricing_mandate");
+  if (!mandate.error && mandate.data && !mandate.data.accepted) {
+    redirect("/account/operations?type=error&message=Review%20and%20accept%20the%20team%20pricing%20terms%20before%20booking%20a%20collection.");
+  }
+
   const [rules, pilot] = await Promise.all([
     loadSellingRules(supabase),
     loadPilotSettings(supabase),

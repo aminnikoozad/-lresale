@@ -126,6 +126,7 @@ export default async function AccountPage({ searchParams }: Props) {
     launchOffer,
     pilot,
     params,
+    pricingMandate,
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -165,6 +166,7 @@ export default async function AccountPage({ searchParams }: Props) {
     loadLaunchSellerOffer(supabase),
     loadPilotSettings(supabase),
     searchParams,
+    supabase.rpc("my_team_pricing_mandate"),
   ]);
 
   const queryError =
@@ -243,6 +245,11 @@ export default async function AccountPage({ searchParams }: Props) {
           </form>
         </div>
       </header>
+      {!pricingMandate.error && pricingMandate.data && !pricingMandate.data.accepted ? <section className="seller-review-box section-wrap">
+        <h2>Pricing by Shikimomo</h2>
+        <p>Before submitting a new collection request, review and accept the team pricing terms once. Shikimomo will then set prices after inspection without asking you to approve each item.</p>
+        <Link href="/account/operations">Review team pricing terms</Link>
+      </section> : null}
       <Dashboard
         name={displayName}
         username={username}
@@ -303,7 +310,7 @@ export default async function AccountPage({ searchParams }: Props) {
             name: item.name,
             status:
               item.initial_approved_price_cents != null &&
-              !item.seller_pricing_approved_at &&
+              !item.seller_pricing_approved_at && !pricingMandate.data?.accepted &&
               ["accepted", "waiting_for_seller_approval"].includes(item.status)
                 ? "Pricing approval required"
                 : titleCase(item.status),
@@ -331,7 +338,7 @@ export default async function AccountPage({ searchParams }: Props) {
                 : "—",
             requiresApproval:
               item.initial_approved_price_cents != null &&
-              !item.seller_pricing_approved_at &&
+              !item.seller_pricing_approved_at && !pricingMandate.data?.accepted &&
               ["accepted", "waiting_for_seller_approval"].includes(item.status),
           };
         })}
@@ -382,7 +389,7 @@ export default async function AccountPage({ searchParams }: Props) {
         <CommissionSection />
       </div>
       <div className="dashboard" style={{ paddingTop: 0, paddingBottom: 24 }}>
-        <CustomerBundles />
+        <CustomerBundles teamPricingAccepted={Boolean(pricingMandate.data?.accepted)} />
       </div>
       <div className="dashboard" style={{ paddingTop: 0, paddingBottom: 16 }}>
         <Link className="back-home" href="/account/operations">
