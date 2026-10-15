@@ -39,3 +39,14 @@ test('dynamic UI translations preserve amounts and user-provided parameters',()=
  assert.equal(translate('fr','Free local delivery in Montréal and within the configured 20 km local radius when the delivery address is eligible. Shipping fees apply outside the local area.'),'Livraison locale gratuite à Montréal et dans le rayon configuré de 20 km, selon l’admissibilité de l’adresse. Des frais s’appliquent à l’extérieur de cette zone.');
  assert.equal(translate('fr','customer-provided text 56'),'customer-provided text 56');
 });
+
+test('asChild controls retain exactly one React element after localization',()=>{
+ function SingleChild({children}:{children?:React.ReactNode}) {
+  const only=React.Children.only(children);
+  assert.ok(React.isValidElement(only));
+  return only;
+ }
+ const tree=React.createElement(SingleChild,null,React.createElement('a',{href:'/shop'},'Enter website'));
+ assert.match(render('fr',tree),/href="\/shop"/);
+ assert.match(render('en',tree),/Enter website/);
+});
