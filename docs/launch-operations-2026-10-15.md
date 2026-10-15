@@ -36,3 +36,12 @@ After authorized access is restored:
 ## Verification boundaries
 
 Local database tests prove permission and state behavior in fixtures; they do not apply migrations remotely. A site response or build does not prove authenticated operational flows, mailbox delivery, carrier rates, seller payouts or payment processing.
+
+## Production verification result
+
+- Release `4eb92d46d54491307ea570ac5f775f917cea3be8` reached READY on shikimomo.com.
+- Unauthenticated expiry request returned 401 as required. Authorized expiry returned 503; runtime logs reported `Invalid API key`. This is not a successful cleanup run.
+- The public `NEXT_PUBLIC_SUPABASE_URL` in Vercel points to `qisvbuqppovaemfmiujr`, whereas the established storefront project is `lsdhobwrnmlkqnvkamlt`. No database was switched and no private key was read or reused to bypass denied administrative access.
+- Align server-only keys and URL configuration with the established storefront project, redeploy, then verify an authorized expiry request returns 200. Restore Supabase management access before applying the prepared pricing migration.
+- Public home, shop, support, account entry, seller terms and guide returned 200 after release; admin readiness redirected unauthenticated access to the restricted login.
+- Add an explicit project-consistency check for server storage/cleanup and display the mismatch in admin readiness. Key presence alone must not mark a mismatched configuration ready.
