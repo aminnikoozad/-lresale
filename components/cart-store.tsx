@@ -79,7 +79,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!ready) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch { /* The in-memory bag remains usable when browser storage is unavailable. */ }
   }, [items, ready]);
 
   const add = useCallback((item: CartItem) => {

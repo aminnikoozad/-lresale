@@ -32,7 +32,7 @@ test("primary and secondary neutral text meet normal-text contrast", () => {
 
 test("simple hero removes decorative lettering and card numbering without removing search/navigation", () => {
   assert.doesNotMatch(page, /market-image-caption|market-discover-number|<em>/);
-  assert.match(page, /Secondhand,<br \/>made simple\./);
+  assert.match(page, /Find your next<br \/>favourite piece\./);
   assert.match(page, /name="q"/);
   assert.match(page, /aria-label="Shop departments"/);
 });

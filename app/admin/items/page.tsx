@@ -8,7 +8,7 @@ import { AdminItemTaxonomyFields } from "@/components/admin-item-taxonomy-fields
 import { activePilotCategories, loadPilotSettings } from "@/lib/pilot-settings";
 import { createClient } from "@/lib/supabase/server";
 import { formatCadFromCents, loadSellingRules } from "@/lib/business-rules";
-import { createAdminBundle, createAdminItem, publishAdminItem, reviewAdminItem, finalizeTeamItemPricing, finalizeTeamBundlePricing } from "./actions";
+import { saveClothingEvidence, createAdminBundle, createAdminItem, publishAdminItem, reviewAdminItem, finalizeTeamItemPricing, finalizeTeamBundlePricing } from "./actions";
 import "./items.css";
 
 export const dynamic = "force-dynamic";
@@ -263,6 +263,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                   <div><dt>Shop</dt><dd>{item.status === "listed" ? "LIVE" : "Not live"}</dd></div>
                 </dl>
 
+                {["women", "men", "kids"].includes(item.category) && item.status !== "sold" ? <details><summary>Clothing photos &amp; measurements</summary><form className="review-form" action={saveClothingEvidence}><input type="hidden" name="item_id" value={item.item_id}/><p>Assign a role to each uploaded photo. Front, back and size label are required. Each disclosed defect needs its own photo. Measurements are optional and must be measured, never estimated.</p>{(item.photo_urls??[]).map((url,index)=><div key={url}><a href={url} target="_blank" rel="noreferrer">Photo {index+1}</a><input type="hidden" name="photo_url" value={url}/><label>Photo role<select name="photo_role" defaultValue="detail"><option value="detail">Detail</option><option value="front">Front</option><option value="back">Back</option><option value="size_label">Size label</option><option value="defect">Defect</option></select></label><label>Defect shown (only for defect photos)<input name="photo_defect" maxLength={300}/></label></div>)}<label>Disclosed defects (one per line)<textarea name="defects" maxLength={2400}/></label>{["chest","waist","hip","length","sleeve","inseam","shoulder"].map(key=><label key={key}>{key} (cm)<input name={`measurement_${key}`} type="number" step="0.1" min="0.1" max="500"/></label>)}<button type="submit">Save clothing evidence</button></form></details> : null}
                 {item.photo_urls?.length ? (
                   <div className="item-photo-links">
                     {item.photo_urls.map((url, index) => <a href={url} target="_blank" rel="noreferrer" key={url}>Photo {index + 1}</a>)}

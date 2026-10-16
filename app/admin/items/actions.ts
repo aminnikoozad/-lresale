@@ -358,3 +358,14 @@ export async function createAdminBundle(formData: FormData) {
   revalidatePath("/account", "layout");
   redirect(itemsMessage("Bundle created. Finalize team pricing if the seller has authorized it; otherwise seller approval is required.", "success"));
 }
+
+export async function saveClothingEvidence(form: FormData) {
+ const supabase = await authorizedClient();
+ const urls = form.getAll("photo_url").map(String), roles = form.getAll("photo_role").map(String), notes = form.getAll("photo_defect").map(String);
+ const photos = urls.map((url,i)=>({url,role:roles[i],...(roles[i]==="defect"?{defect:notes[i]?.trim()}: {})}));
+ const measurements: Record<string,number> = {};
+ for(const key of ["chest","waist","hip","length","sleeve","inseam","shoulder"]) {const raw=text(form,`measurement_${key}`);if(raw)measurements[key]=Number(raw);}
+ const {error}=await supabase.rpc("admin_save_clothing_evidence",{p_item:text(form,"item_id"),p_photos:photos,p_measurements:measurements,p_defects:text(form,"defects").split(/\r?\n/).map(s=>s.trim()).filter(Boolean)});
+ if(error)redirect(itemsMessage("Clothing evidence could not be saved. Check photo roles, defect photos, measurements and MFA.","error"));
+ revalidatePath("/admin/items");redirect(itemsMessage("Clothing evidence saved.","success"));
+}

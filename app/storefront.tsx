@@ -7,13 +7,11 @@ import { connection } from "next/server";
 import type { HomeData } from "@/lib/home-decor";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BadgePercent, Search, ShieldCheck, Truck, UserRound, PackageCheck, Camera } from "lucide-react";
+import { ArrowRight, Search, ShieldCheck, Truck, UserRound, PackageCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CartNavLink } from "@/components/cart-store";
 import { createPublicClient } from "@/lib/supabase/public";
 import { CATALOG_CATEGORIES } from "@/lib/catalog-taxonomy";
-import { formatCadFromCents } from "@/lib/business-rules";
-import { loadLaunchSellerOffer } from "@/lib/launch-offer";
 import { loadPilotSettings, pilotAllowsCategory } from "@/lib/pilot-settings";
 import { ShopCatalog, type CatalogCategory, type CatalogProduct } from "./shop-catalog";
 
@@ -47,12 +45,11 @@ export default async function Home() {
   await connection();
   const requestTime = new Date().getTime();
   const supabase = createPublicClient();
-  const [{ data, error }, { data: shippingData, error: shippingError }, { data: homeData, error: homeError }, pilot, launchOffer] = await Promise.all([
+  const [{ data, error }, { data: shippingData, error: shippingError }, { data: homeData, error: homeError }, pilot] = await Promise.all([
     supabase.rpc("catalog_items_v3"),
     supabase.rpc("get_shipping_policy"),
     supabase.rpc("home_catalog_details"),
     loadPilotSettings(supabase),
-    loadLaunchSellerOffer(supabase),
   ]);
 
   if (error) console.error("[home] catalog load failed", { code: error.code, message: error.message });
@@ -100,7 +97,6 @@ export default async function Home() {
     }));
 
   const navCategories = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value));
-  const waivedServiceFee = formatCadFromCents(launchOffer.waivedServiceFeeCents);
 
   const departmentNotes: Record<string, string> = {
     women: "Tops, dresses, denim and more.",
@@ -116,7 +112,7 @@ export default async function Home() {
         <Link href="/" className="brand" aria-label="Shikimomo home"><BrandWordmark /></Link>
         <form className="market-header-search" action="/shop#shop" method="get" role="search">
           <Search aria-hidden="true" />
-          <input type="search" name="q" aria-label="Search the Shikimomo catalog" placeholder="Search brands or pieces" />
+          <input type="search" name="q" aria-label="Search the Shikimomo catalog" placeholder="Search type, brand or size" />
           <button type="submit" aria-label="Search catalog"><ArrowRight aria-hidden="true" /></button>
         </form>
         <div className="header-actions">
@@ -133,25 +129,13 @@ export default async function Home() {
         <Link href="/support">Contact &amp; support</Link>
       </nav>
 
-      {launchOffer.active ? (
-        <section className="shipping-strip" aria-label="Launch seller offer">
-          <BadgePercent />
-          <div>
-            <strong>Launch offer: first {launchOffer.maxClaims} sellers get the {waivedServiceFee} batch service fee waived on their first collection.</strong>
-            <span>{launchOffer.remaining} spots remain. Creating an account does not reserve a spot; the offer is claimed only when a first collection request is successfully submitted. The flat $5 pickup fee still applies when the pickup value is below $100.</span>
-          </div>
-          <Link href="/sell-with-shikimomo#launch-offer">Offer details</Link>
-        </section>
-      ) : null}
-
       <section className="hero" aria-labelledby="home-hero-title">
         <div className="hero-inner">
           <div className="hero-copy">
-            <h1 id="home-hero-title">Secondhand,<br />made simple.</h1>
-            <p>Shop inspected clothing, or send us the pieces you no longer wear. We handle preparation, photography and resale.</p>
+            <h1 id="home-hero-title">Find your next<br />favourite piece.</h1>
+            <p>Find clothing by size, condition and price. See the details of each piece before adding it to your bag.</p>
             <div className="hero-actions">
               <Button asChild size="lg"><a href="#shop">Explore the shop <ArrowRight aria-hidden="true" /></a></Button>
-              <Button asChild size="lg" variant="outline"><Link href="/sell-with-shikimomo">Sell your pieces</Link></Button>
             </div>
           </div>
           <div className="hero-media">
@@ -162,14 +146,14 @@ export default async function Home() {
 
       <div className="market-service-strip" aria-label="How Shikimomo is different">
         <span><ShieldCheck aria-hidden="true" /><span><strong>Checked before listing</strong>Real pieces. Accountable inspection.</span></span>
-        <span><Camera aria-hidden="true" /><span><strong>We do the resale work</strong>Preparation, photography and listing.</span></span>
-        <span><PackageCheck aria-hidden="true" /><span><strong>Know where you stand</strong>Clear condition, prices and seller terms.</span></span>
+        <span><PackageCheck aria-hidden="true" /><span><strong>Details before you decide</strong>Size, colour, condition and price.</span></span>
+        <span><PackageCheck aria-hidden="true" /><span><strong>Know where you stand</strong>Shipping and policies before payment.</span></span>
       </div>
 
       <section className="market-discover" aria-labelledby="market-discover-title">
         <div className="market-discover-heading"><div><h2 id="market-discover-title">Shop by department.</h2></div><a href="#shop">Explore all finds <ArrowRight aria-hidden="true" /></a></div>
         <div className="market-discover-grid">
-          {navCategories.map((entry) => <a className={`market-discover-card department-${entry.value}`} href={`#${entry.value}`} key={entry.value}>
+          {navCategories.filter((entry) => catalogProducts.some(p => p.category === entry.value)).map((entry) => <a className={`market-discover-card department-${entry.value}`} href={`#${entry.value}`} key={entry.value}>
             <span className="market-discover-label">{entry.label}<ArrowRight aria-hidden="true" /></span>
             <span className="market-discover-description">{departmentNotes[entry.value] ?? "Explore available items."}</span>
             <span className="market-discover-count">{error ? "Explore department" : `${catalogProducts.filter((product) => product.category === entry.value).length} pieces available`}</span>
@@ -180,11 +164,6 @@ export default async function Home() {
       <ShopCatalog products={catalogProducts} now={requestTime} activeCategories={activeCategories} loadError={Boolean(error)} />
 
       <section className="shipping-strip" aria-label="Canada delivery policy"><Truck aria-hidden="true" /><div><strong>{shipping.canadaWideEnabled === false ? "Delivery, with the details up front." : "Finds worth sending across Canada."}</strong><span>{shippingSummary}</span></div><Link href="/shipping-policy">Delivery details <ArrowRight aria-hidden="true" /></Link></section>
-
-      <section id="sell" className="process-section">
-        <div className="process-intro"><p className="eyebrow">Selling with Shikimomo</p><h2>You send it.<br />We handle the rest.</h2><p>For the pieces you no longer reach for: check the acceptance rules and fees up front. Our team takes over after collection and decides what can be listed following physical inspection.</p><Button asChild variant="secondary"><Link href="/sell-with-shikimomo">See the seller guide</Link></Button></div>
-        <ol className="steps"><li><b>01</b><div><h3>Prepare your collection</h3><p>Check the $8 individual item minimum and $60 estimated Bag minimum, then request an available pickup window.</p></div></li><li><b>02</b><div><h3>We collect and prepare everything</h3><p>Our team receives, identifies, inspects, photographs, prices and lists accepted items in the categories currently enabled by Shikimomo.</p></div></li><li><b>03</b><div><h3>Follow every step.</h3><p>We handle buyers and the sale. Your item progress, batch counts, commission and seller earnings stay visible in your account.</p></div></li></ol>
-      </section>
 
       <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Company-managed shopping</p><h2>Listings are prepared and reviewed by Shikimomo.</h2><p>{pilot.enabled ? "During the pilot, only the categories enabled in Pilot Settings are accepted and published." : "Shikimomo reviews accepted items before publication."} If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
 
@@ -198,6 +177,7 @@ export default async function Home() {
           <Link href="/pickup-policy">Pickup policy</Link>
           <Link href="/shipping-policy">Shipping policy</Link>
           <Link href="/returns">Returns & refunds</Link>
+          <Link href="/account/preferences">New arrivals by email</Link>
           <Link href="/privacy">Privacy</Link>
           <Link href="/terms">Terms</Link>
           <Link href="/account">Customer account</Link>

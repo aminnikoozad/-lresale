@@ -1,4 +1,5 @@
 "use client";
+import { recordBuyerEvent } from "@/lib/buyer-analytics";
 import { Localize } from "@/components/site-language";
 
 
@@ -18,7 +19,7 @@ export function AddToCartButton({ item, compact = false }: { item: CartItem; com
       size={compact ? "icon-sm" : "default"}
       variant={inCart ? "secondary" : "default"}
       aria-label={inCart ? `${item.name} is in your bag` : `Add ${item.name} to bag`}
-      onClick={() => add(item)}
+      onClick={() => { if (!inCart) { add(item); void recordBuyerEvent("add_to_cart",[item.id]); } }}
     >
       {inCart ? <Check /> : <ShoppingBag />}
       {!compact ? (inCart ? "In your bag" : "Add to bag") : null}

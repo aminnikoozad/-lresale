@@ -1,4 +1,8 @@
 
+import { BuyerViewEvent } from "@/components/buyer-view-event";
+import { AvailableAlternatives } from "@/components/available-alternatives";
+import { catalogLocation,emptyCatalogFilters } from "@/lib/catalog-navigation";
+import { productAlternatives } from "@/lib/product-alternatives";
 import { Localize } from "@/components/site-language";
 import {
   fieldLabel,
@@ -22,7 +26,7 @@ import {
   FavoriteButton,
 } from "@/components/storefront-actions";
 
-type Props = { params: Promise<{ id: string }> };
+type Props = { params: Promise<{ id: string }>; searchParams:Promise<{sizes?:string|string[]}> };
 type Product = {
   item_id: string;
   name: string;
@@ -40,6 +44,10 @@ type Product = {
   price_cents: number;
   published_at: string | null;
   inspected_at: string | null;
+  availability?: "available" | "reserved" | "sold";
+  clothing_photos?: {url:string;role:string;defect?:string}[];
+  measurements?: Record<string,number>;
+  disclosed_defects?:string[];
 };
 
 function cad(cents: number) {
@@ -57,20 +65,23 @@ function inspectionDate(value: string | null) {
   );
 }
 
-export default async function ProductPage({ params }: Props) {
-  const { id } = await params;
+export default async function ProductPage({ params, searchParams }: Props) {
+  const [{ id }, search] = await Promise.all([params,searchParams]);
+  const selectedSizes=(Array.isArray(search.sizes)?search.sizes:search.sizes?[search.sizes]:[]).filter(s=>s.length<=40).slice(0,10);
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
 
   const supabase = createPublicClient();
-  const { data, error } = await supabase.rpc("catalog_item_detail_v3", {
+  let { data, error } = await supabase.rpc("buyer_catalog_item_detail", {
     target_item_id: id,
   });
+  // Backward compatibility until the reviewed additive migration is applied.
+  if (error?.code === "PGRST202") ({data,error} = await supabase.rpc("catalog_item_detail_v3", {target_item_id:id}));
   if (error) {
     console.error("[product] catalog detail failed", {
       code: error.code,
       message: error.message,
     });
-    notFound();
+    return <Localize><main className="section-wrap"><h1>Item temporarily unavailable</h1><p>We could not verify this item. Please try again.</p><Link href="/shop">Back to shop</Link></main></Localize>;
   }
 
   const product = ((data ?? [])[0] ?? null) as Product | null;
@@ -85,7 +96,7 @@ export default async function ProductPage({ params }: Props) {
   const homePhotos = galleryOrder(
     (homeResult?.data?.[0]?.photos ?? []) as HomePhoto[],
   );
-  const photos = homePhotos.length
+  const photos = product.clothing_photos?.length ? product.clothing_photos : homePhotos.length
     ? homePhotos
     : product.photo_urls.map((url) => ({ url, role: "" }));
   const cartItem = {
@@ -100,11 +111,17 @@ export default async function ProductPage({ params }: Props) {
     weightKg: typeof home?.weight_kg === "number" ? home.weight_kg : null,
   };
   const inspectedOn = inspectionDate(product.inspected_at);
+  const available = !product.availability || product.availability === "available";
+  const catalog = await supabase.rpc("catalog_items_v3");
+  const candidates: {id:string;name:string;brand:string;category:string;subcategory:string|null;size:string|null;priceCents:number;photoUrl:string}[] = (catalog.error ? [] : catalog.data ?? []).filter((p: {photo_url?:string}) => p.photo_url).map((p: Product & {photo_url:string}) => ({id:p.item_id,name:p.name,brand:p.brand,category:p.category,subcategory:p.subcategory,size:p.size,priceCents:p.price_cents,photoUrl:p.photo_url}));
+  const alternatives = productAlternatives({id,category:product.category,subcategory:product.subcategory,size:product.size,priceCents:product.price_cents}, candidates);
+
 
   return <Localize>{(
     <main className="product-page section-wrap">
+      <BuyerViewEvent name="view_item" ids={[id]} />
       <div className="product-topbar">
-        <Link href="/shop#shop">
+        <Link href={catalogLocation("/shop","",{...emptyCatalogFilters(),sizes:selectedSizes})}>
           <ChevronLeft /> Back to shop
         </Link>
         <Link href="/cart">View bag</Link>
@@ -134,7 +151,7 @@ export default async function ProductPage({ params }: Props) {
         <aside className="product-summary">
           <div className="product-kicker-row">
             <p className="eyebrow dark">{product.brand}</p>
-            <span className="one-of-one-badge">One of one</span>
+
           </div>
           <h1 translate="no">{product.name}</h1>
           <strong className="product-price">{cad(product.price_cents)}</strong>
@@ -144,11 +161,11 @@ export default async function ProductPage({ params }: Props) {
           </p>
 
           <div className="product-actions">
-            <AddToCartButton item={cartItem} />
+            {available ? <AddToCartButton item={cartItem} /> : <button disabled className="buyer-status">{product.availability === "sold" ? "Sold" : "Temporarily reserved"}</button>}
             <FavoriteButton itemId={product.item_id} />
           </div>
 
-          <div className="product-trust product-trust-primary">
+          {product.inspected_at ? <div className="product-trust product-trust-primary">
             <ShieldCheck />
             <div>
               <b>Inspected by Shikimomo</b>
@@ -158,7 +175,7 @@ export default async function ProductPage({ params }: Props) {
                 {inspectedOn ? ` · inspected ${inspectedOn}` : ""}.
               </span>
             </div>
-          </div>
+          </div> : null}
 
           <dl className="product-specs">
             {product.subcategory ? (
@@ -310,6 +327,8 @@ export default async function ProductPage({ params }: Props) {
               </details>
             </section>
           ) : null}
+          {product.disclosed_defects?.length ? <section className="condition-panel"><h2>Disclosed defects</h2><ul>{product.disclosed_defects.map(d=><li key={d} translate="no">{d}</li>)}</ul></section> : null}
+          {product.measurements && Object.keys(product.measurements).length ? <section><h2>Recorded measurements (cm)</h2><dl className="product-specs">{Object.entries(product.measurements).map(([key,value])=><div key={key}><dt translate="no">{key}</dt><dd>{value}</dd></div>)}</dl></section> : null}
           {product.condition_notes ? (
             <section className="condition-panel">
               <BadgeCheck />
@@ -337,7 +356,7 @@ export default async function ProductPage({ params }: Props) {
                 <b>
                   {product.category === "home_decor"
                     ? "Delivery review"
-                    : "Delivery-ready"}
+                    : "Delivery details"}
                 </b>
                 Shipping cost will be confirmed before payment.
               </span>
@@ -359,6 +378,7 @@ export default async function ProductPage({ params }: Props) {
           </section>
         </aside>
       </div>
+      <AvailableAlternatives items={alternatives} selectedSizes={selectedSizes} size={product.size} category={product.category} />
     </main>
   )}</Localize>;
 }
