@@ -41,6 +41,16 @@ test('discount math meets threshold boundaries, cap and $8 floor with determinis
  }finally{await db.close();}
 });
 
+test('production legacy total guard permits discounted merchandise with zero shipping and tax',async()=>{
+ const db=await fixture();try{
+  await enable(db);await identity(db,buyer);const c=await offer(db);const oid=await prepare(db,c.code);
+  await db.exec('reset role');
+  await db.query('update public.orders set shipping_cents=0,tax_cents=0,total_cents=subtotal_cents-discount_cents where id=$1',[oid]);
+  assert.equal((await db.query<{n:number}>('select total_cents n from public.orders where id=$1',[oid])).rows[0].n,5400);
+  await assert.rejects(db.query('update public.orders set discount_cents=subtotal_cents+1,total_cents=-1 where id=$1',[oid]));
+ }finally{await db.close();}
+});
+
 test('consent evidence, unsubscribe, price/purchase suppression, caps and provider gate work in SQL',async()=>{
  const db=await fixture();try{
   await identity(db,buyer);await db.query(`select public.save_my_buyer_consent(true,true,'2026-10-16','account_preferences')`);
