@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient as createAuthClient } from "@supabase/supabase-js";
-import { getSupabaseConfig } from "@/lib/supabase/config";
+import { getSupabaseConfig, resolveTestSiteOrigin } from "@/lib/supabase/config";
 import { protectAuthForm } from "@/lib/auth-form-protection";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -61,6 +61,7 @@ export async function validateRecoveryPassword(password: string, confirmation: s
 }
 
 async function requestOrigin() {
+  if (getSupabaseConfig().isTest) return resolveTestSiteOrigin(process.env.TEST_SITE_URL);
   const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL;
   if (configuredUrl?.startsWith("https://")) {
     return configuredUrl.replace(/\/$/, "");
