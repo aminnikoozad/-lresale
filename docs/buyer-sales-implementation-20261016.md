@@ -22,34 +22,31 @@ Source: the owner's 14-page `مدل فروش.pdf` and the explicit approved requ
 
 ## Database status and evidence
 
-**No production migration was applied in this session.** No database was replaced or moved.
+**Seven migrations were committed to production `lsdhobwrnmlkqnvkamlt` through the authenticated Supabase SQL Editor on 16 October 2026.** No database was replaced or moved.
 
-- Supabase connection is present. `list_projects` returned an empty list.
-- `get_project` for both `lsdhobwrnmlkqnvkamlt` and `qisvbuqppovaemfmiujr` returned permission errors.
-- `list_migrations(lsdhobwrnmlkqnvkamlt)` returned a permission error. Actual migration history remains unverified, including `20261015175400_team_managed_pricing.sql`.
-- Organization list returned `opmmedsqoqlloufrsyqb`.
-- Public `catalog_items_v3` on `lsdhobwrnmlkqnvkamlt` returned HTTP200 with an empty catalog. This confirms public API availability, not administrative ownership or the state of all data.
-- Vercel `NEXT_PUBLIC_SUPABASE_URL` still points at `qisvbuqppovaemfmiujr`; storefront configuration still points at `lsdhobwrnmlkqnvkamlt`. This mismatch was not changed, and private credentials were not printed or used to bypass permission errors.
-- Empty product inventory is not treated as a defect. The real gateway and real admin/customer transaction flow remain unverified.
+- After explicit owner approval of browser fallback, the signed-in dashboard showed the project in **my second hand shop**, organization `aezehianbxzztdwyqeqr`. Project status was Healthy. The connector only exposed organization `opmmedsqoqlloufrsyqb` and denied project operations; the reason for that scope difference remains unknown.
+- Real migration history ended at `20261015061741 smart_shop_admin_controls`. Names and actual function definitions were inspected rather than assuming repository timestamps matched production.
+- Applied, in order: `20261015175400_team_managed_pricing`, `20261016030302_buyer_sales_catalog`, `20261016030427_buyer_first_purchase`, `20261016030435_buyer_consent_measurement`, `20261016030734_buyer_verified_payments`, `20261016031156_buyer_guest_support`, `20261016034843_buyer_discount_legacy_total_guard`.
+- The last migration fixes the actual production legacy `orders_check` lower bound so valid discounted totals can fall below the original subtotal. It retains a discounted-subtotal floor and enables RLS on the private payment connection table.
+- The complete batch passed a production transaction ending in ROLLBACK before the same batch was committed. Both executions compared hashes of existing item prices/commission locks and all original order fields; no changes were detected. Migration history was recorded in the same transaction.
+- A separate post-commit query confirmed all seven migration records, all 14 new tables with RLS, the exact formula (CAD60 -> CAD6; CAD100 -> CAD8 cap; almost-all CAD8 lines -> only one cent available), and denied public code reads, authenticated direct code updates, and browser execution of payment confirmation.
+- Live public API after commit: new product-detail RPC HTTP200/null for an unknown ID; mandate/admin RPCs HTTP401/42501 without authentication; unknown unsubscribe token HTTP200/false. These endpoints no longer return missing-function errors.
+- **Offer settings remain disabled**, with approved values 10%, CAD60 minimum, CAD8 cap and platform funding. Enabling through the app still requires the existing sales administrator + MFA flow; it was not bypassed using SQL impersonation.
+- **Payment, marketing delivery and SMS remain disabled**, with no provider selected. No real order/payment/refund was created as a production test.
+- Vercel `SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_URL` both point at `qisvbuqppovaemfmiujr`. The decoded project reference in its existing `SUPABASE_SERVICE_ROLE_KEY` also points there. Its opaque `SUPABASE_SECRET_KEY` cannot be attributed from its format alone. Values were never printed. No keys were sent to or database queries run against that other project.
+- Storefront public configuration correctly points at `lsdhobwrnmlkqnvkamlt`. Server environment variables were left unchanged pending a securely supplied, verified credential for this same project. The server-side contact/cleanup paths therefore remain blocked; installing schema does not fix the environment mismatch.
+- Empty product inventory is not treated as a defect. Real gateway and authenticated admin/customer end-to-end flows remain unverified.
 
-Prepared migration files, generated with the Supabase CLI:
-
-1. `20261016030302_buyer_sales_catalog.sql`
-2. `20261016030427_buyer_first_purchase.sql`
-3. `20261016030435_buyer_consent_measurement.sql`
-4. `20261016030734_buyer_verified_payments.sql`
-5. `20261016031156_buyer_guest_support.sql`
-
-Before applying: reconcile actual migration history, inspect actual schema/function definitions, verify the correct project and authorized role, review data compatibility and run database advisors. Never run `db push` blindly. Payment and message delivery remain off after these migrations.
+Production website changes from PR #57 were merged at `4b9743623599d05de35ac8fc45103ad764d1469b`; Vercel deployment `dpl_wBpAWmrv8uAxrw1SAqmaTAgLgV73` reached READY. Live EN/FR shop/contact/unsubscribe responses were checked; unsigned admin requests redirected to secure login and the payment webhook remained HTTP503.
 
 ## Validation
 
-- Full security/behaviour suite: 117 passing tests at the last complete run, including executable PGlite SQL integration tests.
+- Full security/behaviour suite: 118 passing tests at the last complete run, including executable PGlite SQL integration tests.
 - TypeScript and optimized production build passed. Lint: no errors; one existing `<img>` performance warning in seller item tracking.
 - Local HTTP smoke: `/shop`, `/cart`, `/contact`, `/support`, `/unsubscribe` returned HTTP200; empty cart quote returned HTTP200 with no items. These are local server results, not production verification.
 - SQL integration covers code ownership, MFA restrictions, threshold boundaries, cap and item floor, reservations excluding a second buyer, cancellation/expiry, failure, replayed successful payment, unchanged seller share, platform discount accounting, consent withdrawal, unsubscribe, price invalidation, provider gate, sold/reserved detail, photo publication, refund bounds/replay and campaign attribution.
 - PGlite serializes work: this does **not** prove simultaneous sessions against production PostgreSQL. A real concurrent two-buyer test is still required after authorized staging access is available.
-- Local browser installation failed and cloud browser inspection did not return usable page evidence. No mobile/visual E2E result is claimed. Authenticated customer/admin, payment provider and delivery-provider tests are blocked.
+- Local browser installation failed. A later authenticated cloud-browser session successfully verified production database changes. No mobile/visual shopping E2E result is claimed. Authenticated customer/admin, payment provider and delivery-provider tests are blocked.
 
 ## Owner decisions / required information
 

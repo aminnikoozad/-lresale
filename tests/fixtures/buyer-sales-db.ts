@@ -34,6 +34,8 @@ export async function fixture(){
  for(let i=0;i<ids.length;i++)await db.query('insert into public.items(id,owner_id,listed_price_cents,initial_approved_price_cents) values($1,$2,$3,$3)',[ids[i],seller,[800,5200,4000,4000][i]]);
  for(const name of ['20261016030302_buyer_sales_catalog','20261016030427_buyer_first_purchase','20261016030435_buyer_consent_measurement','20261016030734_buyer_verified_payments','20261016031156_buyer_guest_support']) await db.exec(sql(name));
 
+ await db.exec('alter table public.orders add constraint orders_check check(total_cents is null or total_cents>=subtotal_cents)');
+ await db.exec(sql('20261016034843_buyer_discount_legacy_total_guard'));
  return db;
 }
 export async function identity(db:PGlite,id:string,role='authenticated',aal='aal2'){await db.exec(`reset role;select set_config('test.uid','${id}',false);select set_config('test.role','${role}',false);select set_config('test.aal','${aal}',false);set role ${role};`);}
