@@ -5,7 +5,7 @@ import { Localize } from "@/components/site-language";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { createBrowserClient } from "@supabase/ssr";
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from "@/lib/supabase/config";
+import { getSupabaseConfig } from "@/lib/supabase/config";
 import { verifyRecoverySession } from "@/lib/recovery-session";
 import { PASSWORD_REQUIREMENTS_TEXT } from "@/lib/password-policy";
 import { validateRecoveryPassword } from "../auth/actions";
@@ -21,10 +21,13 @@ export function RecoveryForm() {
   const [mfaCode, setMfaCode] = useState("");
   const [factorId, setFactorId] = useState("");
   const verification = useRef<Promise<void> | null>(null);
-  const client = useMemo(() => createBrowserClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  const client = useMemo(() => {
+    const { url, publishableKey } = getSupabaseConfig();
+    return createBrowserClient(url, publishableKey, {
     isSingleton: false,
     auth: { detectSessionInUrl: false },
-  }), []);
+    });
+  }, []);
 
   useEffect(() => {
     let active = true;

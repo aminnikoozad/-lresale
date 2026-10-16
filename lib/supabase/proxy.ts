@@ -7,7 +7,10 @@ export async function updateSession(request: NextRequest) {
   try {
     config = getSupabaseConfig();
   } catch {
-    return NextResponse.next({ request });
+    return new NextResponse("Application environment is not configured", {
+      status: 503,
+      headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" },
+    });
   }
 
   const { url, publishableKey } = config;
