@@ -47,6 +47,7 @@ export function SupportHub({ userId, contact }: { userId: string | null; contact
         <section className="support-public-card" aria-labelledby="support-access-title">
           <h2 id="support-access-title">{t("Trouble signing in?", "Difficulté à vous connecter?")}</h2>
           <p>{t("If you have forgotten your password, request a recovery link using your account email.", "Si vous avez oublié votre mot de passe, demandez un lien de récupération à l’aide de l’adresse courriel de votre compte.")}</p>
+          <Link href="/contact">{t("Contact without signing in", "Contact sans connexion")}</Link><br/>
           <Link href="/forgot-password">{t("Recover my password", "Récupérer mon mot de passe")}</Link>
           {!contact.email && <p className="support-public-note">{t("If you cannot access your account email either, a direct support contact is needed. This contact has not been published yet.", "Si vous n’avez pas non plus accès à l’adresse courriel de votre compte, vous aurez besoin d’un contact direct avec le soutien. Ces coordonnées ne sont pas encore publiées.")}</p>}
         </section>

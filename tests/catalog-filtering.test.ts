@@ -74,12 +74,12 @@ test("all sort modes are deterministic and leave the input order untouched", () 
   assert.deepEqual(ids(products), ["b", "az", "aa"]);
 });
 
-test("department navigation clears incompatible facets while preserving search", () => {
+test("department navigation clears incompatible facets while preserving search and explicit size", () => {
   const labels = ["all", "women", "men", "kids"].map((value) => ({ value, label: value }));
   const previous = "?catalog=women&q=linen&subcategories=Shirts+%26+Blouses&sizes=M&brands=Test+Brand&minPrice=20";
   const next = readCatalogLocation(previous, "#kids", labels);
-  assert.deepEqual(next, emptyCatalogFilters("kids", "linen"));
-  assert.deepEqual(ids(filterCatalogProducts(departmentFixtures, next, now)), ["kids-shirt"]);
+  assert.deepEqual(next, { ...emptyCatalogFilters("kids", "linen"), sizes: ["M"] });
+  assert.deepEqual(ids(filterCatalogProducts(departmentFixtures, next, now)), []);
   assert.equal(filterCatalogProducts(departmentFixtures, { ...emptyCatalogFilters("kids"), sizes: ["M"] }, now).length, 0);
 });
 
@@ -96,4 +96,13 @@ test("Home collection, era and boolean predicates retain their existing semantic
   const filters = { ...emptyCatalogFilters("home_decor", "ceramic"), collection: "Vintage Finds", eras: ["1980s"], homeFlags: ["handmade", "price_drop", "new_arrivals"] };
   assert.deepEqual(ids(filterCatalogProducts(products, filters, now)), ["home-match"]);
   assert.deepEqual(filterCatalogProducts(products, { ...filters, query: "unknown designer" }, now), []);
+});
+
+test("text search matches size tokens and combines brand/type/size", () => {
+ const products = [fixture("small", {name:"Linen shirt", brand:"Arket", size:"S"}), fixture("medium", {name:"Linen shirt", brand:"Arket", size:"M"})];
+ assert.deepEqual(ids(filterCatalogProducts(products, emptyCatalogFilters("all", "arket shirt s"), now)), ["small"]);
+});
+test("clothing collections use strictly under 25 and first publication, and exclude home", () => {
+ const products = [fixture("below", {priceCents:2499}), fixture("equal", {priceCents:2500}), fixture("above", {priceCents:2501}), fixture("home", {category:"home_decor", priceCents:2000})];
+ assert.deepEqual(ids(filterCatalogProducts(products, {...emptyCatalogFilters(), collection:"clothing-under-25"}, now)), ["below"]);
 });

@@ -1,10 +1,13 @@
 "use client";
+import { BuyerViewEvent } from "@/components/buyer-view-event";
+import { useCartQuote } from "@/components/use-cart-quote";
+import { FirstPurchaseOffer } from "@/components/first-purchase-offer";
 import { Localize } from "@/components/site-language";
 
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, CreditCard, LockKeyhole, MapPin, ShieldCheck, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +38,14 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
   const router = useRouter();
   const { items } = useCart();
   const checkoutItems = useMemo(() => items.filter((item) => itemIds.includes(item.id)), [items, itemIds]);
-  const subtotal = checkoutItems.reduce((sum, item) => sum + item.priceCents, 0);
+  const {quote, error:quoteError} = useCartQuote(itemIds);
+  const currentItems = quote?.items ?? [];
+  const subtotal = currentItems.reduce((sum,item)=>sum+item.priceCents,0);
+  const quoteReady = Boolean(quote && !quote.unavailable.length && currentItems.length === itemIds.length);
+  const [discountCode,setDiscountCode] = useState("");
+  const [discountCents,setDiscountCents] = useState(0);
+  const onOfferChange = useCallback((code:string,cents:number)=>{setDiscountCode(code);setDiscountCents(cents);},[]);
+
   const [authenticated, setAuthenticated] = useState<boolean | null>(initialDelivery ? true : null);
   const [destination, setDestination] = useState(initialDelivery?.postalCode ?? "");
   const [postalSelection, setPostalSelection] = useState<PostalSelection | null>(null);
@@ -58,6 +68,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
     setSubmitting(true);
     setError(null);
     try {
+      if (!quoteReady) throw new Error("Current cart verification required");
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -70,7 +81,8 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
       }
 
       if (postalSelection && (postalSelection.postalCode !== postalCode(String(formData.get("postal_code") || "")) || Date.parse(postalSelection.expiresAt) <= Date.now())) throw new Error("Postal quote expired");
-      const { data, error: rpcError } = await supabase.rpc("prepare_checkout_with_terms", {
+      const { data, error: rpcError } = await supabase.rpc(discountCode ? "prepare_buyer_checkout" : "prepare_checkout_with_terms", {
+        ...(discountCode ? {p_discount_code:discountCode} : {}),
         p_items: postalSelection ? null : itemIds,
         p_quote: postalSelection?.quoteId ?? null,
         p_service: postalSelection?.serviceCode ?? null,
@@ -131,7 +143,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
         </div>
         <div className="checkout-readiness-card">
           <ShieldCheck />
-          <div><b>What is already ready</b><span>Buyer identity, selected inventory, server-verified prices, delivery details and the accepted policy versions are attached to this order.</span></div>
+          <div><b>Prepared order details</b><span>Buyer identity, selected inventory, server-verified prices, delivery details and the accepted policy versions are attached to this order.</span></div>
         </div>
         <Button asChild><Link href="/account/buyer">View My Purchases</Link></Button>
       </section>
@@ -140,6 +152,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
 
   return <Localize>{(
     <div className="checkout-page-shell">
+      {quoteReady ? <BuyerViewEvent name="begin_checkout" ids={itemIds} /> : null}
       <div className="checkout-progress" aria-label="Checkout progress">
         <div className="done"><span><Check /></span><b>Bag</b></div>
         <div className="active"><span>2</span><b>Delivery</b></div>
@@ -178,6 +191,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
           <PostalEstimator itemIds={itemIds} destination={destination} onSelect={setPostalSelection}/>
           {!postalSelection ? <p>Without a selected postal service, delivery details are saved for review only; shipping remains unconfirmed.</p> : null}
 
+          <FirstPurchaseOffer itemIds={itemIds} onChange={onOfferChange} />
           <div className="checkout-field-section">
             <h2>Policies</h2>
             <label className="checkout-policy-consent">
@@ -192,21 +206,24 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
             <div><b>Next: Payment</b><span>Card or wallet fields will appear here after the payment provider is connected. They are intentionally disabled today.</span></div>
           </div>
 
-          <Button type="submit" size="lg" disabled={submitting}>{submitting ? "Checking availability…" : "Save delivery & prepare payment"}</Button>
+          <Button type="submit" size="lg" disabled={submitting || !quoteReady}>{submitting ? "Checking availability…" : "Save delivery & prepare payment"}</Button>
           <small>Preparing checkout does not charge your card. The database verifies current price and availability again before creating the order.</small>
         </form>
 
         <aside className="checkout-summary">
           <h2>Your items</h2>
-          {checkoutItems.map((item) => (
+          {currentItems.map((item) => (
             <div className="checkout-line" key={item.id}>
               <span><b>{item.brand}</b>{item.name}</span>
               <strong>{cad(item.priceCents)}</strong>
             </div>
           ))}
+          {!quoteReady ? <p role="alert">{quoteError ? "We could not verify your bag. Try again before continuing." : "Checking current prices and availability…"}</p> : null}
+          {quote?.unavailable.length ? <p role="alert">An item is no longer available. Return to your bag to review it.</p> : null}
+          <div className="checkout-summary-row"><span>Discount</span><span>{cad(discountCents)}</span></div>
           <div className="checkout-summary-row"><span>Shipping</span><span>{postalSelection ? cad(postalSelection.totalCents) : "Not yet confirmed"}</span></div>
           <div className="checkout-summary-row"><span>Taxes</span><span>Calculated before payment</span></div>
-          <div className="cart-total"><span>Subtotal</span><strong>{cad(subtotal)}</strong></div>
+          <div className="cart-total"><span>Subtotal</span><strong>{quote ? cad(subtotal-discountCents) : "—"}</strong></div>
           <div className="checkout-assurance-list">
             <span><ShieldCheck /> Inspected inventory</span>
             <span><LockKeyhole /> Server-verified price</span>

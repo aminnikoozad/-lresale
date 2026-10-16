@@ -1,4 +1,6 @@
 "use client";
+import { BuyerViewEvent } from "@/components/buyer-view-event";
+import { recordBuyerEvent } from "@/lib/buyer-analytics";
 import { Localize } from "@/components/site-language";
 
 
@@ -13,8 +15,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { hashCategory, catalogLocation, catalogHistoryMode, readCatalogLocation, emptyCatalogFilters, priceCents, type CatalogFilters } from "@/lib/catalog-navigation";
-import { filterCatalogProducts } from "@/lib/catalog-filtering";
+import { changeCatalogCategory, hashCategory, catalogLocation, catalogHistoryMode, readCatalogLocation, emptyCatalogFilters, priceCents, type CatalogFilters } from "@/lib/catalog-navigation";
+import { clothingCollectionMatches, filterCatalogProducts } from "@/lib/catalog-filtering";
 import { subcategoriesFor } from "@/lib/catalog-taxonomy";
 import { Dialog as DialogPrimitive } from "radix-ui";
 import {
@@ -135,7 +137,7 @@ export function ShopCatalog({
       const category = hashCategory(url.hash, labels);
       if (!category) return;
       event.preventDefault();
-      setFilters((current) => emptyCatalogFilters(category, category === "all" ? "" : current.query));
+      setFilters((current) => changeCatalogCategory(current, category));
       setFilterOpen(false);
       document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" });
     };
@@ -225,7 +227,7 @@ export function ShopCatalog({
   const clearFilters = () => setFilters(emptyCatalogFilters(activeCategory));
   const changeCategory = (value: string) => {
     if (!labels.some((label) => label.value === value)) return;
-    setFilters(emptyCatalogFilters(value, value === "all" ? "" : query));
+    setFilters(current => changeCatalogCategory(current, value));
     setFilterOpen(false);
   };
   const chips = [
@@ -236,7 +238,7 @@ export function ShopCatalog({
     }))),
     ...(["query", "collection", "minPrice", "maxPrice"] as const).filter((key) => filters[key]).map((key) => ({
       key,
-      label: key === "query" ? `Search: ${query}` : key === "minPrice" ? `From $${minPrice} CAD` : key === "maxPrice" ? `Up to $${maxPrice} CAD` : collection,
+      label: key === "query" ? `Search: ${query}` : key === "minPrice" ? `From $${minPrice} CAD` : key === "maxPrice" ? `Up to $${maxPrice} CAD` : collection === "clothing-new" ? "New arrivals" : collection === "clothing-under-25" ? "Under $25 CAD" : collection,
       remove: () => setFilters((current) => ({ ...current, [key]: "" })),
     })),
   ];
@@ -332,7 +334,7 @@ export function ShopCatalog({
             aria-label="Search items"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search brand, item, subcategory, colour…"
+            placeholder="Search type, brand or size"
           />
         </label>
         <select
@@ -347,6 +349,10 @@ export function ShopCatalog({
         </select>
       </div>
 
+      <div className="home-collections" aria-label="Clothing collections">
+        {[["clothing-new", "New arrivals"], ["clothing-under-25", "Under $25 CAD"]].filter(([key]) => categoryProducts.some(p => clothingCollectionMatches(p, key, now))).map(([key, label]) => <button key={key} type="button" aria-pressed={collection === key} onClick={() => setCollection(collection === key ? "" : key)}>{label}</button>)}
+        {unique(categoryProducts.filter(p => ["women", "men", "kids"].includes(p.category)).map(p => p.brand)).map(brand => <button key={brand} type="button" aria-pressed={brands.includes(brand)} onClick={() => toggle(setBrands, brand)} translate="no">{brand}</button>)}
+      </div>
       {activeCategory === "home_decor" ? (
         <>
           <p className="home-catalog-note">
@@ -427,6 +433,7 @@ export function ShopCatalog({
                   clearFilters={clearFilters}
                   homeCategory={activeCategory === "home_decor"}
                   products={filtered}
+                  selectedSizes={sizes}
                   filtersActive={activeFilterCount > 0 || Boolean(query)}
                 />
               </div>
@@ -630,14 +637,16 @@ function FilterGroup({
   )}</Localize>;
 }
 
-function ProductGrid({
+export function ProductGrid({
   products,
   filtersActive,
   homeCategory,
   departmentLabel,
   loadError,
   clearFilters,
+  selectedSizes = [],
 }: {
+  selectedSizes?: string[];
   products: CatalogProduct[];
   filtersActive: boolean;
   homeCategory: boolean;
@@ -665,14 +674,14 @@ function ProductGrid({
             ? "Try changing your search or removing a filter."
             : homeCategory
               ? "Our team is preparing selected Home & Decor pieces. Explore other categories or offer a piece for Shikimomo to review."
-              : departmentLabel ? `Check back for inspected ${departmentLabel.toLowerCase()} pieces, explore another department, or send us your own collection for review.` : "Our team is preparing inspected pieces. Check back soon or learn how to send us your own collection."}
+              : departmentLabel ? `Check back for inspected ${departmentLabel.toLowerCase()} pieces or explore another department.` : "Our team is preparing inspected pieces. Check back soon."}
         </p>
         {filtersActive ? <button type="button" onClick={clearFilters}>Clear search and filters</button> : null}
-        {!filtersActive ? <Link href="/sell-with-shikimomo">Explore selling with Shikimomo</Link> : null}
       </div>
     )}</Localize>;
   return <Localize>{(
     <div className="catalog-grid">
+      <BuyerViewEvent name="view_item_list" ids={products.map(p=>p.id)} />
       {products.map((product) => {
         const cartItem = {
           id: product.id,
@@ -689,7 +698,7 @@ function ProductGrid({
           <article className="shop-card" key={product.id}>
             <div className="catalog-photo live-photo">
               <Link
-                href={`/item/${product.id}`}
+                href={`/item/${product.id}${selectedSizes.length ? `?${new URLSearchParams(selectedSizes.map(size=>["sizes",size])).toString()}` : ""}`} onClick={()=>void recordBuyerEvent("select_item",[product.id])}
                 aria-label={`View ${product.brand} ${product.name}`}
               >
                 <Image
@@ -708,7 +717,7 @@ function ProductGrid({
             </div>
             <div className="shop-card-copy">
               <small>{product.brand}</small>
-              <Link href={`/item/${product.id}`}>
+              <Link href={`/item/${product.id}${selectedSizes.length ? `?${new URLSearchParams(selectedSizes.map(size=>["sizes",size])).toString()}` : ""}`} onClick={()=>void recordBuyerEvent("select_item",[product.id])}>
                 <h3 translate="no">{product.name}</h3>
               </Link>
               <span>
@@ -722,6 +731,8 @@ function ProductGrid({
                       ? "Home & Decor"
                       : product.category}
               </span>
+              {product.color ? <span translate="no">{product.color}</span> : null}
+              <QuickView product={product} selectedSizes={selectedSizes} />
               <div>
                 <b>{cad(product.priceCents)}</b>
                 <AddToCartButton item={cartItem} compact />
@@ -732,4 +743,8 @@ function ProductGrid({
       })}
     </div>
   )}</Localize>;
+}
+
+function QuickView({ product, selectedSizes }: { product: CatalogProduct; selectedSizes:string[] }) {
+  return <Localize><DialogPrimitive.Root><DialogPrimitive.Trigger asChild><button type="button" className="quick-view-trigger">Quick view</button></DialogPrimitive.Trigger><DialogPrimitive.Portal><DialogPrimitive.Overlay className="filter-sheet-backdrop" /><DialogPrimitive.Content className="quick-view" aria-describedby={undefined}><Localize><DialogPrimitive.Title>{product.brand}</DialogPrimitive.Title><DialogPrimitive.Close asChild><button className="quick-view-close" aria-label="Close quick view"><X /></button></DialogPrimitive.Close><div className="quick-view-photo"><Image src={product.photoUrl} alt={product.name} fill sizes="(max-width: 600px) 90vw, 400px" /></div><h2 translate="no">{product.name}</h2><dl><dt>Type</dt><dd translate="no">{product.subcategory || product.category}</dd><dt>Size</dt><dd translate="no">{product.size || "—"}</dd><dt>Colour</dt><dd translate="no">{product.color || "—"}</dd><dt>Condition</dt><dd>{product.condition || "—"}</dd></dl><b>{cad(product.priceCents)} CAD</b><p>Availability and price are checked before checkout.</p><Link href={`/item/${product.id}${selectedSizes.length ? `?${new URLSearchParams(selectedSizes.map(size=>["sizes",size])).toString()}` : ""}`} onClick={()=>void recordBuyerEvent("select_item",[product.id])}>View full details</Link></Localize></DialogPrimitive.Content></DialogPrimitive.Portal></DialogPrimitive.Root></Localize>;
 }

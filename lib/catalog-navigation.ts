@@ -32,7 +32,10 @@ export function readCatalogLocation(search: string, hash: string, labels: readon
   const savedCategory = labels.find((entry) => entry.value === params.get("catalog"))?.value;
   const category = (hash ? hashCategory(hash, labels) : savedCategory) ?? savedCategory ?? "all";
   const state = emptyCatalogFilters(category, params.get("q") ?? "");
-  if (params.has("catalog") && params.get("catalog") !== category) return state;
+  if (params.has("catalog") && params.get("catalog") !== category) {
+    if (["all","women","men","kids","shoes","accessories"].includes(params.get("catalog") || "all") && ["all","women","men","kids","shoes","accessories"].includes(category)) state.sizes = [...new Set(params.getAll("sizes").filter(Boolean))];
+    return state;
+  }
   for (const key of catalogListFields) state[key] = [...new Set(params.getAll(key).filter(Boolean))];
   state.collection = params.get("collection") ?? "";
   for (const key of ["minPrice", "maxPrice"] as const) {
@@ -59,4 +62,12 @@ export function catalogLocation(pathname: string, search: string, state: Catalog
 export function catalogHistoryMode(previous: CatalogFilters, next: CatalogFilters): "push" | "replace" {
   const discreteFields = [...catalogListFields, "category", "collection", "sort"] as const;
   return discreteFields.some((key) => JSON.stringify(previous[key]) !== JSON.stringify(next[key])) ? "push" : "replace";
+}
+
+/** Preserve explicit sizing when moving between clothing departments. */
+export function changeCatalogCategory(current: CatalogFilters, category: string): CatalogFilters {
+  const next = emptyCatalogFilters(category, category === "all" ? "" : current.query);
+  const sized = ["all", "women", "men", "kids", "shoes", "accessories"];
+  if (sized.includes(current.category) && sized.includes(category)) next.sizes = current.sizes;
+  return next;
 }

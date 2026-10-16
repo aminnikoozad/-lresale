@@ -17,12 +17,13 @@ export const accountNavigation: WorkspaceLink[] = [
   { href: "/account/seller/earnings", label: "Earnings & settlement" },
   { href: "/account/profile", label: "Profile & security" },
   { href: "/account/messages", label: "Messages & support" },
+  { href: "/account/preferences", label: "Communication preferences" },
 ];
 export function accountNavigationFor(mode: "buyer" | "seller" | null): WorkspaceLink[] {
   const paths = mode === "seller"
     ? ["/account/seller", "/account/seller/items", "/account/seller/earnings"]
     : mode === "buyer" ? ["/account/buyer", "/account/buyer/delivery"] : ["/account"];
-  return accountNavigation.filter(link => paths.includes(link.href) || ["/account/profile", "/account/messages"].includes(link.href));
+  return accountNavigation.filter(link => paths.includes(link.href) || ["/account/profile", "/account/messages", "/account/preferences"].includes(link.href));
 }
 export function adminNavigation(access: MenuAccess): WorkspaceLink[] {
   return [
@@ -36,8 +37,8 @@ export function adminNavigation(access: MenuAccess): WorkspaceLink[] {
     ...(access.can_manage_pickups || access.can_manage_shipping ? [{ href: "/admin/operations", label: "Operations" }] : []),
     ...(access.can_manage_pickups ? [{ href: "/admin/operations#pickup-requests", label: "Pickup inbox" }] : []),
     ...(access.can_manage_shipping ? [{ href: "/admin/orders", label: "Orders" }, { href: "/admin/postal", label: "Postal shipping" }] : []),
-    ...(access.can_manage_selling_rules ? [{ href: "/admin/pilot", label: "Pilot" }, { href: "/admin/settings", label: "Selling rules" }, { href: "/admin/smart-shop", label: "Smart Shopping" }] : []),
-    ...(access.can_support ? [{ href: "/admin/support", label: "Support" }, { href: "/admin/support/settings", label: "Support settings" }] : []),
+    ...(access.can_manage_selling_rules ? [{ href: "/admin/buyer-sales", label: "Buyer sales" }, { href: "/admin/pilot", label: "Pilot" }, { href: "/admin/settings", label: "Selling rules" }, { href: "/admin/smart-shop", label: "Smart Shopping" }] : []),
+    ...(access.can_support ? [{ href: "/admin/support", label: "Support" }, { href: "/admin/support/settings", label: "Support settings" }, { href: "/admin/support/guest", label: "Guest inquiries" }] : []),
     { href: "/admin/readiness", label: "Readiness" },
     { href: "/admin/security", label: "My security" },
     ...(!access.has_aal2 ? [{ href: "/admin/mfa", label: "Verify MFA" }] : []),

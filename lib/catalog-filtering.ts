@@ -26,10 +26,10 @@ export function filterCatalogProducts<T extends FilterableCatalogProduct>(
   const { category, query, subcategories, eras, homeFlags, collection, brands, sizes, conditions, colors, materials, patterns, sort } = filters;
   const minCents = priceCents(filters.minPrice);
   const maxCents = priceCents(filters.maxPrice);
-  const q = query.trim().toLowerCase();
+  const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const next = products.filter((product) => {
     const haystack =
-      `${product.name} ${product.brand} ${product.category} ${product.subcategory || ""} ${product.color || ""} ${product.material || ""} ${product.pattern || ""} ${product.home?.designer || ""} ${product.home?.era || ""} ${product.home?.keywords || ""}`.toLowerCase();
+      `${product.name} ${product.brand} ${product.category} ${product.subcategory || ""} ${product.size || ""} ${product.color || ""} ${product.material || ""} ${product.pattern || ""} ${product.home?.designer || ""} ${product.home?.era || ""} ${product.home?.keywords || ""}`.toLowerCase();
     return (
       (category === "all" || product.category === category) &&
       (!subcategories.length ||
@@ -49,7 +49,9 @@ export function filterCatalogProducts<T extends FilterableCatalogProduct>(
             : product.home?.[f] === true,
       ) &&
       (!collection ||
-        (product.home &&
+        (collection === "clothing-new" ? clothingCollectionMatches(product, collection, now)
+        : collection === "clothing-under-25" ? clothingCollectionMatches(product, collection, now)
+        : product.home &&
           homeCollectionMatches(
             collection,
             product.home,
@@ -57,7 +59,7 @@ export function filterCatalogProducts<T extends FilterableCatalogProduct>(
             product.publishedAt,
             now,
           ))) &&
-      (!q || haystack.includes(q)) &&
+      terms.every(term => haystack.split(/[^\p{L}\p{N}-]+/u).some(word => term.length <= 2 ? word === term : word.includes(term))) &&
       (!brands.length || brands.includes(product.brand)) &&
       (!sizes.length || (product.size && sizes.includes(product.size))) &&
       (!conditions.length ||
@@ -81,4 +83,11 @@ export function filterCatalogProducts<T extends FilterableCatalogProduct>(
       new Date(a.publishedAt || 0).getTime()
     );
   });
+}
+
+export function clothingCollectionMatches(product: FilterableCatalogProduct, collection: string, now: number): boolean {
+  if (!["women", "men", "kids"].includes(product.category)) return false;
+  if (collection === "clothing-under-25") return product.priceCents < 2500;
+  const published = Date.parse(product.publishedAt || "");
+  return collection === "clothing-new" && Number.isFinite(published) && published <= now && published >= now - 30 * 86400000;
 }
