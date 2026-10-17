@@ -1,5 +1,7 @@
 "use server";
 
+import { torontoLocalToIso } from "@/lib/toronto-local-time";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -11,29 +13,6 @@ function text(formData: FormData, key: string) {
 
 function message(message: string, type: "success" | "error", anchor?: string) {
   return `/admin/operations?message=${encodeURIComponent(message)}&type=${type}${anchor ? `#${anchor}` : ""}`;
-}
-
-function torontoLocalToIso(local: string) {
-  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(local);
-  if (!match) throw new Error("Invalid local date/time");
-  const [, y, mo, d, h, mi] = match;
-  const utcGuess = new Date(Date.UTC(Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi)));
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Toronto",
-    timeZoneName: "shortOffset",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: "h23",
-  }).formatToParts(utcGuess);
-  const offsetText = parts.find((part) => part.type === "timeZoneName")?.value ?? "GMT-4";
-  const offsetMatch = /GMT([+-])(\d{1,2})(?::(\d{2}))?/.exec(offsetText);
-  const sign = offsetMatch?.[1] === "-" ? -1 : 1;
-  const offsetMinutes = sign * ((Number(offsetMatch?.[2] ?? 4) * 60) + Number(offsetMatch?.[3] ?? 0));
-  const actualUtc = Date.UTC(Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi)) - offsetMinutes * 60_000;
-  return new Date(actualUtc).toISOString();
 }
 
 export async function createPickupSlot(formData: FormData) {
@@ -52,7 +31,7 @@ export async function createPickupSlot(formData: FormData) {
     });
     if (error) throw error;
   } catch {
-    redirect(message("Pickup slot could not be created. Check the time, area and capacity.", "error"));
+    redirect(message("Pickup slot could not be created. Check the time, area and capacity. Choose a Toronto time outside skipped or repeated daylight-saving hours.", "error"));
   }
   revalidatePath("/account", "layout");
   revalidatePath("/admin/operations");

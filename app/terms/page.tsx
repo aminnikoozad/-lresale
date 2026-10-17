@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 
 export function generateMetadata(): Promise<Metadata> {
-  return localizedMetadata({ title: "Terms of Use | Shikimomo", description: "Terms governing use of the Shikimomo marketplace." }, {"title": "Conditions d’utilisation", "description": "Conditions d’utilisation de la plateforme Shikimomo."});
+  return localizedMetadata({ title: "Terms of Use", description: "Terms governing use of the Shikimomo marketplace." }, {"title": "Conditions d’utilisation", "description": "Conditions d’utilisation de la plateforme Shikimomo."});
 }
 
 export default function TermsPage() {

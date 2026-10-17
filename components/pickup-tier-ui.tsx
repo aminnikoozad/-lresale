@@ -164,7 +164,7 @@ export function PickupTierUi() {
     scan();
 
     const supabase = createClient();
-    void supabase.rpc("get_selling_rules").then(({ data }) => {
+    void supabase.rpc("get_public_selling_rules").then(({ data }) => {
       if (cancelled || !data) return;
       rules = normalizeSellingRules(data);
       scan();

@@ -9,7 +9,7 @@ import { siteConfig } from "@/lib/site-config";
 
 export function generateMetadata(): Promise<Metadata> {
   return localizedMetadata({
-  title: "Privacy Policy | Shikimomo",
+  title: "Privacy Policy",
   description: "How Shikimomo collects, uses, protects and handles personal information.",
 }, {"title": "Politique de confidentialité", "description": "Comment Shikimomo recueille, utilise et protège les renseignements personnels."});
 }

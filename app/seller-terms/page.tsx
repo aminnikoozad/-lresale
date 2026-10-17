@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 
 export function generateMetadata(): Promise<Metadata> {
-  return localizedMetadata({ title: "Seller Terms | Shikimomo", description: "Seller and consignment terms for Shikimomo." }, {"title": "Conditions de vente", "description": "Conditions applicables aux vendeurs qui confient leurs articles à Shikimomo."});
+  return localizedMetadata({ title: "Seller Terms", description: "Seller and consignment terms for Shikimomo." }, {"title": "Conditions de vente", "description": "Conditions applicables aux vendeurs qui confient leurs articles à Shikimomo."});
 }
 
 export default function SellerTermsPage() {

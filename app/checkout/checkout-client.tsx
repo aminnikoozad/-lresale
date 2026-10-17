@@ -1,4 +1,5 @@
 "use client";
+import { checkoutLoginHref } from "@/lib/buyer-flow-navigation";
 import { BuyerViewEvent } from "@/components/buyer-view-event";
 import { useCartQuote } from "@/components/use-cart-quote";
 import { FirstPurchaseOffer } from "@/components/first-purchase-offer";
@@ -72,7 +73,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        router.push("/login?next=%2Fcheckout");
+        router.push(checkoutLoginHref(itemIds));
         return;
       }
 
