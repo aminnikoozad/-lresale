@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 
 export function generateMetadata(): Promise<Metadata> {
-  return localizedMetadata({ title: "Returns & Refunds | Shikimomo", description: "Return and refund policy for Shikimomo purchases." }, {"title": "Retours et remboursements", "description": "Politique de retour et de remboursement des achats Shikimomo."});
+  return localizedMetadata({ title: "Returns & Refunds", description: "Return and refund policy for Shikimomo purchases." }, {"title": "Retours et remboursements", "description": "Politique de retour et de remboursement des achats Shikimomo."});
 }
 
 export default function ReturnsPage() {

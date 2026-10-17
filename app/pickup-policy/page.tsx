@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export function generateMetadata(): Promise<Metadata> {
   return localizedMetadata({
-  title: "Pickup & Missed Pickup Policy | Shikimomo",
+  title: "Pickup & Missed Pickup Policy",
   description: "Shikimomo pickup fees, batch service fee, Bag eligibility, confirmation and missed pickup policy.",
 }, {"title": "Politique de collecte et frais", "description": "Frais de collecte Shikimomo, frais de service du lot, admissibilité au sac, confirmation et collectes manquées."});
 }
