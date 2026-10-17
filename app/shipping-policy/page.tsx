@@ -11,7 +11,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 export const dynamic = "force-dynamic";
 export function generateMetadata(): Promise<Metadata> {
   return localizedMetadata({
-  title: "Shipping & Local Delivery | Shikimomo",
+  title: "Shipping & Local Delivery",
   description: "Canada-wide Shikimomo shipping policy and Montréal local free-delivery policy.",
 }, {"title": "Expédition et livraison locale", "description": "Politique de livraison Shikimomo au Canada et de livraison locale gratuite à Montréal."});
 }

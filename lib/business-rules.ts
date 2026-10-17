@@ -179,7 +179,7 @@ export function normalizeSellingRules(value: unknown): SellingRules {
 
 export async function loadSellingRules(supabase: SupabaseClient): Promise<SellingRules> {
   try {
-    const { data, error } = await supabase.rpc("get_selling_rules");
+    const { data, error } = await supabase.rpc("get_public_selling_rules");
     if (error || !data) return DEFAULT_SELLING_RULES;
     return normalizeSellingRules(data);
   } catch {

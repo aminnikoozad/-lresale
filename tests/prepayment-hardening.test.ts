@@ -33,7 +33,7 @@ test("paid orders require payment and policy evidence", () => {
 });
 
 test("support AI describes below-threshold pickup fee as one flat fee", () => {
-  assert.match(supportAi, /get_selling_rules/);
+  assert.match(supportAi, /get_public_selling_rules/);
   assert.doesNotMatch(supportAi, /pickup fee is \$\{money\([^)]*\)\} per item/);
   assert.doesNotMatch(supportAi, /itemCount \* perItem/);
 });
