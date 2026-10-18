@@ -3,7 +3,7 @@ import { Localize } from "@/components/site-language";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { scheduleAutoPublish, setUnsoldPreference } from "@/app/account/operations-actions";
+import { setUnsoldPreference } from "@/app/account/operations-actions";
 import { acceptTeamPricing } from "@/app/account/pricing-actions";
 import "../../operations/operations.css";
 
@@ -79,7 +79,7 @@ export default async function SellerOperationsPage({ searchParams }: Props) {
         <div className="seller-ops-heading">
           <p className="eyebrow dark">My items → Operations</p>
           <h1>Follow every item</h1><Link href="/sell-with-shikimomo">Seller guide</Link>
-          <p>See where each item is in the Shikimomo process, review pricing, schedule publishing, and decide what should happen if it does not sell.</p>
+          <p>Follow inspection, Shikimomo pricing and publishing, and choose what happens if an item does not sell.</p>
         </div>
         {message ? <div className={`seller-ops-message ${type}`}>{message}</div> : null}
 
@@ -127,16 +127,9 @@ export default async function SellerOperationsPage({ searchParams }: Props) {
                 </section>
               ) : null}
 
-              {needsReview && mandate.data?.accepted ? <p>Shikimomo will finalize this price after inspection. No separate price approval is needed.</p> : needsReview ? (
-                <section className="seller-review-box">
-                  <div><h3>Ready for your review</h3><p>Approve the displayed initial price and locked commission, then Shikimomo will publish this item automatically after the review window.</p></div>
-                  <form action={scheduleAutoPublish}>
-                    <input type="hidden" name="item_id" value={item.itemId} />
-                    <input type="hidden" name="expected_price" value={item.initialPriceCents ?? ""} />
-                    <button type="submit">Approve & schedule publishing</button>
-                  </form>
-                </section>
-              ) : null}
+              {needsReview ? <p>{mandate.data?.accepted
+                ? "Shikimomo will finalize this price after inspection. No separate price approval is needed."
+                : "Authorize team pricing above so Shikimomo can finalize prices and publish your items."}</p> : null}
 
               {!['sold','closed'].includes(item.stage) ? (
                 <section className="unsold-choice">
