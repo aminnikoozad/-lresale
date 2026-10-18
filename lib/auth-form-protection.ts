@@ -1,3 +1,4 @@
+import { verifyTurnstile } from "@/lib/turnstile-verification";
 import { createHmac } from "node:crypto";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -26,16 +27,19 @@ export async function protectAuthForm(form: FormData, path: string, next?: strin
     fail("Too many attempts or protection unavailable. Please wait and try again.");
   }
 
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && secret) {
+    if (!(await verifyTurnstile(String(form.get("captcha_token") || ""), secret))) {
+      fail("Complete the anti-bot verification and try again.");
+    }
+    // Siteverify consumes tokens once. Do not send a consumed token to Supabase.
+    return undefined;
+  }
+
   const challengeToken = String(form.get("human_challenge") || "");
   const challengeAnswer = String(form.get("human_answer") || "");
   if (!verifyHumanChallenge(challengeToken, challengeAnswer)) {
     fail("Complete the human check and try again.");
   }
-
-  const captchaToken = String(form.get("captcha_token") || "");
-  if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !captchaToken) {
-    fail("Complete the anti-bot verification and try again.");
-  }
-
-  return captchaToken || undefined;
+  return undefined;
 }
