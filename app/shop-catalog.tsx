@@ -199,8 +199,8 @@ export function ShopCatalog({
     [categoryProducts],
   );
   const categorySubcategories = useMemo(
-    () => activeCategory === "all" ? [] : unique([...subcategoriesFor(activeCategory), ...categoryProducts.map((product) => product.subcategory)]),
-    [activeCategory, categoryProducts],
+    () => unique([...(activeCategory === "all" ? activeCategories.flatMap(category => subcategoriesFor(category)) : subcategoriesFor(activeCategory)), ...categoryProducts.map((product) => product.subcategory)]),
+    [activeCategory, activeCategories, categoryProducts],
   );
 
   const minCents = priceCents(minPrice);
@@ -245,6 +245,11 @@ export function ShopCatalog({
 
   const filterPanel = (
     <>
+      <fieldset className="filter-group"><legend>Category</legend>
+        <select aria-label="Filter by category" value={activeCategory} onChange={event => changeCategory(event.target.value)}>
+          {labels.map(entry => <option key={entry.value} value={entry.value}>{entry.label}</option>)}
+        </select>
+      </fieldset>
       <FilterPanel
         activeCategory={activeCategory}
         options={options}
@@ -264,7 +269,7 @@ export function ShopCatalog({
         clearFilters={clearFilters}
         extraActiveCount={subcategories.length + eras.length + homeFlags.length + (collection ? 1 : 0) + (query ? 1 : 0)}
       />
-      {activeCategory !== "all" ? (
+      {categorySubcategories.length > 0 ? (
         <FilterGroup
           title="Subcategory"
           values={categorySubcategories}
@@ -619,7 +624,7 @@ function FilterGroup({
   selected: string[];
   onToggle: (value: string) => void;
 }) {
-  if (!values.length) return null;
+  if (!values.length) return <Localize><fieldset className="filter-group"><legend>{title}</legend><small className="filter-empty-note">Options will appear when matching items are listed.</small></fieldset></Localize>;
   return <Localize>{(
     <fieldset className="filter-group">
       <legend>{title}</legend>
