@@ -145,23 +145,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
             <label>Item name
               <input name="name" minLength={2} maxLength={160} required placeholder="Example: Aritzia wool coat" />
             </label>
-            <label>Brand
-              <input name="brand" maxLength={100} placeholder="Aritzia" />
-            </label>
             <AdminItemTaxonomyFields activeCategories={activePilotCategories(pilot).map((entry) => entry.value)} />
-            <label>Size
-              <input name="size" maxLength={40} placeholder="XS, M, 8Y, shoe 9, One Size" />
-            </label>
-            <label>Condition
-              <select name="item_condition" defaultValue="Excellent">
-                <option value="New with tags">New with tags</option>
-                <option value="Like new">Like new</option>
-                <option value="Excellent">Excellent</option>
-                <option value="Very good">Very good</option>
-                <option value="Good">Good</option>
-                <option value="Tested">Tested (electronics)</option>
-              </select>
-            </label>
             <label>Initial proposed price (CAD)
               <input name="initial_price" type="number" min="0.01" step="0.01" required placeholder="20.00" />
             </label>
