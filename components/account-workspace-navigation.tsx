@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, Shirt, LayoutGrid } from "lucide-react";
+import { ShoppingBag, Shirt } from "lucide-react";
 import { Localize } from "@/components/site-language";
 import { WorkspaceNavigation } from "@/components/workspace-navigation";
 import { accountWorkspaceFromPath, accountWorkspaceForNavigation, type AccountWorkspace } from "@/lib/account-workspaces";
@@ -23,7 +22,6 @@ export function AccountWorkspaceNavigation({ initialMode }: {initialMode: Accoun
         <form action={selectAccountWorkspace}><input type="hidden" name="workspace" value="buyer" /><button type="submit" aria-pressed={mode === "buyer"}><ShoppingBag aria-hidden="true" /> Buyer</button></form>
         <form action={selectAccountWorkspace}><input type="hidden" name="workspace" value="seller" /><button type="submit" aria-pressed={mode === "seller"}><Shirt aria-hidden="true" /> Seller</button></form>
       </div>
-      <Link href="/account?choose=1" aria-label="Choose workspace"><LayoutGrid aria-hidden="true" /><span>Choose workspace</span></Link>
     </div>
     <WorkspaceNavigation title={mode === "buyer" ? "Buyer account" : mode === "seller" ? "Seller account" : "Account"} links={accountNavigationFor(mode)} />
   </div></Localize>;
