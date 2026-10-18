@@ -1,7 +1,6 @@
 
 import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
-import { AuthCaptcha } from "@/components/auth-captcha";
 import { AuthHumanCheck } from "@/components/auth-human-check";
 import Link from "next/link";
 import { requestPasswordReset } from "../auth/actions";
@@ -22,7 +21,6 @@ export default async function ForgotPasswordPage({ searchParams }: Props) {
     <form className="auth-form" action={requestPasswordReset}>
       <label htmlFor="email">Email address<input id="email" name="email" type="email" autoComplete="email" required /></label>
       <AuthHumanCheck />
-      <AuthCaptcha />
       <button className="auth-submit" type="submit">Send reset link</button>
     </form>
     <Link className="auth-back" href="/login">← Back to sign in</Link>
