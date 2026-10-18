@@ -1845,5 +1845,8 @@
   "front": "Avant",
   "back": "Arrière",
   "size_label": "Étiquette de taille",
-  "defect": "Défaut"
+  "defect": "Défaut",
+  "Verify your email before signing in. Check your inbox and spam folder.": "Confirmez votre adresse courriel avant de vous connecter. Vérifiez votre boîte de réception et vos courriels indésirables.",
+  "If this email is new, check your inbox and spam folder to confirm it. If you already have an account, sign in or use Forgot password.": "Si cette adresse courriel est nouvelle, vérifiez votre boîte de réception et vos courriels indésirables pour la confirmer. Si vous avez déjà un compte, connectez-vous ou utilisez « Mot de passe oublié ».",
+  "If this email is new, check your inbox and spam folder to confirm it, then sign in and verify your Canadian phone number. If you already have an account, sign in or use Forgot password.": "Si cette adresse courriel est nouvelle, vérifiez votre boîte de réception et vos courriels indésirables pour la confirmer, puis connectez-vous et vérifiez votre numéro canadien. Si vous avez déjà un compte, connectez-vous ou utilisez « Mot de passe oublié »."
 }
