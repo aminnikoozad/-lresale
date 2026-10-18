@@ -2,7 +2,6 @@
 import { GoogleSignIn } from "@/components/google-sign-in";
 import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
-import { AuthCaptcha } from "@/components/auth-captcha";
 import { AuthHumanCheck } from "@/components/auth-human-check";
 import Link from "next/link";
 import { signup } from "../auth/actions";
@@ -31,7 +30,6 @@ export default async function SignUpPage({ searchParams }: Props) {
       <label htmlFor="password_confirmation">Confirm password<input id="password_confirmation" name="password_confirmation" type="password" minLength={8} maxLength={128} autoComplete="new-password" required /></label>
       <label className="auth-check"><input name="terms" type="checkbox" value="accepted" required /> <span>I agree to the <Link href="/terms" target="_blank">Terms of Use</Link> and acknowledge the <Link href="/privacy" target="_blank">Privacy Policy</Link>.</span></label>
       <AuthHumanCheck />
-      <AuthCaptcha />
       <button className="auth-submit" type="submit">Create account</button>
       <small className="auth-note">We’ll verify your email{phoneRequired ? " and Canadian phone number" : ""} before the account becomes active.</small>
     </form>
