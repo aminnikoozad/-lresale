@@ -1,7 +1,7 @@
 "use client";
 import { BuyerViewEvent } from "@/components/buyer-view-event";
 import { recordBuyerEvent } from "@/lib/buyer-analytics";
-import { Localize } from "@/components/site-language";
+import { Localize, useLocale } from "@/components/site-language";
 
 
 import {
@@ -9,6 +9,8 @@ import {
   homeCollectionMatches,
   type HomeData,
 } from "@/lib/home-decor";
+import { catalogAttributeOptions } from "@/lib/catalog-attributes";
+import { translate } from "@/lib/translations";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -188,15 +190,18 @@ export function ShopCatalog({
     [activeCategory, products],
   );
   const options = useMemo(
-    () => ({
-      brands: unique(categoryProducts.map((product) => product.brand)),
-      sizes: unique(categoryProducts.map((product) => product.size)),
-      conditions: unique(categoryProducts.map((product) => product.condition)),
-      colors: unique(categoryProducts.map((product) => product.color)),
-      materials: unique(categoryProducts.map((product) => product.material)),
-      patterns: unique(categoryProducts.map((product) => product.pattern)),
-    }),
-    [categoryProducts],
+    () => {
+      const shared = catalogAttributeOptions(activeCategory);
+      return ({
+      brands: unique([...shared.brands, ...categoryProducts.map((product) => product.brand)]),
+      sizes: unique([...shared.sizes, ...categoryProducts.map((product) => product.size)]),
+      conditions: unique([...shared.conditions, ...categoryProducts.map((product) => product.condition)]),
+      colors: unique([...shared.colors, ...categoryProducts.map((product) => product.color)]),
+      materials: unique([...shared.materials, ...categoryProducts.map((product) => product.material)]),
+      patterns: unique([...shared.patterns, ...categoryProducts.map((product) => product.pattern)]),
+    });
+    },
+    [activeCategory, categoryProducts],
   );
   const categorySubcategories = useMemo(
     () => unique([...(activeCategory === "all" ? activeCategories.flatMap(category => subcategoriesFor(category)) : subcategoriesFor(activeCategory)), ...categoryProducts.map((product) => product.subcategory)]),
@@ -624,22 +629,21 @@ function FilterGroup({
   selected: string[];
   onToggle: (value: string) => void;
 }) {
-  if (!values.length) return null;
-  return <Localize>{(
-    <fieldset className="filter-group">
-      <legend>{title}</legend>
-      {values.map((value) => (
-        <label key={value}>
-          <input
-            type="checkbox"
-            checked={selected.includes(value)}
-            onChange={() => onToggle(value)}
-          />
-          <span>{value}</span>
-        </label>
-      ))}
-    </fieldset>
-  )}</Localize>;
+  const { locale } = useLocale();
+  const [search, setSearch] = useState("");
+  const choices = unique([...values, ...selected]);
+  const matching = choices.filter(value => translate(locale, value).toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()) || value.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
+  return <Localize><details className="catalog-filter-dropdown">
+    <summary><span>{title}</span><span className="catalog-filter-choice">{selected.length ? String(selected.length) : "Any"}<span aria-hidden="true">⌄</span></span></summary>
+    <div className="catalog-filter-options">
+      <input type="search" aria-label={`Search ${title}`} placeholder="Search options" value={search} onChange={event => setSearch(event.target.value)} />
+      <fieldset className="filter-group">
+        <legend className="sr-only">{title}</legend>
+        {matching.map(value => <label key={value}><input type="checkbox" checked={selected.includes(value)} onChange={() => onToggle(value)} /><span translate={title === "Brand" || title === "Maker / Brand" ? "no" : undefined}>{value}</span></label>)}
+        {!matching.length ? <p role="status">No matching options</p> : null}
+      </fieldset>
+    </div>
+  </details></Localize>;
 }
 
 export function ProductGrid({
