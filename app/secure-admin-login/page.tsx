@@ -1,7 +1,6 @@
 
 import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
-import { AuthCaptcha } from "@/components/auth-captcha";
 import { AuthHumanCheck } from "@/components/auth-human-check";
 import type { Metadata } from "next";
 import { adminLogin } from "./actions";
@@ -33,7 +32,6 @@ export default async function SecureAdminLogin({ searchParams }: Props) {
             <input id="admin-password" name="password" type="password" autoComplete="current-password" required />
           </label>
           <AuthHumanCheck />
-          <AuthCaptcha />
           <button className="auth-submit" type="submit">Continue securely</button>
         </form>
         <small>Authorized accounts must complete multi-factor authentication before privileged actions are allowed.</small>
