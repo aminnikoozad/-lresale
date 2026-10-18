@@ -1,4 +1,5 @@
 
+import { GoogleSignIn } from "@/components/google-sign-in";
 import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { AuthCaptcha } from "@/components/auth-captcha";
@@ -20,6 +21,7 @@ export default async function SignUpPage({ searchParams }: Props) {
     <h1>Create your account.</h1>
     <p>One account to shop, track purchases and manage the items you sell.</p>
     {message && <div className="auth-message error">{message}</div>}
+    <GoogleSignIn />
     <form className="auth-form" action={signup}>
       <label htmlFor="full_name">Full name<input id="full_name" name="full_name" type="text" minLength={2} maxLength={100} autoComplete="name" required /></label>
       <label htmlFor="username">Username<input id="username" name="username" minLength={3} maxLength={30} pattern="[a-z0-9][a-z0-9._]{2,29}" autoCapitalize="none" autoComplete="username" placeholder="e.g. amin.montreal" required /><small>This is your unique, readable Shikimomo username. No long account number is shown in your customer account.</small></label>
