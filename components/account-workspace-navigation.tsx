@@ -2,14 +2,15 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, Shirt } from "lucide-react";
+import Link from "next/link";
+import { ShoppingBag, Shirt, ShieldCheck } from "lucide-react";
 import { Localize } from "@/components/site-language";
 import { WorkspaceNavigation } from "@/components/workspace-navigation";
 import { accountWorkspaceFromPath, accountWorkspaceForNavigation, type AccountWorkspace } from "@/lib/account-workspaces";
 import { accountNavigationFor } from "@/lib/workspace-navigation";
 import { rememberAccountWorkspace, selectAccountWorkspace } from "@/app/account/workspace-actions";
 
-export function AccountWorkspaceNavigation({ initialMode }: {initialMode: AccountWorkspace | null}) {
+export function AccountWorkspaceNavigation({ initialMode, showAdminPanel = false }: {initialMode: AccountWorkspace | null; showAdminPanel?: boolean}) {
   const pathname = usePathname();
   const pathMode = accountWorkspaceFromPath(pathname);
   const mode = accountWorkspaceForNavigation(pathname, initialMode);
@@ -22,6 +23,7 @@ export function AccountWorkspaceNavigation({ initialMode }: {initialMode: Accoun
         <form action={selectAccountWorkspace}><input type="hidden" name="workspace" value="buyer" /><button type="submit" aria-pressed={mode === "buyer"}><ShoppingBag aria-hidden="true" /> Buyer</button></form>
         <form action={selectAccountWorkspace}><input type="hidden" name="workspace" value="seller" /><button type="submit" aria-pressed={mode === "seller"}><Shirt aria-hidden="true" /> Seller</button></form>
       </div>
+      {showAdminPanel ? <Link href="/admin" className="account-admin-panel-link"><ShieldCheck aria-hidden="true" /> Admin panel</Link> : null}
     </div>
     <WorkspaceNavigation title={mode === "buyer" ? "Buyer account" : mode === "seller" ? "Seller account" : "Account"} links={accountNavigationFor(mode)} />
   </div></Localize>;
