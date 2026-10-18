@@ -86,6 +86,9 @@ export async function login(formData: FormData) {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken } });
   if (error) {
+    if (error.code === "email_not_confirmed") {
+      redirect(messageUrl("/login", "Verify your email before signing in. Check your inbox and spam folder.", "error", next));
+    }
     redirect(messageUrl("/login", "Email or password is incorrect.", "error", next));
   }
 
@@ -141,7 +144,7 @@ export async function signup(formData: FormData) {
   }
   if (data.session) redirect(next);
 
-  redirect(messageUrl("/login", isPhoneVerificationRequired() ? "Check your email first. After signing in, we’ll verify your Canadian phone number." : "Check your email to verify your account, then sign in.", "success"));
+  redirect(messageUrl("/login", isPhoneVerificationRequired() ? "If this email is new, check your inbox and spam folder to confirm it, then sign in and verify your Canadian phone number. If you already have an account, sign in or use Forgot password." : "If this email is new, check your inbox and spam folder to confirm it. If you already have an account, sign in or use Forgot password.", "success"));
 }
 
 export async function sendPhoneVerification(formData: FormData) {
