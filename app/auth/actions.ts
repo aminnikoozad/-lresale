@@ -136,7 +136,9 @@ export async function signup(formData: FormData) {
     password,
     options: {
       captchaToken,
-      data: { full_name: fullName, phone_e164: phone, username },
+      data: { full_name: fullName, phone_e164: phone, username,
+        email_marketing: formData.get("email_marketing") === "accepted",
+        marketing_notice_version: "2026-10-16" },
       emailRedirectTo: `${origin}/auth/callback?next=${next}`,
     },
   });
