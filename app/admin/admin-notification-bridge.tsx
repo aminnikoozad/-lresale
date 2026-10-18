@@ -24,9 +24,6 @@ export function AdminNotificationBridge(){
         const eventAllowed=prefs.event_preferences?.[n.event_type]??true;
         if(!eventAllowed)return;
         if(prefs.dashboard_enabled)setItem(n);
-        if(prefs.push_enabled&&"Notification" in window&&Notification.permission==="granted"&&"serviceWorker" in navigator){
-          try{const reg=await navigator.serviceWorker.ready;await reg.showNotification(n.title,{body:n.body,icon:"/favicon.svg",badge:"/favicon.svg",tag:`support-${n.id}`,data:{url:n.conversation_id?`/admin/support/${n.conversation_id}`:"/admin/ai-trainer"}})}catch{}
-        }
       }).subscribe();
     });
     return()=>{if(channel)void supabase.removeChannel(channel)};

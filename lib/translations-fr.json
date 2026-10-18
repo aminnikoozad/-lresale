@@ -712,7 +712,7 @@
   "New conversation": "Nouvelle conversation",
   "New items": "Nouveaux articles",
   "New password": "Nouveau mot de passe",
-  "New pickup request": "Nouvelle demande de ramassage",
+  "New pickup request": "Nouvelle demande de collecte",
   "New pickup requests": "Nouvelles demandes de ramassage",
   "New priority pickup request": "Demande de ramassage prioritaire",
   "New to Shikimomo?": "Nouveau sur Shikimomo?",
@@ -1962,5 +1962,8 @@
   "T-Shirts": "T-shirts",
   "Tops": "Hauts",
   "Tops & T-Shirts": "Hauts et t-shirts",
-  "Admin panel": "Panneau d’administration"
+  "Admin panel": "Panneau d’administration",
+  "Pickup and support alerts can reach registered devices even when this panel is closed.": "Les alertes de collecte et de soutien peuvent atteindre les appareils enregistrés même lorsque ce panneau est fermé.",
+  "On iPhone, add Shikimomo to your Home Screen, open it there, then enable notifications.": "Sur iPhone, ajoutez Shikimomo à l’écran d’accueil, ouvrez l’application, puis activez les notifications.",
+  "Choose the events you want. Web Push reaches registered devices even when the panel is closed.": "Choisissez les événements souhaités. Web Push atteint les appareils enregistrés même lorsque le panneau est fermé."
 }

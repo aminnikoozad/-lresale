@@ -4,7 +4,8 @@ import { Localize } from "@/components/site-language";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, BellRing, X } from "lucide-react";
+import { BellRing, X } from "lucide-react";
+import { AdminPushControls } from "@/components/admin-push-controls";
 import { createClient } from "@/lib/supabase/client";
 
 type PickupInsert = {
@@ -22,23 +23,10 @@ type Alert = {
 };
 
 export function AdminLiveAlerts() {
-  const [permission, setPermission] = useState<NotificationPermission | "unsupported">("default");
   const [alert, setAlert] = useState<Alert | null>(null);
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const permissionTimer = window.setTimeout(() => {
-      if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-        setPermission("unsupported");
-      } else {
-        setPermission(Notification.permission);
-      }
-    }, 0);
-
-    if ("Notification" in window && "serviceWorker" in navigator) {
-      void navigator.serviceWorker.register("/admin-sw.js", { scope: "/" }).catch(() => undefined);
-    }
-
     const supabase = createClient();
     const channel = supabase
       .channel("admin-pickup-alerts")
@@ -56,43 +44,14 @@ export function AdminLiveAlerts() {
           };
           setAlert(notification);
 
-          if ("Notification" in window && Notification.permission === "granted" && "serviceWorker" in navigator) {
-            try {
-              const registration = await navigator.serviceWorker.ready;
-              await registration.showNotification(notification.title, {
-                body: notification.body,
-                icon: "/favicon.svg",
-                badge: "/favicon.svg",
-                tag: `pickup-${notification.id}`,
-                data: { url: "/admin/operations#pickup-requests" },
-              });
-            } catch {
-              // The in-dashboard alert remains available even when the browser blocks device notifications.
-            }
-          }
         },
       )
       .subscribe((status) => setConnected(status === "SUBSCRIBED"));
 
     return () => {
-      window.clearTimeout(permissionTimer);
       void supabase.removeChannel(channel);
     };
   }, []);
-
-  async function enableNotifications() {
-    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-      setPermission("unsupported");
-      return;
-    }
-    try {
-      await navigator.serviceWorker.register("/admin-sw.js", { scope: "/" });
-      const result = await Notification.requestPermission();
-      setPermission(result);
-    } catch {
-      setPermission("unsupported");
-    }
-  }
 
   return <Localize>{(
     <>
@@ -100,24 +59,16 @@ export function AdminLiveAlerts() {
         <div className="ops-card-title">
           <div>
             <h2>Pickup alerts</h2>
-            <p>Live alerts are connected to new pickup requests while this Admin session is open.</p>
+            <p>Pickup and support alerts can reach registered devices even when this panel is closed.</p>
           </div>
           <strong>{connected ? "Live" : "Connecting…"}</strong>
         </div>
         <div className="admin-alert-controls">
-          {permission === "granted" ? (
-            <span className="alert-enabled"><BellRing /> Device notifications enabled</span>
-          ) : permission === "denied" ? (
-            <span>Notifications are blocked in this browser. Enable them in your browser/site settings.</span>
-          ) : permission === "unsupported" ? (
-            <span>This browser does not expose web notification permission here. In-dashboard alerts still work.</span>
-          ) : (
-            <button type="button" onClick={enableNotifications}><Bell /> Enable notifications on this device</button>
-          )}
+          <AdminPushControls />
           <Link href="/admin/operations#pickup-requests">Open Pickup Inbox</Link>
         </div>
         <p className="integration-note">
-          For iPhone background alerts when the Admin site is completely closed, Shikimomo will need a dedicated Web Push provider/VAPID connection. No private push key is stored in the browser or repository.
+          On iPhone, add Shikimomo to your Home Screen, open it there, then enable notifications.
         </p>
       </section>
 
