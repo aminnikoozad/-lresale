@@ -634,7 +634,7 @@ function FilterGroup({
   const choices = unique([...values, ...selected]);
   const matching = choices.filter(value => translate(locale, value).toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()) || value.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
   return <Localize><details className="catalog-filter-dropdown">
-    <summary><span>{title}</span><span className="catalog-filter-choice">{selected.length ? String(selected.length) : "Any"}<span aria-hidden="true">⌄</span></span></summary>
+    <summary style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 76px", gap: 8, fontSize: 14 }}><span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{title}</span><span className="catalog-filter-choice" style={{ minWidth: 0, width: "100%", boxSizing: "border-box" }}>{selected.length ? String(selected.length) : "Any"}<span aria-hidden="true">⌄</span></span></summary>
     <div className="catalog-filter-options">
       <input type="search" aria-label={`Search ${title}`} placeholder="Search options" value={search} onChange={event => setSearch(event.target.value)} />
       <fieldset className="filter-group">
