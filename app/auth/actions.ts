@@ -126,7 +126,9 @@ export async function signup(formData: FormData) {
 
   await enforcePasswordSafety(password, "/signup");
 
-  const supabase = await createClient();
+  // Email confirmation may open on another device: do not bind it to a PKCE cookie.
+  const { url, publishableKey } = getSupabaseConfig();
+  const supabase = createAuthClient(url, publishableKey, { auth: { flowType: "implicit", persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
   const origin = await requestOrigin();
   const next = isPhoneVerificationRequired() ? "/verify-phone" : "/account";
   const { data, error } = await supabase.auth.signUp({
