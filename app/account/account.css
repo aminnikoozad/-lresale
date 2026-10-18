@@ -563,3 +563,26 @@
     padding-bottom: max(8px, env(safe-area-inset-bottom));
   }
 }
+
+/* Working settlement links must remain visible on the dark balance card. */
+.stats .balance-stat > a {
+  display: inline-block;
+  margin-top: 14px;
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.payout-box > a {
+  margin-left: auto;
+  color: #37654f;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.account-shell > .seller-review-box {
+  background: #f1f5f2;
+  border-color: #d5e2d9;
+  color: #242424;
+}
+@media (max-width: 760px) {
+  .payout-box > a { margin-left: 0; }
+}
