@@ -48,3 +48,7 @@
     font-size: 0.86rem;
   }
 }
+
+/* Match the seller commission table to the storefront brand. */
+.account-commission-wrap .commission-table-wrap th{background:#37654f!important;color:#fff!important;border-color:#d5e2d9!important}
+.account-commission-wrap .commission-table-wrap td{border-color:#e4e7e2!important}
