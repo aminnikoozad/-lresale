@@ -1,5 +1,7 @@
 "use client";
 import { createContext, useContext, useMemo, useState, cloneElement, isValidElement, Children, type ReactNode, type ReactElement } from "react";
+import Link from "next/link";
+import { BrandWordmark } from "@/components/brand-wordmark";
 import { useRouter } from "next/navigation";
 import { translate, type Locale } from "@/lib/translations";
 const LanguageContext = createContext<{locale: Locale; setLocale: (value: Locale) => void}>({locale:"en",setLocale:()=>{}});
@@ -18,7 +20,7 @@ export function LanguageProvider({initialLocale,children}:{initialLocale:Locale;
 export const useLocale = () => useContext(LanguageContext);
 export function LanguageSwitch() {
   const {locale,setLocale}=useLocale();
-  return <div className="site-language-bar" translate="no"><button className="site-language-switch" type="button" onClick={()=>setLocale(locale==="en"?"fr":"en")} aria-label={locale==="en"?"Passer au français":"Switch to English"}><span lang="en">EN</span><span aria-hidden="true">/</span><span lang="fr">FR</span><strong>{locale==="en"?"Français":"English"}</strong></button></div>;
+  return <div className="site-language-bar" translate="no"><Link className="site-home-link" href="/" aria-label={locale==="en"?"Shikimomo — Back to home":"Shikimomo — Retour à l’accueil"}><BrandWordmark /></Link><button className="site-language-switch" type="button" onClick={()=>setLocale(locale==="en"?"fr":"en")} aria-label={locale==="en"?"Passer au français":"Switch to English"}><span lang="en">EN</span><span aria-hidden="true">/</span><span lang="fr">FR</span><strong>{locale==="en"?"Français":"English"}</strong></button></div>;
 }
 const attributes = new Set(["placeholder","title","aria-label","alt","pendingLabel"]);
 /** Translate only reviewed source UI copy, never HTML, paths, actions or form values. */
