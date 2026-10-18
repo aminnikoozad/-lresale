@@ -139,8 +139,17 @@ export async function signup(formData: FormData) {
     },
   });
 
+  const existingAccountMessage = "This email is already registered. Sign in or reset your password.";
   if (error) {
+    if (error.code === "user_already_exists" || error.code === "email_exists") {
+      redirect(messageUrl("/login", existingAccountMessage, "error", "/account"));
+    }
     redirect(messageUrl("/signup", "We could not create the account. Try again shortly.", "error"));
+  }
+  // Supabase returns an obfuscated user with no identities for a confirmed duplicate.
+  // Check this before considering a session or displaying signup success.
+  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+    redirect(messageUrl("/login", existingAccountMessage, "error", "/account"));
   }
   if (data.session) redirect(next);
 
