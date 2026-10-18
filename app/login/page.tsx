@@ -3,7 +3,6 @@ import { GoogleSignIn } from "@/components/google-sign-in";
 import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { PendingSubmitButton } from "@/components/pending-submit-button";
-import { AuthCaptcha } from "@/components/auth-captcha";
 import { AuthHumanCheck } from "@/components/auth-human-check";
 import Link from "next/link";
 import { safeRedirectPath } from "@/lib/safe-redirect";
@@ -29,7 +28,6 @@ export default async function LoginPage({ searchParams }: Props) {
       <label htmlFor="password">Password<input id="password" name="password" type="password" autoComplete="current-password" required /></label>
       <div className="auth-row"><Link href="/forgot-password">Forgot password?</Link></div>
       <AuthHumanCheck />
-      <AuthCaptcha />
       <PendingSubmitButton className="auth-submit" pendingLabel="Signing in…">Sign in</PendingSubmitButton>
     </form>
     <p className="auth-switch">New to Shikimomo? <Link href="/signup">Create an account</Link></p>
