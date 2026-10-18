@@ -624,7 +624,7 @@ function FilterGroup({
   selected: string[];
   onToggle: (value: string) => void;
 }) {
-  if (!values.length) return <Localize><fieldset className="filter-group"><legend>{title}</legend><small className="filter-empty-note">Options will appear when matching items are listed.</small></fieldset></Localize>;
+  if (!values.length) return <Localize><fieldset className="filter-group"><legend>{title}</legend></fieldset></Localize>;
   return <Localize>{(
     <fieldset className="filter-group">
       <legend>{title}</legend>
