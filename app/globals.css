@@ -7,3 +7,15 @@
 
 /* Home & Decor extends the existing storefront and intake controls. */
 .home-intake{display:grid;gap:16px;min-width:0;border:1px solid var(--border,#ddd);padding:18px;border-radius:14px}.home-intake legend{font-weight:700}.home-intake p{font-size:.9rem;line-height:1.6}.home-intake input:not([type=checkbox]),.home-intake textarea{width:100%;font:inherit;font-size:16px;padding:12px;border:1px solid #d9dee8;border-radius:10px;background:#fff}.home-intake .check{display:flex;gap:10px}.home-filters{margin-top:20px;border-top:1px solid #ddd;padding:16px 0}.home-filters summary{font-weight:650;cursor:pointer;padding-bottom:12px}.home-filters label{display:flex;gap:10px;margin:12px 0}.home-collections{display:flex;gap:8px;overflow:auto;padding:12px 0}.home-collections button{white-space:nowrap;padding:9px 14px;border:1px solid #d2dad5;border-radius:22px}.home-collections button[aria-pressed=true]{background:#155e59;color:#fff}.home-product-details{margin:24px 0}.home-product-details summary{font-weight:650;cursor:pointer;padding:16px 0}.home-product-details p{line-height:1.65;margin:12px 0}.home-product-details dd{overflow-wrap:anywhere}.home-gallery-role{position:absolute;bottom:8px;left:8px;background:#fff;padding:4px 8px;font-size:.8rem;border-radius:4px}.home-catalog-note{max-width:650px;line-height:1.65;margin:16px 0}
+
+/* Shared catalog filter dropdowns */
+.catalog-filter-dropdown{border-bottom:1px solid #dce2dc;padding:10px 0}
+.catalog-filter-dropdown>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none;font-weight:600}
+.catalog-filter-dropdown>summary::-webkit-details-marker{display:none}
+.catalog-filter-choice{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:96px;padding:8px 12px;border:1px solid #b9c8bc;border-radius:7px;background:#fff;color:#365542;font-size:14px;font-weight:400}
+.catalog-filter-dropdown[open] .catalog-filter-choice{border-color:#426951;background:#f0f5f0}
+.catalog-filter-options{padding-top:10px}
+.catalog-filter-options>input{width:100%;padding:9px 10px;border:1px solid #b9c8bc;border-radius:6px;background:#fff;font-size:14px}
+.catalog-filter-options .filter-group{max-height:220px;overflow-y:auto;margin:8px 0 0;padding:0;border:0}
+.catalog-filter-options .filter-group label{display:flex;align-items:center;gap:9px;padding:6px 2px}
+.catalog-filter-dropdown>summary:focus-visible{outline:2px solid #426951;outline-offset:4px}
