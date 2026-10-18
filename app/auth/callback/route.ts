@@ -12,6 +12,14 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/update-password", url.origin));
   }
 
+  // Fragments never reach this server. Forward them intact to the browser handler.
+  if (!code && !url.searchParams.has("error") && !url.searchParams.has("error_code")) {
+    const response = NextResponse.redirect(new URL("/auth/complete", url.origin));
+    response.headers.set("Cache-Control", "no-store");
+    response.headers.set("Referrer-Policy", "no-referrer");
+    return response;
+  }
+
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
@@ -20,6 +28,6 @@ export async function GET(request: Request) {
 
   const failure = new URL(next === "/update-password" ? "/forgot-password" : "/login", url.origin);
   failure.searchParams.set("type", "error");
-  failure.searchParams.set("message", next === "/update-password" ? "This reset link could not be verified. Request a new link and use the latest email." : "The verification link is invalid or expired.");
+  failure.searchParams.set("message", next === "/update-password" ? "This reset link could not be verified. Request a new link and use the latest email." : "We could not complete sign-in with this link. If you have already confirmed your email, sign in with your password. Otherwise, use the latest confirmation email.");
   return NextResponse.redirect(failure);
 }
