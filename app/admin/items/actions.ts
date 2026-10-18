@@ -143,7 +143,10 @@ export async function createAdminItem(formData: FormData) {
     ));
   }
 
-  const { data: itemId, error: createError } = await supabase.rpc("admin_create_item_v4", {
+  const { data: itemId, error: createError } = await supabase.rpc("admin_create_item_v5", {
+    item_color: text(formData, "color") || null,
+    item_material: text(formData, "material") || null,
+    item_pattern: text(formData, "pattern") || null,
     target_owner_id: ownerId,
     target_collection_request_id: collectionRequestId || null,
     item_name: name,
