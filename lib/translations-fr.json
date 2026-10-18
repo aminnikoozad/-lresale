@@ -1856,5 +1856,16 @@
   "or": "ou",
   "By continuing with Google, you agree to the ": "En continuant avec Google, vous acceptez les ",
   "Google sign-in is unavailable. Please sign in with your email or try again later.": "La connexion avec Google est indisponible. Connectez-vous avec votre courriel ou réessayez plus tard.",
-  "Google sign-in was not completed. Please try again or sign in with your email.": "La connexion avec Google n’a pas abouti. Réessayez ou connectez-vous avec votre courriel."
+  "Google sign-in was not completed. Please try again or sign in with your email.": "La connexion avec Google n’a pas abouti. Réessayez ou connectez-vous avec votre courriel.",
+  "Active items": "Articles en cours",
+  "Pricing in progress": "Tarification en cours",
+  "Team pricing terms required": "Autorisation de tarification requise",
+  "View earnings & settlement →": "Voir les revenus et le règlement →",
+  "Follow inspection, Shikimomo pricing, your locked commission and each item through sale and settlement.": "Suivez l’inspection, la tarification par Shikimomo, votre commission fixe et chaque article jusqu’à la vente et au règlement.",
+  "Completed wallet balance:": "Solde du portefeuille confirmé :",
+  "Online bank payouts are not available yet. View your earnings activity or contact support about settlement.": "Les virements bancaires en ligne ne sont pas encore disponibles. Consultez vos revenus ou contactez l’assistance au sujet du règlement.",
+  "Online bank payouts are not available yet. Contact support about settlement.": "Les virements bancaires en ligne ne sont pas encore disponibles. Contactez l’assistance au sujet du règlement.",
+  "Contact support about settlement →": "Contacter l’assistance au sujet du règlement →",
+  "Follow inspection, Shikimomo pricing and publishing, and choose what happens if an item does not sell.": "Suivez l’inspection, la tarification et la publication par Shikimomo, et choisissez le devenir d’un article invendu.",
+  "Authorize team pricing above so Shikimomo can finalize prices and publish your items.": "Autorisez la tarification par l’équipe ci-dessus pour que Shikimomo puisse finaliser les prix et publier vos articles."
 }
