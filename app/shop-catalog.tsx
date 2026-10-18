@@ -399,7 +399,7 @@ export function ShopCatalog({
             </TabsTrigger>
           ))}
         </TabsList>
-        {categorySubcategories.length > 0 ? <div className="catalog-subcategories" aria-label="Shop by subcategory">
+        {activeCategory !== "all" && categorySubcategories.length > 0 ? <div className="catalog-subcategories" aria-label="Shop by subcategory">
           {categorySubcategories.map((value) => <button key={value} type="button" aria-pressed={subcategories.includes(value)} onClick={() => toggle(setSubcategories, value)}>{value}</button>)}
         </div> : null}
         {labels.map((tab) => (
