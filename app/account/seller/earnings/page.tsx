@@ -18,7 +18,8 @@ export default async function SellerEarnings() {
     <p className="eyebrow dark">Seller account</p><h1>Earnings &amp; settlement</h1>
     {summary.error||activity.error ? <p role="alert">Your earnings could not be loaded. Please try again.</p> : <>
       <section className="account-shared-card"><h2>Pending sale earnings</h2><p><strong>{cad(pending)}</strong></p><p>Awaiting settlement review. This is not an available bank payout.</p></section>
-      <section className="account-shared-card"><h2>Completed wallet balance</h2><p><strong>{cad(completed)}</strong></p><p>Payout setup will become available after payment verification is connected.</p></section>
+      <section className="account-shared-card"><h2>Completed wallet balance</h2><p><strong>{cad(completed)}</strong></p><p>Online bank payouts are not available yet. Contact support about settlement.</p></section>
+      <p><Link href="/account/messages">Contact support about settlement →</Link></p>
       <section className="account-shared-card"><h2>Recent earnings activity</h2>{activity.data?.length ? <table><thead><tr><th>Date</th><th>Activity</th><th>Amount</th><th>Status</th></tr></thead><tbody>{activity.data.map(row=><tr key={row.id}><td>{new Date(row.created_at).toLocaleDateString("en-CA",{timeZone:"America/Toronto"})}</td><td>{row.description||row.transaction_type.replaceAll("_"," ")}</td><td>{cad(row.amount_cents)}</td><td>{row.status}</td></tr>)}</tbody></table> : <p>No earnings activity yet.</p>}</section>
     </>}
     <Link href="/account/seller">Back to selling dashboard</Link>
