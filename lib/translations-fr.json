@@ -1850,5 +1850,11 @@
   "If this email is new, check your inbox and spam folder to confirm it. If you already have an account, sign in or use Forgot password.": "Si cette adresse courriel est nouvelle, vérifiez votre boîte de réception et vos courriels indésirables pour la confirmer. Si vous avez déjà un compte, connectez-vous ou utilisez « Mot de passe oublié ».",
   "If this email is new, check your inbox and spam folder to confirm it, then sign in and verify your Canadian phone number. If you already have an account, sign in or use Forgot password.": "Si cette adresse courriel est nouvelle, vérifiez votre boîte de réception et vos courriels indésirables pour la confirmer, puis connectez-vous et vérifiez votre numéro canadien. Si vous avez déjà un compte, connectez-vous ou utilisez « Mot de passe oublié ».",
   "This email is already registered. Sign in or reset your password.": "Cette adresse courriel est déjà inscrite. Connectez-vous ou réinitialisez votre mot de passe.",
-  "We could not complete sign-in with this link. If you have already confirmed your email, sign in with your password. Otherwise, use the latest confirmation email.": "Nous n’avons pas pu terminer la connexion avec ce lien. Si vous avez déjà confirmé votre courriel, connectez-vous avec votre mot de passe. Sinon, utilisez le dernier courriel de confirmation."
+  "We could not complete sign-in with this link. If you have already confirmed your email, sign in with your password. Otherwise, use the latest confirmation email.": "Nous n’avons pas pu terminer la connexion avec ce lien. Si vous avez déjà confirmé votre courriel, connectez-vous avec votre mot de passe. Sinon, utilisez le dernier courriel de confirmation.",
+  "Continue with Google": "Continuer avec Google",
+  "Connecting to Google…": "Connexion à Google…",
+  "or": "ou",
+  "By continuing with Google, you agree to the ": "En continuant avec Google, vous acceptez les ",
+  "Google sign-in is unavailable. Please sign in with your email or try again later.": "La connexion avec Google est indisponible. Connectez-vous avec votre courriel ou réessayez plus tard.",
+  "Google sign-in was not completed. Please try again or sign in with your email.": "La connexion avec Google n’a pas abouti. Réessayez ou connectez-vous avec votre courriel."
 }
