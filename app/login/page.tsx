@@ -1,4 +1,5 @@
 
+import { GoogleSignIn } from "@/components/google-sign-in";
 import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { PendingSubmitButton } from "@/components/pending-submit-button";
@@ -21,6 +22,7 @@ export default async function LoginPage({ searchParams }: Props) {
     <h1>Welcome back.</h1>
     <p>Sign in to shop, track orders or manage the items you sell.</p>
     {message && <div className={`auth-message ${type}`}>{message}</div>}
+    <GoogleSignIn next={next} />
     <form className="auth-form" action={login}>
       <input type="hidden" name="next" value={next} />
       <label htmlFor="email">Email address<input id="email" name="email" type="email" autoComplete="email" required /></label>
