@@ -636,7 +636,7 @@ function FilterGroup({
   return <Localize><details className="catalog-filter-dropdown">
     <summary style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 76px", gap: 8, fontSize: 14 }}><span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{title}</span><span className="catalog-filter-choice" style={{ minWidth: 0, width: "100%", boxSizing: "border-box" }}>{selected.length ? String(selected.length) : "Any"}<span aria-hidden="true">⌄</span></span></summary>
     <div className="catalog-filter-options">
-      <input type="search" aria-label={`Search ${title}`} placeholder="Search options" value={search} onChange={event => setSearch(event.target.value)} />
+      <input type="search" aria-label={locale === "fr" ? `Rechercher : ${title}` : `Search ${title}`} placeholder="Search options" value={search} onChange={event => setSearch(event.target.value)} />
       <fieldset className="filter-group">
         <legend className="sr-only">{title}</legend>
         {matching.map(value => <label key={value}><input type="checkbox" checked={selected.includes(value)} onChange={() => onToggle(value)} /><span translate={title === "Brand" || title === "Maker / Brand" ? "no" : undefined}>{value}</span></label>)}
