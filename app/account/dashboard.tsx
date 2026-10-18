@@ -19,7 +19,6 @@ import {
   CircleDollarSign,
   Package,
   Shirt,
-  ShoppingBag,
   Truck,
   Wallet,
 } from "lucide-react";
@@ -35,7 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { approveItemPricing, createCollectionRequest } from "./actions";
+import { createCollectionRequest } from "./actions";
 import type { CommissionTier } from "@/lib/business-rules";
 
 type Item = {
@@ -49,7 +48,6 @@ type Item = {
   platformRate: string;
   estimatedEarnings: string;
   finalEarnings: string;
-  requiresApproval: boolean;
 };
 type Request = {
   id: string;
@@ -99,6 +97,7 @@ type Props = {
   message: string | null;
   messageType: "success" | "error";
   balance: string;
+  activeItemCount: number;
   totalEarned: string;
   items: Item[];
   requests: Request[];
@@ -125,6 +124,7 @@ export function Dashboard({
   message,
   messageType,
   balance,
+  activeItemCount,
   totalEarned,
   items,
   requests,
@@ -199,20 +199,18 @@ export function Dashboard({
         <article className="balance-stat">
           <div>
             <Wallet />
-            <span>Available balance</span>
+            <span>Completed wallet balance</span>
           </div>
           <strong>{balance}</strong>
           <small>Completed wallet balance recorded in your account</small>
-          <Button size="sm" disabled>
-            <ShoppingBag /> Balance checkout coming later
-          </Button>
+          <Link href="/account/seller/earnings">View earnings &amp; settlement →</Link>
         </article>
         <article>
           <div>
             <Shirt />
-            <span>Items with us</span>
+            <span>Active items</span>
           </div>
-          <strong>{items.length}</strong>
+          <strong>{activeItemCount}</strong>
           <small>{pilotEnabled ? `${activeCategoryLabels || "Selected categories"} during the pilot` : "Accepted Shikimomo inventory"}</small>
         </article>
         <article>
@@ -229,15 +227,14 @@ export function Dashboard({
           <TabsList>
             <TabsTrigger value="items">My items</TabsTrigger>
             <TabsTrigger value="requests">My batches</TabsTrigger>
-            <TabsTrigger value="payout">Payout</TabsTrigger>
+            <TabsTrigger value="payout">Earnings &amp; settlement</TabsTrigger>
           </TabsList>
           <TabsContent value="items">
             <div className="panel-title">
               <div>
                 <h2>Items we’re handling for you</h2>
                 <p>
-                  Review pricing, approve your locked commission and follow each
-                  item through sale and payout.
+                  Follow inspection, Shikimomo pricing, your locked commission and each item through sale and settlement.
                 </p>
               </div>
               <RequestDialog
@@ -257,7 +254,7 @@ export function Dashboard({
               <div className="seller-items">
                 {items.map((item) => (
                   <article
-                    className={`seller-item ${item.requiresApproval ? "needs-approval" : ""}`}
+                    className="seller-item"
                     key={item.id}
                   >
                     <header>
@@ -270,7 +267,6 @@ export function Dashboard({
                           {item.status}
                         </span>
                       </div>
-                      {item.requiresApproval ? <b>Approval needed</b> : null}
                     </header>
                     <dl>
                       <div><dt>Initial approved price</dt><dd>{item.initialPrice}</dd></div>
@@ -280,20 +276,7 @@ export function Dashboard({
                       <div><dt>Estimated earnings</dt><dd>{item.estimatedEarnings}</dd></div>
                       <div><dt>Final earnings after sale</dt><dd>{item.finalEarnings}</dd></div>
                     </dl>
-                    {item.requiresApproval ? (
-                      <div className="pricing-approval">
-                        <p>
-                          By approving, you accept the initial price and
-                          commission shown above. The percentage will remain
-                          locked even if the item is discounted later.
-                        </p>
-                        <form action={approveItemPricing}>
-                          <input type="hidden" name="item_id" value={item.id} />
-                          <input type="hidden" name="expected_price" value={item.initialPriceCents} />
-                          <Button type="submit">Approve price &amp; commission</Button>
-                        </form>
-                      </div>
-                    ) : null}
+
                   </article>
                 ))}
               </div>
@@ -336,20 +319,13 @@ export function Dashboard({
             <div className="payout-box">
               <Wallet />
               <div>
-                <h2>{balance} available</h2>
-                <p>Payout setup will become available after payment verification is connected.</p>
+                <h2>Completed wallet balance: {balance}</h2>
+                <p>Online bank payouts are not available yet. View your earnings activity or contact support about settlement.</p>
               </div>
-              <Button disabled>Set up payout</Button>
+              <Link href="/account/seller/earnings">View earnings &amp; settlement →</Link>
             </div>
           </TabsContent>
         </Tabs>
-      </section>
-      <section className="consignment-status">
-        <div className="end-choice">
-          <b>Item timeline &amp; unsold preferences</b>
-          <Link href="/account/seller/items">Manage item operations →</Link>
-          <small>Track processing, review deadlines, automatic publishing, Last Chance and choose Return or Donate / Reuse for unsold items.</small>
-        </div>
       </section>
       <section className="mini-rules">
         <b>Quick check before sending</b>
