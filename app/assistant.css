@@ -708,7 +708,11 @@
 .experience-option-copy .coming-soon{font-size:12px;font-weight:600;letter-spacing:.02em;color:#696969}
 .shikimomo-wordmark > b{display:inline-flex;align-items:baseline}
 .shikimomo-wordmark .assistant-mark{display:inline-flex;width:.57em;height:.57em;margin-left:.025em;align-self:baseline;vertical-align:baseline;transform:translateY(.08em)}
-.site-language-bar{display:flex;justify-content:flex-end;padding:8px max(20px,4vw);background:#fff;border-bottom:1px solid #f1f1f1}
+.site-language-bar{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:12px;height:53px;box-sizing:border-box;padding:8px max(20px,4vw);background:#fff;border-bottom:1px solid #f1f1f1}
+.site-home-link{display:inline-flex;align-items:center;min-height:36px;color:#242424;text-decoration:none;font-size:24px;line-height:1;letter-spacing:-.06em;flex-shrink:0}
+.site-home-link em{font-style:normal}
+.site-home-link:focus-visible{outline:3px solid #37654f;outline-offset:3px;border-radius:4px}
+.market-home .site-header.market-header{top:53px}
 .site-language-switch{display:inline-flex;gap:6px;align-items:center;min-height:36px;padding:6px 12px;background:#fff;color:#242424;border:1px solid #ddd;border-radius:22px;font:inherit;font-size:13px;cursor:pointer}
 .site-language-switch:focus-visible{outline:3px solid #37654f;outline-offset:3px}
 .assistant-shell{height:calc(100dvh - 53px)}
