@@ -4,16 +4,16 @@
   gap: 14px;
   margin-top: 28px;
   padding: 18px 20px;
-  border: 1px solid #b9dff1;
+  border: 1px solid #d5e2d9;
   border-radius: 4px;
-  background: #dbf4ff;
+  background: #f1f5f2;
 }
 
 .launch-offer-account > svg {
   width: 22px;
   height: 22px;
   flex: none;
-  color: #0400d2;
+  color: #37654f;
 }
 
 .launch-offer-account > div {
@@ -22,7 +22,7 @@
 }
 
 .launch-offer-account b {
-  color: #0400d2;
+  color: #37654f;
 }
 
 .launch-offer-account span {
