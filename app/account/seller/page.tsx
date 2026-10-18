@@ -1,7 +1,6 @@
 
 import { Localize } from "@/components/site-language";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { redirect } from "next/navigation";
 import { Dashboard } from "@/app/account/dashboard";
 import { CommissionSection } from "@/components/commission-section";
@@ -240,6 +239,7 @@ export default async function AccountPage({ searchParams }: Props) {
         customerCode={customerCode}
         message={message}
         messageType={params.type === "error" ? "error" : "success"}
+        activeItemCount={rawItems.filter(item => !["sold", "returned", "donated", "auctioned", "archived", "rejected", "cancelled", "closed"].includes(item.status)).length}
         balance={money(balanceCents)}
         totalEarned={money(earnedCents)}
         activeCategories={activeCategories}
@@ -292,12 +292,9 @@ export default async function AccountPage({ searchParams }: Props) {
           return {
             id: item.id,
             name: item.name,
-            status:
-              item.initial_approved_price_cents != null &&
-              !item.seller_pricing_approved_at && !pricingMandate.data?.accepted &&
-              ["accepted", "waiting_for_seller_approval"].includes(item.status)
-                ? "Pricing approval required"
-                : titleCase(item.status),
+            status: item.status === "waiting_for_seller_approval"
+              ? (pricingMandate.data?.accepted ? "Pricing in progress" : "Team pricing terms required")
+              : titleCase(item.status),
             initialPrice:
               item.initial_approved_price_cents != null
                 ? money(item.initial_approved_price_cents)
@@ -320,10 +317,7 @@ export default async function AccountPage({ searchParams }: Props) {
               item.final_seller_earnings_cents != null
                 ? money(item.final_seller_earnings_cents)
                 : "—",
-            requiresApproval:
-              item.initial_approved_price_cents != null &&
-              !item.seller_pricing_approved_at && !pricingMandate.data?.accepted &&
-              ["accepted", "waiting_for_seller_approval"].includes(item.status),
+
           };
         })}
         requests={rawRequests.map((request) => {
@@ -375,14 +369,6 @@ export default async function AccountPage({ searchParams }: Props) {
       <div className="dashboard" style={{ paddingTop: 0, paddingBottom: 24 }}>
         <CustomerBundles teamPricingAccepted={Boolean(pricingMandate.data?.accepted)} />
       </div>
-      <div className="dashboard" style={{ paddingTop: 0, paddingBottom: 16 }}>
-        <Link className="back-home" href="/account/seller/items">
-          Track item timeline, review & unsold preferences →
-        </Link>
-      </div>
-      <Link className="back-home" href="/">
-        <ArrowLeft /> Back to marketplace
-      </Link>
     </main>
   )}</Localize>;
 }
