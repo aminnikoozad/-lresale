@@ -109,8 +109,9 @@ export function AdminMfaClient() {
         setError("The code is incorrect or expired. Try the current code.");
         return;
       }
-      router.replace("/admin");
-      router.refresh();
+      // MFA changes the session assurance level. A full navigation discards
+      // pre-verification route data and loads Admin with the updated cookies.
+      window.location.replace("/admin");
     } catch {
       setError("Verification could not be completed. Check your connection and try again.");
     } finally {
