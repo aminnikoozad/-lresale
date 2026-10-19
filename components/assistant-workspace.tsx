@@ -47,7 +47,7 @@ const money = (v: number, fr: boolean) =>
     style: "currency",
     currency: "CAD",
   }).format(v / 100);
-export function AssistantWorkspace({ available = false, chatEnabled = true, voiceEnabled = true, memoryEnabled = true, noticeEn = "", noticeFr = "" }: { available?: boolean; chatEnabled?: boolean; voiceEnabled?: boolean; memoryEnabled?: boolean; noticeEn?: string; noticeFr?: string }) {
+export function AssistantWorkspace({ available = false, chatEnabled = true, voiceEnabled = true, memoryEnabled = true, onClose }: { available?: boolean; chatEnabled?: boolean; voiceEnabled?: boolean; memoryEnabled?: boolean; noticeEn?: string; noticeFr?: string; onClose?: () => void }) {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
   const cart = useCart();
@@ -102,7 +102,19 @@ export function AssistantWorkspace({ available = false, chatEnabled = true, voic
     setVoice(false);
     setConnecting(false);
   }, []);
-  useEffect(() => () => stopVoice(), [stopVoice]);
+  const closeAssistant = useCallback(() => {
+    stopVoice();
+    requestAbort.current?.abort();
+    turn.current++;
+    if (onClose) onClose();
+    else router.replace("/shop");
+  }, [onClose, router, stopVoice]);
+  useEffect(() => {
+    const onEscape = (event: KeyboardEvent) => { if (event.key === "Escape") closeAssistant(); };
+    document.addEventListener("keydown", onEscape);
+    return () => document.removeEventListener("keydown", onEscape);
+  }, [closeAssistant]);
+  useEffect(() => () => { stopVoice(); requestAbort.current?.abort(); turn.current++; }, [stopVoice]);
   useEffect(() => {
     let active = true;
     const restore = (id: string | null) => {
@@ -500,6 +512,7 @@ export function AssistantWorkspace({ available = false, chatEnabled = true, voic
             <ShoppingBag size={19} />
             <span>{cart.items.length}</span>
           </Link>
+          <button type="button" className="assistant-close" aria-label={t("Close assistant", "Fermer l’assistant")} title={t("Close assistant", "Fermer l’assistant")} onClick={closeAssistant}><X size={22} /></button>
         </div>
       </header>
       {supportOpen && <section id="assistant-team-support" className="assistant-settings assistant-team-support" aria-labelledby="assistant-team-title">
@@ -589,13 +602,7 @@ export function AssistantWorkspace({ available = false, chatEnabled = true, voic
           <Link href="/privacy">{t("Privacy", "Confidentialité")}</Link>
         </aside>
       )}
-      {!available && <section className="assistant-availability" role="status">
-        <strong>{t("Smart Shopping is not active yet", "L’achat intelligent n’est pas encore activé")}</strong>
-        {(fr ? noticeFr : noticeEn) && <p translate="no">{fr ? noticeFr : noticeEn}</p>}
-        <p>{t("Chat and live voice will be available once our shopping assistant is connected. You can browse the shop and use your account now.", "Le clavardage et la voix en direct seront disponibles une fois notre assistant connecté. Vous pouvez déjà parcourir la boutique et utiliser votre compte.")}</p>
-        <Link href="/shop">{t("Enter website", "Entrer sur le site")}</Link>
-        <Link href="/account">{t("My account", "Mon compte")}</Link>
-      </section>}
+
       <div
         className="assistant-mode-tabs"
         role="tablist"
@@ -855,10 +862,7 @@ export function AssistantWorkspace({ available = false, chatEnabled = true, voic
             value={text}
             onChange={(e) => setText(e.target.value)}
             maxLength={3000}
-            placeholder={t(
-              "Tell me what you have in mind…",
-              "Dites-moi ce que vous cherchez…",
-            )}
+            placeholder={!available ? t("Coming soon", "Bientôt disponible") : t("Tell me what you have in mind…", "Dites-moi ce que vous cherchez…")}
             aria-label={t("Your message", "Votre message")}
             rows={1}
             onKeyDown={(e) => {
@@ -1118,3 +1122,4 @@ function OperationReview({
     </section>
   );
 }
+
