@@ -100,6 +100,8 @@ export default async function Home() {
 
 
 
+  const navCategories = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value));
+
   return <Localize>{(
     <main className="market-home">
       <a className="market-skip-link" href="#shop">Skip to the shop</a>
