@@ -52,6 +52,8 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
   const [postalSelection, setPostalSelection] = useState<PostalSelection | null>(null);
   const [savedShipping, setSavedShipping] = useState<PostalSelection | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [returnsAccepted, setReturnsAccepted] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,7 +79,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
         return;
       }
 
-      if (formData.get("buyer_terms_accepted") !== "accepted") {
+      if (formData.get("buyer_terms_accepted") !== "accepted" || formData.get("return_policy_accepted") !== "accepted") {
         throw new Error("Buyer terms were not accepted");
       }
 
@@ -196,9 +198,21 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
           <div className="checkout-field-section">
             <h2>Policies</h2>
             <label className="checkout-policy-consent">
-              <input type="checkbox" name="buyer_terms_accepted" value="accepted" required />
-              <span>I have reviewed and agree to the <Link href="/terms" target="_blank">Terms of Use</Link> and <Link href="/returns" target="_blank">Returns & Refunds Policy</Link>, and I acknowledge the <Link href="/privacy" target="_blank">Privacy Policy</Link>.</span>
+              <input type="checkbox" name="buyer_terms_accepted" value="accepted" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} required />
+              <span>I have reviewed and agree to the <Link href="/terms" target="_blank">Terms of Use</Link> and I acknowledge the <Link href="/privacy" target="_blank">Privacy Policy</Link>.</span>
             </label>
+            <div id="checkout-return-summary" style={{padding:"14px 16px",border:"1px solid #d9e1d9",borderRadius:12,background:"#f5f8f4",lineHeight:1.6}}>
+              <strong>Returns at a glance</strong>
+              <p>Request a change-of-mind or fit return within 7 calendar days of delivery, then send it within 7 calendar days of approval. Items must be unworn, unwashed and in their delivered condition, with Shikimomo tags attached.</p>
+              <p>For change-of-mind or fit returns, you pay return postage; original delivery charges are not refunded. If we sent the wrong item or an item has an undisclosed defect or transit damage, we cover reasonable return shipping and refund the affected item, its taxes and applicable original delivery charges.</p>
+              <p>Refunds use the amount actually paid after discounts, plus applicable item taxes. No restocking fee. Approved refunds are initiated within 5 business days after receipt and inspection. Your statutory rights remain unchanged.</p>
+              <Link href="/returns" target="_blank" rel="noopener noreferrer">Read the full Returns & Refunds Policy</Link>
+            </div>
+            <label className="checkout-policy-consent">
+              <input type="checkbox" name="return_policy_accepted" value="accepted" checked={returnsAccepted} onChange={e => setReturnsAccepted(e.target.checked)} aria-describedby="checkout-return-summary" required />
+              <span>I have read and accept the <Link href="/returns" target="_blank" rel="noopener noreferrer">Returns & Refunds Policy</Link>, including the return deadlines, item condition requirements and shipping costs.</span>
+            </label>
+            {!termsAccepted || !returnsAccepted ? <small>Accept the Terms of Use and Returns & Refunds Policy to continue.</small> : null}
             <small>The policy versions and acceptance time are recorded with this prepared order. You will review the final price, tax and delivery total again before any payment is charged.</small>
           </div>
 
@@ -207,7 +221,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
             <div><b>Next: Payment</b><span>Card or wallet fields will appear here after the payment provider is connected. They are intentionally disabled today.</span></div>
           </div>
 
-          <Button type="submit" size="lg" disabled={submitting || !quoteReady}>{submitting ? "Checking availability…" : "Save delivery & prepare payment"}</Button>
+          <Button type="submit" size="lg" disabled={submitting || !quoteReady || !termsAccepted || !returnsAccepted}>{submitting ? "Checking availability…" : "Save delivery & prepare payment"}</Button>
           <small>Preparing checkout does not charge your card. The database verifies current price and availability again before creating the order.</small>
         </form>
 
