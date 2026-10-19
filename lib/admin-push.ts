@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import webpush from "web-push";
 import { postalStorage } from "@/lib/postal-server";
 
@@ -24,7 +25,7 @@ export async function deliverAdminPushJobs() {
      : (fr ? "Nouvelle activité de soutien. Ouvrez votre boîte de réception." : "New support activity. Open your support inbox.");
     const response = await webpush.sendNotification(
      {endpoint:job.endpoint,keys:{p256dh:job.p256dh,auth:job.auth_secret}},
-     JSON.stringify({title:job.kind==="pickup"?"Shikimomo · Pickup":job.kind==="support"?"Shikimomo · Support":"Shikimomo",body,tag:job.event_key,url:job.target_path}),
+     JSON.stringify({title:job.kind==="pickup"?"Shikimomo · Pickup":job.kind==="support"?"Shikimomo · Support":"Shikimomo",body,tag:job.event_key,url:job.target_path,receipt:{id:job.job_id,token:createHmac("sha256",process.env.ADMIN_PUSH_DISPATCH_SECRET!).update(job.job_id).digest("hex")}}),
      {TTL:3600,urgency:"high",timeout:5000,vapidDetails:{subject:"https://shikimomo.com",publicKey:process.env.ADMIN_PUSH_VAPID_PUBLIC_KEY!,privateKey:process.env.ADMIN_PUSH_VAPID_PRIVATE_KEY!}});
     status=response.statusCode;success=true;delivered++;
    } catch(error) {

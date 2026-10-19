@@ -60,6 +60,15 @@ export function AdminPushControls() {
   }catch{setFailed(true);setMessage(fr?"Impossible de désactiver les notifications. Réessayez.":"Could not disconnect. Try again.");}
   finally{setBusy(false);}
  }
+ async function testDisplay() {
+  setBusy(true);setFailed(false);
+  try{
+   const registration=await navigator.serviceWorker.ready;
+   await registration.showNotification("Shikimomo",{body:fr?"Test d’affichage sur cet appareil.":"Display test on this device.",tag:"shikimomo-display-test",icon:"/favicon.svg"});
+   setMessage(fr?"Le navigateur a accepté l’affichage. Si rien n’apparaît, vérifiez les notifications système de Chrome et le mode Concentration.":"Browser accepted display. If nothing appears, check Chrome notifications in system settings and Focus mode.");
+  }catch{setFailed(true);setMessage(fr?"Le navigateur a refusé l’affichage des notifications.":"Browser refused to display notifications.");}
+  finally{setBusy(false);}
+ }
  async function test() {
   setBusy(true);setFailed(false);
   try{
@@ -74,7 +83,7 @@ export function AdminPushControls() {
  return <div className="admin-push-controls">
   {!supported?<p>{fr?"Sur iPhone, ajoutez Shikimomo à l’écran d’accueil, ouvrez l’application, puis activez les notifications.":"On iPhone, add Shikimomo to your Home Screen, open the app, then enable notifications."}</p>
    :<div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
-    {registered?<><span><BellRing size={18} style={{display:"inline"}}/> {fr?"Cet appareil est connecté":"This device is connected"}</span><button type="button" disabled={busy} onClick={()=>void test()}>{fr?"Envoyer un test":"Send test notification"}</button><button type="button" disabled={busy} onClick={()=>void disable()}>{fr?"Désactiver sur cet appareil":"Disable on this device"}</button></>
+    {registered?<><span><BellRing size={18} style={{display:"inline"}}/> {fr?"Cet appareil est connecté":"This device is connected"}</span><button type="button" disabled={busy} onClick={()=>void test()}>{fr?"Envoyer un test":"Send test notification"}</button><button type="button" disabled={busy} onClick={()=>void testDisplay()}>{fr?"Tester l’affichage":"Test device display"}</button><button type="button" disabled={busy} onClick={()=>void disable()}>{fr?"Désactiver sur cet appareil":"Disable on this device"}</button></>
     :<button type="button" disabled={busy} onClick={()=>void enable()}><Bell size={18} style={{display:"inline"}}/> {busy?(fr?"Connexion…":"Connecting…"):(fr?"Activer les notifications sur cet appareil":"Enable notifications on this device")}</button>}
    </div>}
   {blocked?<p>{fr?"Les notifications sont bloquées dans les réglages de ce navigateur.":"Notifications are blocked in this browser's site settings."}</p>:null}
