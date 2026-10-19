@@ -1,65 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { Mail, MapPin, MessageCircle, Phone, Clock } from "lucide-react";
-import { BrandWordmark } from "./brand-wordmark";
+import { ArrowLeft, LifeBuoy, Mail, ArrowUpRight } from "lucide-react";
 import { CustomerSupport } from "./customer-support";
 import { useLocale } from "./site-language";
 
 type Contact = { email: string; phone: string; address: string; hoursEn: string; hoursFr: string };
-
 export function SupportHub({ userId, contact }: { userId: string | null; contact: Contact }) {
   const { locale } = useLocale();
   const fr = locale === "fr";
   const t = (en: string, french: string) => fr ? french : en;
   const hours = fr ? contact.hoursFr : contact.hoursEn;
-  return <main className="support-public" lang={locale}>
-    <header className="support-public-header">
-      <Link href="/" className="brand" aria-label={t("Shikimomo home", "Accueil Shikimomo")}><BrandWordmark /></Link>
-      <Link href="/shop">{t("Back to shop", "Retour à la boutique")}</Link>
-    </header>
-    <div className="support-public-intro">
-      <p className="eyebrow">{t("The Shikimomo team", "L’équipe Shikimomo")}</p>
-      <h1>{t("Contact & support", "Contact et soutien")}</h1>
-      <p>{t("Questions about selling, a pickup, an order or your account? Contact our team here.", "Une question sur la vente, une collecte, une commande ou votre compte? Communiquez avec notre équipe ici.")}</p>
-    </div>
+  return <main className="support-public support-redesign" lang={locale}>
+    <Link className="support-back" href="/shop"><ArrowLeft size={16} />{t("Back to shop", "Retour à la boutique")}</Link>
+    <header className="support-hero"><span className="support-icon"><LifeBuoy size={24} /></span><p className="support-kicker">SHIKIMOMO</p><h1>{t("How can we help?", "Comment pouvons-nous vous aider?")}</h1><p>{t("Tell us about your order, pickup or account. Our team will follow up here.", "Parlez-nous de votre commande, collecte ou compte. Notre équipe vous répondra ici.")}</p></header>
     <div className="support-public-grid">
-      <section className="support-public-card" aria-labelledby="support-chat-title">
-        <MessageCircle aria-hidden="true" />
-        <h2 id="support-chat-title">{t("Message our team", "Écrivez à notre équipe")}</h2>
-        <p>{t("Team messages are separate from the shopping assistant. You do not need Smart Shopping to be active to contact us.", "Les messages à l’équipe sont distincts de l’assistant d’achat. Vous pouvez nous écrire même si l’achat intelligent n’est pas activé.")}</p>
-        {userId ? <CustomerSupport key={userId} userId={userId} fr={fr} /> : <>
-          <p>{t("Sign in to send a private message and follow your conversation in your account.", "Connectez-vous pour envoyer un message privé et suivre votre conversation dans votre compte.")}</p>
-          <Link className="support-public-button" href="/login?next=%2Fsupport">{t("Sign in to message us", "Se connecter pour nous écrire")}</Link>
-        </>}
-        <p className="support-public-note">{t("Replies are not necessarily immediate. Never send passwords, verification codes or payment card details.", "La réponse peut ne pas être immédiate. N’envoyez jamais de mot de passe, de code de vérification ou de renseignements de carte bancaire.")}</p>
+      <section className="support-public-card support-main-card" aria-label={t("Support tickets", "Demandes de soutien")}>
+        {userId ? <CustomerSupport key={userId} userId={userId} fr={fr} /> : <div className="support-guest-choice"><h2>{t("Send a support ticket", "Envoyer une demande de soutien")}</h2><p>{t("Sign in to track your ticket and read our replies, or contact us without an account.", "Connectez-vous pour suivre votre demande et lire nos réponses, ou écrivez-nous sans compte.")}</p><Link className="support-public-button" href="/login?next=%2Fsupport">{t("Sign in & create a ticket", "Se connecter et créer une demande")}</Link><Link href="/contact">{t("Create a ticket without signing in", "Créer une demande sans connexion")} <ArrowUpRight size={15} /></Link></div>}
       </section>
-      <div className="support-public-side">
-        <section className="support-public-card" aria-labelledby="support-contact-title">
-          <h2 id="support-contact-title">{t("Contact details", "Coordonnées")}</h2>
-          {contact.email && <p><Mail aria-hidden="true" /><a href={`mailto:${contact.email}`} translate="no">{contact.email}</a></p>}
-          {contact.phone && <p><Phone aria-hidden="true" /><a href={`tel:${contact.phone.replace(/[^+\d]/g, "")}`} translate="no">{contact.phone}</a></p>}
-          {contact.address && <p><MapPin aria-hidden="true" /><span translate="no">{contact.address}</span></p>}
-          {hours && <p><Clock aria-hidden="true" /><span>{hours}</span></p>}
-          {!contact.email && !contact.phone && <p>{t("Direct email and telephone contact details have not been published yet. Use account messaging or the contact form without signing in.", "Les coordonnées directes par courriel et par téléphone ne sont pas encore publiées. Utilisez la messagerie de votre compte ou le formulaire de contact sans connexion.")}</p>}
-          {!hours && <p>{t("Support hours have not been published yet.", "Les heures de soutien ne sont pas encore publiées.")}</p>}
-        </section>
-        <section className="support-public-card" aria-labelledby="support-access-title">
-          <h2 id="support-access-title">{t("Trouble signing in?", "Difficulté à vous connecter?")}</h2>
-          <p>{t("If you have forgotten your password, request a recovery link using your account email.", "Si vous avez oublié votre mot de passe, demandez un lien de récupération à l’aide de l’adresse courriel de votre compte.")}</p>
-          <Link href="/contact">{t("Contact without signing in", "Contact sans connexion")}</Link><br/>
-          <Link href="/forgot-password">{t("Recover my password", "Récupérer mon mot de passe")}</Link>
-          {!contact.email && <p className="support-public-note">{t("If you cannot access your account email either, use the contact form without signing in and provide an email address where our team can reach you.", "Si vous n’avez pas non plus accès à l’adresse courriel de votre compte, utilisez le formulaire de contact sans connexion et indiquez une adresse courriel où notre équipe peut vous joindre.")}</p>}
-        </section>
-        <nav className="support-public-card support-policy-links" aria-label={t("Help and policies", "Aide et politiques")}>
-          <h2>{t("Useful information", "Renseignements utiles")}</h2>
-          <Link href="/sell-with-shikimomo">{t("Seller guide", "Guide de vente")}</Link>
-          <Link href="/pickup-policy">{t("Pickup policy", "Politique de collecte")}</Link>
-          <Link href="/shipping-policy">{t("Shipping policy", "Politique de livraison")}</Link>
-          <Link href="/returns">{t("Returns & refunds", "Retours et remboursements")}</Link>
-          <Link href="/privacy">{t("Privacy", "Confidentialité")}</Link>
+      <aside className="support-public-side">
+        <nav className="support-public-card support-policy-links" aria-label={t("Quick help", "Aide rapide")}><h2>{t("Quick help", "Aide rapide")}</h2>
+          <Link href="/pickup-policy">{t("Pickup & collection", "Collecte et ramassage")}<ArrowUpRight size={16}/></Link><Link href="/returns">{t("Returns & refunds", "Retours et remboursements")}<ArrowUpRight size={16}/></Link><Link href="/shipping-policy">{t("Shipping & delivery", "Expédition et livraison")}<ArrowUpRight size={16}/></Link><Link href="/forgot-password">{t("Reset your password", "Réinitialiser votre mot de passe")}<ArrowUpRight size={16}/></Link>
         </nav>
-      </div>
+        <section className="support-public-card support-contact-compact"><Mail size={20}/><h2>{t("Need help signing in?", "Besoin d’aide pour vous connecter?")}</h2><Link href="/contact">{t("Contact us without signing in", "Nous écrire sans connexion")}</Link>{contact.email ? <p><a href={`mailto:${contact.email}`} translate="no">{contact.email}</a></p> : null}{hours ? <p>{hours}</p> : null}</section>
+      </aside>
     </div>
   </main>;
 }
