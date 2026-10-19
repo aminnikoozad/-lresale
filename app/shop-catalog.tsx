@@ -94,6 +94,7 @@ export function ShopCatalog({
     () => allLabels.filter((entry) => entry.value === "all" || activeCategories.includes(entry.value as CatalogCategory)),
     [activeCategories],
   );
+  const { locale } = useLocale();
   const [filters, setFilters] = useState<CatalogFilters>(() => emptyCatalogFilters());
   const { subcategories, eras, homeFlags, collection, query, brands, sizes, conditions, colors, materials, patterns, minPrice, maxPrice, sort } = filters;
   const activeCategory = filters.category as TabValue;
@@ -251,7 +252,7 @@ export function ShopCatalog({
   const filterPanel = (
     <>
       <fieldset className="filter-group"><legend>Category</legend>
-        <select aria-label="Filter by category" value={activeCategory} onChange={event => changeCategory(event.target.value)}>
+        <select aria-label="Filter by category" value={activeCategory} onChange={event => setFilters(current => changeCatalogCategory(current, event.target.value))}>
           {labels.map(entry => <option key={entry.value} value={entry.value}>{entry.label}</option>)}
         </select>
       </fieldset>
@@ -410,20 +411,14 @@ export function ShopCatalog({
         {labels.map((tab) => (
           <TabsContent key={tab.value} value={tab.value}>
             <DialogPrimitive.Root open={filterOpen} onOpenChange={setFilterOpen}>
-            <div className="catalog-body">
-              <aside
-                className="catalog-filter desktop-filter"
-                aria-label="Product filters"
-              >
-                {filterPanel}
-              </aside>
+            <div className="catalog-body catalog-body-collapsed">
               <div className="catalog-results">
                 <div className="catalog-toolbar">
                   <div className="catalog-result-count" role="status" aria-live="polite">
                     {loadError ? "Catalog unavailable" : <><strong>{filtered.length}</strong>{" "}{filtered.length === 1 ? "item" : "items"}</>}
                   </div>
                   <DialogPrimitive.Trigger asChild><button
-                    className="mobile-filter-toggle"
+                    className="catalog-filter-toggle"
                     type="button"
                   >
                     <SlidersHorizontal /> Filters{" "}
@@ -449,10 +444,10 @@ export function ShopCatalog({
               </div>
             </div>
               <DialogPrimitive.Portal>
-                <DialogPrimitive.Overlay className="filter-sheet-backdrop" />
+                <DialogPrimitive.Overlay className="filter-sheet-backdrop catalog-filter-backdrop" />
                 <DialogPrimitive.Content
-                  className="catalog-filter filter-sheet"
-                  aria-label="Mobile product filters"
+                  className="catalog-filter filter-sheet catalog-filter-drawer"
+                  aria-label={locale === "fr" ? "Filtres du catalogue" : "Product filters"}
                   aria-describedby={undefined}
                 >
                   <div className="filter-sheet-head">
@@ -467,8 +462,7 @@ export function ShopCatalog({
                   {filterPanel}
                   <div className="filter-sheet-footer">
                     <DialogPrimitive.Close asChild><Button type="button">
-                      Show {filtered.length}{" "}
-                      {filtered.length === 1 ? "item" : "items"}
+                      {locale === "fr" ? "Appliquer les filtres" : "Apply filters"}
                     </Button></DialogPrimitive.Close>
                   </div>
                 </DialogPrimitive.Content>
@@ -757,3 +751,4 @@ export function ProductGrid({
 function QuickView({ product, selectedSizes }: { product: CatalogProduct; selectedSizes:string[] }) {
   return <Localize><DialogPrimitive.Root><DialogPrimitive.Trigger asChild><button type="button" className="quick-view-trigger">Quick view</button></DialogPrimitive.Trigger><DialogPrimitive.Portal><DialogPrimitive.Overlay className="filter-sheet-backdrop" /><DialogPrimitive.Content className="quick-view" aria-describedby={undefined}><Localize><DialogPrimitive.Title>{product.brand}</DialogPrimitive.Title><DialogPrimitive.Close asChild><button className="quick-view-close" aria-label="Close quick view"><X /></button></DialogPrimitive.Close><div className="quick-view-photo"><Image src={product.photoUrl} alt={product.name} fill sizes="(max-width: 600px) 90vw, 400px" /></div><h2 translate="no">{product.name}</h2><dl><dt>Type</dt><dd translate="no">{product.subcategory || product.category}</dd><dt>Size</dt><dd translate="no">{product.size || "—"}</dd><dt>Colour</dt><dd translate="no">{product.color || "—"}</dd><dt>Condition</dt><dd>{product.condition || "—"}</dd></dl><b>{cad(product.priceCents)} CAD</b><p>Availability and price are checked before checkout.</p><Link href={`/item/${product.id}${selectedSizes.length ? `?${new URLSearchParams(selectedSizes.map(size=>["sizes",size])).toString()}` : ""}`} onClick={()=>void recordBuyerEvent("select_item",[product.id])}>View full details</Link></Localize></DialogPrimitive.Content></DialogPrimitive.Portal></DialogPrimitive.Root></Localize>;
 }
+
