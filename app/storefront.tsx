@@ -1,3 +1,4 @@
+import { CATALOG_CATEGORIES } from "@/lib/catalog-taxonomy";
 
 import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
