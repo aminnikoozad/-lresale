@@ -237,6 +237,18 @@ export function ShopCatalog({
 
   const filterPanel = (
     <>
+      <fieldset className="filter-group"><legend>Sort items</legend>
+        <select
+          value={sort}
+          onChange={(event) => setSort(event.target.value as SortValue)}
+          aria-label="Sort items"
+        >
+          <option value="newest">Newest</option>
+          <option value="price_low">Price: low to high</option>
+          <option value="price_high">Price: high to low</option>
+          <option value="brand">Brand A–Z</option>
+        </select>
+      </fieldset>
       <fieldset className="filter-group"><legend>Category</legend>
         <select aria-label="Filter by category" value={activeCategory} onChange={event => setFilters(current => changeCatalogCategory(current, event.target.value))}>
           {labels.map(entry => <option key={entry.value} value={entry.value}>{entry.label}</option>)}
@@ -334,16 +346,7 @@ export function ShopCatalog({
             placeholder="Search type, brand or size"
           />
         </label>
-        <select
-          value={sort}
-          onChange={(event) => setSort(event.target.value as SortValue)}
-          aria-label="Sort items"
-        >
-          <option value="newest">Newest</option>
-          <option value="price_low">Price: low to high</option>
-          <option value="price_high">Price: high to low</option>
-          <option value="brand">Brand A–Z</option>
-        </select>
+
       </div>
 
       <div className="home-collections" aria-label="Clothing collections">
@@ -396,23 +399,19 @@ export function ShopCatalog({
         </div> : null}
         {labels.map((tab) => (
           <TabsContent key={tab.value} value={tab.value}>
-            <DialogPrimitive.Root open={filterOpen} onOpenChange={setFilterOpen}>
             <div className="catalog-body catalog-body-collapsed">
               <div className="catalog-results">
-                <div className="catalog-toolbar">
-                  <div className="catalog-result-count" role="status" aria-live="polite">
-                    {loadError ? "Catalog unavailable" : <><strong>{filtered.length}</strong>{" "}{filtered.length === 1 ? "item" : "items"}</>}
-                  </div>
-                  <DialogPrimitive.Trigger asChild><button
-                    className="catalog-filter-toggle"
-                    type="button"
-                  >
-                    <SlidersHorizontal /> Filters{" "}
-                    {activeFilterCount > 0 ? (
-                      <span>{activeFilterCount}</span>
-                    ) : null}
-                  </button></DialogPrimitive.Trigger>
+                <div className="catalog-toolbar catalog-inline-toolbar">
+                  <button className="catalog-filter-toggle" type="button" aria-expanded={filterOpen} aria-controls="catalog-inline-filters" onClick={()=>setFilterOpen(open=>!open)}>
+                    <SlidersHorizontal /> Filters {activeFilterCount > 0 ? <span>{activeFilterCount}</span> : null}<span aria-hidden="true">{filterOpen ? "⌃" : "⌄"}</span>
+                  </button>
+                  <div className="catalog-result-count" role="status" aria-live="polite">{loadError ? "Catalog unavailable" : <><strong>{filtered.length}</strong>{" "}{filtered.length===1?"item":"items"}</>}</div>
                 </div>
+                {filterOpen ? <section id="catalog-inline-filters" className="catalog-filter catalog-inline-filter" aria-label={locale === "fr" ? "Filtres du catalogue" : "Product filters"}>
+                  <div className="catalog-inline-filter-head"><strong>Filters</strong><button type="button" aria-label="Close filters" onClick={()=>setFilterOpen(false)}><X size={18}/></button></div>
+                  {filterPanel}
+                  <div className="catalog-inline-filter-footer"><Button type="button" onClick={()=>setFilterOpen(false)}>{locale === "fr" ? "Appliquer les filtres" : "Apply filters"}</Button></div>
+                </section> : null}
                 {chips.length > 0 ? <div className="catalog-active-filters" aria-label="Active filters">
                   {chips.map((chip) => <button type="button" key={chip.key} onClick={chip.remove} aria-label={`Remove ${chip.label}`}><span>{chip.label}</span><X aria-hidden="true" /></button>)}
                   <button type="button" onClick={clearFilters}>Clear all</button>
@@ -429,31 +428,7 @@ export function ShopCatalog({
                 />
               </div>
             </div>
-              <DialogPrimitive.Portal>
-                <DialogPrimitive.Overlay className="filter-sheet-backdrop catalog-filter-backdrop" />
-                <DialogPrimitive.Content
-                  className="catalog-filter filter-sheet catalog-filter-drawer"
-                  aria-label={locale === "fr" ? "Filtres du catalogue" : "Product filters"}
-                  aria-describedby={undefined}
-                >
-                  <div className="filter-sheet-head">
-                    <DialogPrimitive.Title asChild><strong>Filters</strong></DialogPrimitive.Title>
-                    <DialogPrimitive.Close asChild><button
-                      type="button"
-                      aria-label="Close filters"
-                    >
-                      <X />
-                    </button></DialogPrimitive.Close>
-                  </div>
-                  {filterPanel}
-                  <div className="filter-sheet-footer">
-                    <DialogPrimitive.Close asChild><Button type="button">
-                      {locale === "fr" ? "Appliquer les filtres" : "Apply filters"}
-                    </Button></DialogPrimitive.Close>
-                  </div>
-                </DialogPrimitive.Content>
-              </DialogPrimitive.Portal>
-            </DialogPrimitive.Root>
+
           </TabsContent>
         ))}
       </Tabs>
@@ -737,4 +712,5 @@ export function ProductGrid({
 function QuickView({ product, selectedSizes }: { product: CatalogProduct; selectedSizes:string[] }) {
   return <Localize><DialogPrimitive.Root><DialogPrimitive.Trigger asChild><button type="button" className="quick-view-trigger">Quick view</button></DialogPrimitive.Trigger><DialogPrimitive.Portal><DialogPrimitive.Overlay className="filter-sheet-backdrop" /><DialogPrimitive.Content className="quick-view" aria-describedby={undefined}><Localize><DialogPrimitive.Title>{product.brand}</DialogPrimitive.Title><DialogPrimitive.Close asChild><button className="quick-view-close" aria-label="Close quick view"><X /></button></DialogPrimitive.Close><div className="quick-view-photo"><Image src={product.photoUrl} alt={product.name} fill sizes="(max-width: 600px) 90vw, 400px" /></div><h2 translate="no">{product.name}</h2><dl><dt>Type</dt><dd translate="no">{product.subcategory || product.category}</dd><dt>Size</dt><dd translate="no">{product.size || "—"}</dd><dt>Colour</dt><dd translate="no">{product.color || "—"}</dd><dt>Condition</dt><dd>{product.condition || "—"}</dd></dl><b>{cad(product.priceCents)} CAD</b><p>Availability and price are checked before checkout.</p><Link href={`/item/${product.id}${selectedSizes.length ? `?${new URLSearchParams(selectedSizes.map(size=>["sizes",size])).toString()}` : ""}`} onClick={()=>void recordBuyerEvent("select_item",[product.id])}>View full details</Link></Localize></DialogPrimitive.Content></DialogPrimitive.Portal></DialogPrimitive.Root></Localize>;
 }
+
 

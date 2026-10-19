@@ -98,11 +98,7 @@ export default async function Home() {
 
   const navCategories = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value));
 
-  const departmentNotes: Record<string, string> = {
-    women: "Tops, dresses, denim and more.",
-    men: "Shirts, knitwear, denim and more.",
-    kids: "Everyday clothing for growing kids.",
-  };
+
 
   return <Localize>{(
     <main className="market-home">
@@ -150,17 +146,6 @@ export default async function Home() {
         <span><PackageCheck aria-hidden="true" /><span><strong>Know where you stand</strong>Shipping and policies before payment.</span></span>
       </div>
 
-      <section className="market-discover" aria-labelledby="market-discover-title">
-        <div className="market-discover-heading"><div><h2 id="market-discover-title">Shop by department.</h2></div><a href="#shop">Explore all finds <ArrowRight aria-hidden="true" /></a></div>
-        <div className="market-discover-grid">
-          {navCategories.filter((entry) => catalogProducts.some(p => p.category === entry.value)).map((entry) => <a className={`market-discover-card department-${entry.value}`} href={`#${entry.value}`} key={entry.value}>
-            <span className="market-discover-label">{entry.label}<ArrowRight aria-hidden="true" /></span>
-            <span className="market-discover-description">{departmentNotes[entry.value] ?? "Explore available items."}</span>
-            <span className="market-discover-count">{error ? "Explore department" : `${catalogProducts.filter((product) => product.category === entry.value).length} pieces available`}</span>
-          </a>)}
-        </div>
-      </section>
-
       <ShopCatalog products={catalogProducts} now={requestTime} activeCategories={activeCategories} loadError={Boolean(error)} />
 
       <section className="shipping-strip" aria-label="Canada delivery policy"><Truck aria-hidden="true" /><div><strong>{shipping.canadaWideEnabled === false ? "Delivery, with the details up front." : "Finds worth sending across Canada."}</strong><span>{shippingSummary}</span></div><Link href="/shipping-policy">Delivery details <ArrowRight aria-hidden="true" /></Link></section>
@@ -186,3 +171,4 @@ export default async function Home() {
     </main>
   )}</Localize>;
 }
+
