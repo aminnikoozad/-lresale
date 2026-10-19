@@ -272,3 +272,5 @@
 .market-home .site-header.market-header.market-header-single-brand{grid-template-columns:minmax(0,1fr) auto!important;top:53px!important}
 @media(max-width:900px){.market-header-single-brand .market-header-search{grid-row:1;grid-column:1;width:100%}.market-header-single-brand .header-actions{grid-row:1;grid-column:2}}
 @media(max-width:650px){.market-home .site-header.market-header.market-header-single-brand{grid-template-columns:minmax(0,1fr)!important}.market-header-single-brand .market-header-search{grid-row:1;grid-column:1}.market-header-single-brand .header-actions{grid-row:2;grid-column:1;justify-content:flex-end}}
+
+.market-home .site-header.market-header.market-header-single-brand{display:flex!important;justify-content:flex-end!important;min-height:60px;height:auto!important;padding-block:10px!important}
