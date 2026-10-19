@@ -87,6 +87,8 @@ export default async function AdminOperationsPage({ searchParams }: Props) {
 
         <PickupInbox requests={pickupRequests} enabled={pickupInboxEnabled} />
 
+        <PickupCalendar slots={slots} today={today} />
+
         <section className="ops-card">
           <div className="ops-card-title"><div><h2>Pickup service areas</h2><p>Active locations cover Montréal and nearby municipalities in the 20 km pilot radius.</p></div><strong>{areas.filter((area) => area.active).length} active</strong></div>
           <div className="area-grid">
@@ -102,8 +104,6 @@ export default async function AdminOperationsPage({ searchParams }: Props) {
             ))}
           </div>
         </section>
-
-        <PickupCalendar slots={slots} today={today} />
 
         <section className="ops-card two-col">
           <div>
