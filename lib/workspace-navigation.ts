@@ -22,7 +22,7 @@ export function accountNavigationFor(mode: "buyer" | "seller" | null): Workspace
   const paths = mode === "seller"
     ? ["/account/seller", "/account/seller/items", "/account/seller/earnings"]
     : mode === "buyer" ? ["/account/buyer", "/account/buyer/delivery"] : ["/account"];
-  return accountNavigation.filter(link => paths.includes(link.href) || ["/account/profile", "/account/messages"].includes(link.href));
+  return accountNavigation.filter(link => paths.includes(link.href) || link.href === "/account/messages" || (mode !== "seller" && link.href === "/account/profile"));
 }
 export function adminNavigation(access: MenuAccess): WorkspaceLink[] {
   return [
