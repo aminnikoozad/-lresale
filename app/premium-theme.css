@@ -221,7 +221,7 @@ footer a{color:#fff!important;text-decoration:none;font-size:.88rem}
 .account-user span,.back-home{color:var(--brand)!important}
 .account-user a,.logout-button{color:var(--text-secondary)!important}
 .dashboard{max-width:1240px!important;padding:54px 28px 74px!important}
-.welcome h1{font-size:clamp(2.6rem,4.6vw,4rem)!important;letter-spacing:-.05em!important;font-weight:650!important;color:var(--ink)!important}
+.welcome h1{font-size:clamp(1.25rem,2.4vw,1.75rem)!important;line-height:1.3!important;letter-spacing:-.02em!important;font-weight:650!important;color:var(--ink)!important}
 .welcome>div>p:last-child{color:var(--text-secondary)!important}
 .customer-identifiers span{min-height:30px!important;background:var(--brand-soft)!important;color:var(--brand-dark)!important;border:1px solid color-mix(in srgb,var(--brand) 18%,var(--line))!important;border-radius:999px!important;font-weight:620!important}
 .dash-actions button{border-radius:10px!important;min-height:46px!important}
