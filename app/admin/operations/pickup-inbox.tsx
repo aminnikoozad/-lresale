@@ -9,6 +9,7 @@ export type PickupRequest = {
   request_type: string;
   category: string;
   address: string;
+  contact_phone: string | null;
   item_count: number | null;
   brand_notes: string | null;
   estimated_resale_value_cents: number;
@@ -84,6 +85,7 @@ export function PickupInbox({ requests, enabled }: { requests: PickupRequest[]; 
 
               <div className="pickup-contact">
                 <p><b>Pickup address:</b> {request.address}</p>
+                {request.contact_phone ? <p><b>Phone number:</b> <a href={`tel:${request.contact_phone}`}>{request.contact_phone}</a></p> : null}
                 {request.brand_notes ? <p><b>Customer notes / brands:</b> {request.brand_notes}</p> : null}
               </div>
 
@@ -113,3 +115,4 @@ export function PickupInbox({ requests, enabled }: { requests: PickupRequest[]; 
     </section>
   )}</Localize>;
 }
+

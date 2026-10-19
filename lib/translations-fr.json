@@ -1980,5 +1980,17 @@
   "I authorize Shikimomo to set and manage selling prices after inspection under the": "J’autorise Shikimomo à fixer et gérer les prix de vente après inspection conformément aux",
   ". This one-time authorization covers current and future items.": ". Cette autorisation unique couvre les articles actuels et futurs.",
   "Pricing terms could not be verified. Please try again.": "Impossible de vérifier les conditions de tarification. Veuillez réessayer.",
-  "Accept the pricing authorization in the collection form.": "Acceptez l’autorisation de tarification dans le formulaire de collecte."
+  "Accept the pricing authorization in the collection form.": "Acceptez l’autorisation de tarification dans le formulaire de collecte.",
+  "Mixed clothing": "Vêtements mélangés",
+  "Pickup in Montréal and nearby areas. We confirm coverage from your full address.": "Collecte à Montréal et dans les environs. Nous confirmons la couverture à partir de votre adresse complète.",
+  "Collection address & contact": "Adresse de collecte et coordonnées",
+  "Street address": "Adresse",
+  "Street number and street name": "Numéro et nom de rue",
+  "Phone number": "Numéro de téléphone",
+  "• Mixed clothing is welcome. Shikimomo sorts and categorizes each item after inspection.": "• Les vêtements mélangés sont acceptés. Shikimomo trie et classe chaque article après inspection.",
+  "• Choose an open pickup time in the calendar. Appointments are confirmed by Shikimomo.": "• Choisissez un créneau ouvert dans le calendrier. Les rendez-vous sont confirmés par Shikimomo.",
+  "Enter a complete pickup address, valid Canadian postal code and phone number.": "Saisissez une adresse de collecte complète, un code postal canadien valide et un numéro de téléphone.",
+  "This pickup time is no longer available. Please choose another time.": "Ce créneau de collecte n’est plus disponible. Veuillez en choisir un autre.",
+  "Pickup calendar saved.": "Calendrier de collecte enregistré.",
+  "Calendar could not be saved. Check future hours, capacity and overlapping times. Booked appointment hours cannot be changed.": "Le calendrier n’a pas pu être enregistré. Vérifiez les horaires futurs, la capacité et les chevauchements. Les heures des rendez-vous réservés ne peuvent pas être modifiées."
 }

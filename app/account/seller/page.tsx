@@ -153,7 +153,7 @@ export default async function AccountPage({ searchParams }: Props) {
     supabase
       .from("pickup_slots")
       .select(
-        "id,service_area_id,window_start,window_end,capacity,booked_count",
+        "id,service_area_id,window_start,window_end,capacity,booked_count,calendar_managed",
       )
       .eq("active", true)
       .gt("window_start", new Date().toISOString())
@@ -215,7 +215,7 @@ export default async function AccountPage({ searchParams }: Props) {
   const message = typeof params.message === "string" ? params.message : null;
 
   const availablePickupSlots = (pickupSlotsResult.data ?? []).filter((slot) =>
-    pilotAllowsPickupDate(slot.window_start, pilot),
+    slot.calendar_managed || pilotAllowsPickupDate(slot.window_start, pilot),
   );
   const activeCategories = pilot.enabled
     ? pilot.categories
@@ -350,11 +350,12 @@ export default async function AccountPage({ searchParams }: Props) {
           pickupMode: area.pickup_mode,
         }))}
         pickupSlots={availablePickupSlots
-          .filter((slot) => slot.booked_count < slot.capacity)
+          .filter((slot) => slot.booked_count < slot.capacity && (serviceAreasResult.data ?? []).some(area => area.id === slot.service_area_id))
           .map((slot) => ({
             id: slot.id,
             serviceAreaId: slot.service_area_id,
             label: pickupWindowLabel(slot.window_start, slot.window_end),
+            date: new Intl.DateTimeFormat("en-CA", { timeZone: "America/Toronto", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(slot.window_start)),
             remaining: slot.capacity - slot.booked_count,
           }))}
       />
@@ -367,3 +368,4 @@ export default async function AccountPage({ searchParams }: Props) {
     </main>
   )}</Localize>;
 }
+

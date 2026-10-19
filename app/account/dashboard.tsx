@@ -7,7 +7,6 @@ import {
   CATALOG_CATEGORIES,
   FASHION_CATEGORIES,
   categoryLabel,
-  subcategoriesFor,
   type CatalogCategory,
 } from "@/lib/catalog-taxonomy";
 import { useState } from "react";
@@ -34,6 +33,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PickupTimePicker } from "@/components/pickup-time-picker";
 import { createCollectionRequest } from "./actions";
 import type { CommissionTier } from "@/lib/business-rules";
 
@@ -71,6 +71,7 @@ type PickupSlot = {
   id: string;
   serviceAreaId: string;
   label: string;
+  date: string;
   remaining: number;
 };
 type FeeRules = {
@@ -129,13 +130,11 @@ export function Dashboard({
   totalEarned,
   items,
   requests,
-  serviceAreas,
   pickupSlots,
   feeRules,
   launchOffer,
   activeCategories = ["women"],
   pilotEnabled = true,
-  pickupDayText = "Saturdays",
 }: Props) {
   const activeCategoryLabels = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value)).map((entry) => entry.label).join(", ");
   const showLaunchOffer = launchOffer.active && launchOffer.eligible;
@@ -155,11 +154,9 @@ export function Dashboard({
             type="bag"
             label="Request a Shikimomo Bag"
             icon={<Package />}
-            serviceAreas={serviceAreas}
             pickupSlots={pickupSlots}
             activeCategories={activeCategories}
             pilotEnabled={pilotEnabled}
-            pickupDayText={pickupDayText}
             feeRules={feeRules}
             launchOffer={launchOffer}
             teamPricingAccepted={teamPricingAccepted}
@@ -168,11 +165,9 @@ export function Dashboard({
             type="pickup"
             label="Use my own bag / box"
             icon={<Truck />}
-            serviceAreas={serviceAreas}
             pickupSlots={pickupSlots}
             activeCategories={activeCategories}
             pilotEnabled={pilotEnabled}
-            pickupDayText={pickupDayText}
             feeRules={feeRules}
             launchOffer={launchOffer}
             teamPricingAccepted={teamPricingAccepted}
@@ -240,11 +235,9 @@ export function Dashboard({
                 type="pickup"
                 label="Arrange collection"
                 icon={<Truck />}
-                serviceAreas={serviceAreas}
                 pickupSlots={pickupSlots}
                 activeCategories={activeCategories}
                 pilotEnabled={pilotEnabled}
-                pickupDayText={pickupDayText}
                 feeRules={feeRules}
                 launchOffer={launchOffer}
             teamPricingAccepted={teamPricingAccepted}
@@ -349,11 +342,9 @@ function RequestDialog({
   label,
   icon,
   type,
-  serviceAreas,
   pickupSlots,
   activeCategories,
   pilotEnabled,
-  pickupDayText,
   feeRules,
   launchOffer,
 }: {
@@ -361,23 +352,20 @@ function RequestDialog({
   label: string;
   icon: React.ReactNode;
   type: "bag" | "pickup";
-  serviceAreas: ServiceArea[];
   pickupSlots: PickupSlot[];
   activeCategories: CatalogCategory[];
   pilotEnabled: boolean;
-  pickupDayText: string;
   feeRules: FeeRules;
   launchOffer: LaunchOffer;
 }) {
   const [open, setOpen] = useState(false);
-  const [category, setCategory] = useState<CatalogCategory>(activeCategories[0] ?? "women");
-  const [subcategory, setSubcategory] = useState("");
-  const [serviceAreaId, setServiceAreaId] = useState(serviceAreas[0]?.id ?? "");
+  const mixedClothing = !pilotEnabled || ["women", "men", "kids"].every(value => activeCategories.includes(value as CatalogCategory));
+  const [category, setCategory] = useState<string>(mixedClothing ? "clothing" : activeCategories[0] ?? "women");
   const [estimatedValue, setEstimatedValue] = useState(feeRules.freePickupThresholdCents / 100);
-  const availableSlots = pickupSlots.filter((slot) => slot.serviceAreaId === serviceAreaId);
+  const availableSlots = pickupSlots;
   const paidPickup = type === "pickup" && estimatedValue > 0 && estimatedValue * 100 < feeRules.freePickupThresholdCents;
-  const fashionCategory = FASHION_CATEGORIES.includes(category);
-  const subcategoryOptions = subcategoriesFor(category);
+  const fashionCategory = category === "clothing" || FASHION_CATEGORIES.includes(category as CatalogCategory);
+  const collectionLabel = category === "clothing" ? "Mixed clothing" : categoryLabel(category);
   const categoryOptions = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value));
   const threshold = cad(feeRules.freePickupThresholdCents);
   const lowValuePickupFee = cad(feeRules.lowValuePickupItemFeeCents);
@@ -408,57 +396,18 @@ function RequestDialog({
                 name="category"
                 value={category}
                 onChange={(event) => {
-                  setCategory(event.target.value as CatalogCategory);
-                  setSubcategory("");
+                  setCategory(event.target.value);
                 }}
               >
+                {mixedClothing ? <option value="clothing">Mixed clothing</option> : null}
                 {categoryOptions.map((entry) => (
                   <option value={entry.value} key={entry.value}>{entry.label}</option>
                 ))}
               </select>
             </label>
-            {category === "home_decor" ? (
-              <HomeIntake />
-            ) : (
-              <label>
-                Subcategory
-                <select
-                  name="subcategory_hint"
-                  required
-                  value={subcategory}
-                  onChange={(event) => setSubcategory(event.target.value)}
-                >
-                  <option value="" disabled>Choose a subcategory</option>
-                  {subcategoryOptions.map((option) => <option value={option} key={option}>{option}</option>)}
-                </select>
-              </label>
-            )}
-            <label>
-              Pickup city
-              <select
-                name="service_area_id"
-                value={serviceAreaId}
-                onChange={(event) => setServiceAreaId(event.target.value)}
-                required
-              >
-                <option value="" disabled>Select a city</option>
-                {serviceAreas.map((area) => (
-                  <option key={area.id} value={area.id}>
-                    {area.city}{area.pickupMode === "free" ? " — Pickup available" : " — Subject to review"}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Available pickup time
-              <select name="pickup_slot_id" required defaultValue="">
-                <option value="" disabled>Select an available time</option>
-                {availableSlots.map((slot) => (
-                  <option key={slot.id} value={slot.id}>{slot.label} · {slot.remaining} spots left</option>
-                ))}
-              </select>
-            </label>
-            {!availableSlots.length ? <p className="slot-note">No pickup times are currently open for this city. Please check again after new times are added.</p> : null}
+            {category === "home_decor" ? <HomeIntake /> : null}
+            <p>Pickup in Montréal and nearby areas. We confirm coverage from your full address.</p>
+            <PickupTimePicker slots={availableSlots} />
             <div className="hold-card">
               <Truck />
               <div>
@@ -476,10 +425,15 @@ function RequestDialog({
                 </p>
               </div>
             </div>
-            <label>
-              Collection address
-              <Input name="address" required minLength={10} maxLength={500} autoComplete="street-address" placeholder="Street address, city, postal code" />
-            </label>
+            <fieldset className="pickup-address-fields">
+              <legend>Collection address &amp; contact</legend>
+              <label>Street address<Input name="street_address" required minLength={5} maxLength={200} autoComplete="address-line1" placeholder="Street number and street name" /></label>
+              <label>Apartment / unit (optional)<Input name="address_unit" maxLength={50} autoComplete="address-line2" /></label>
+              <label>City<Input name="address_city" required minLength={2} maxLength={100} autoComplete="address-level2" /></label>
+              <label>Province<Input name="address_province" value="Quebec" readOnly autoComplete="address-level1" /></label>
+              <label>Postal code<Input name="postal_code" required maxLength={7} autoComplete="postal-code" pattern="[ABCEGHJ-NPRSTVXYabceghj-nprstvxy][0-9][ABCEGHJ-NPRSTVWXYZabceghj-nprstvwxyz] ?[0-9][ABCEGHJ-NPRSTVWXYZabceghj-nprstvwxyz][0-9]" placeholder="H2X 1Y4" /></label>
+              <label>Phone number<Input name="contact_phone" required type="tel" maxLength={25} autoComplete="tel" placeholder="514 555 0123" /></label>
+            </fieldset>
             <label>
               Approximate number of items
               <Input name="item_count" required type="number" min="1" max="500" step="1" inputMode="numeric" placeholder="For example: 12" />
@@ -517,7 +471,7 @@ function RequestDialog({
                 : `I understand this new batch records one ${processingFee} service fee. If I request a Shikimomo Bag, it is included in that fee and no separate Bag fee is added. This fee is intended to be deducted from seller earnings when settlement is available, not charged to my card upfront.`}
             </label>
             <div className="terms-box">
-              <b>Required terms for {categoryLabel(category)}</b>
+              <b>Required terms for {collectionLabel}</b>
               {category === "home_decor" ? (
                 <>
                   <p>• Items must be clean, structurally sound, inspectable and suitable for resale.</p>
@@ -539,14 +493,14 @@ function RequestDialog({
                   <p>• Our technicians test the device and Shikimomo determines its resale value.</p>
                 </>
               )}
-              <p>{pilotEnabled ? `• During the pilot, pickup appointments are offered on ${pickupDayText} only and confirmed by Shikimomo.` : "• Pickup appointments depend on current service-area and scheduling availability."}</p>
+              <p>{pilotEnabled ? `• Choose an open pickup time in the calendar. Appointments are confirmed by Shikimomo.` : "• Pickup appointments depend on current service-area and scheduling availability."}</p>
               <p>• Your commission is locked from the initial approved item price. Current tiers: {feeRules.commissionTiers.map((tier) => `${cad(tier.minCents)}${tier.maxCents === null ? "+" : `–${cad(tier.maxCents)}`}: ${tier.sellerBps / 100}%`).join("; ")} seller share.</p>
-              <p>• Category and subcategory details are intake information; Shikimomo confirms final listing taxonomy after physical inspection.</p>
+              <p>• Mixed clothing is welcome. Shikimomo sorts and categorizes each item after inspection.</p>
               <p>• <Link href="/sell-with-shikimomo" target="_blank">Read acceptance, pricing, fees and earnings in the Seller Guide.</Link></p>
             </div>
             <label className="check">
               <input name="condition_confirmed" value="accepted" required type="checkbox" />{" "}
-              I confirm my {categoryLabel(category)} items meet the cleaning, condition, ownership and minimum-value requirements, and understand Shikimomo may reject items after inspection.
+              I confirm my {collectionLabel} items meet the cleaning, condition, ownership and minimum-value requirements, and understand Shikimomo may reject items after inspection.
             </label>
             {!teamPricingAccepted ? <>
               <input type="hidden" name="pricing_mandate_version" value="2026-10-15-team-v1" />
@@ -573,3 +527,4 @@ function RequestDialog({
     </Dialog>
   )}</Localize>;
 }
+

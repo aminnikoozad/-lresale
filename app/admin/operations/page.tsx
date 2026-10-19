@@ -3,7 +3,8 @@ import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
-import { createPickupSlot, togglePickupSlot, toggleServiceArea, updateReminderSettings, updateShippingSettings } from "./actions";
+import { toggleServiceArea, updateReminderSettings, updateShippingSettings } from "./actions";
+import { PickupCalendar } from "./pickup-calendar";
 import { PickupInbox, type PickupRequest } from "./pickup-inbox";
 import "./operations.css";
 
@@ -46,14 +47,6 @@ type ShippingSettings = {
   nonlocal_flat_fee_cents: number | null;
 };
 
-function localDateTime(value: string) {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Toronto",
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
-
 export default async function AdminOperationsPage({ searchParams }: Props) {
   const { supabase, access } = await requireAdmin();
   if (!access.can_manage_pickups && !access.can_manage_shipping) redirect("/admin");
@@ -72,7 +65,7 @@ export default async function AdminOperationsPage({ searchParams }: Props) {
   const shipping = data.shippingSettings as ShippingSettings;
   const message = typeof params.message === "string" ? params.message : null;
   const type = params.type === "error" ? "error" : "success";
-  const areaById = new Map(areas.map((area) => [area.id, area.city]));
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Toronto", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 
   return <Localize>{(
     <main className="ops-shell">
@@ -110,24 +103,7 @@ export default async function AdminOperationsPage({ searchParams }: Props) {
           </div>
         </section>
 
-        <section className="ops-card">
-          <div className="ops-card-title"><div><h2>Pickup Scheduler</h2><p>Create the time windows customers can actually select.</p></div><strong>Toronto time</strong></div>
-          <form action={createPickupSlot} className="slot-form">
-            <label>Area<select name="service_area_id" required defaultValue=""><option value="" disabled>Select area</option>{areas.filter((a) => a.active).map((area) => <option key={area.id} value={area.id}>{area.city}</option>)}</select></label>
-            <label>Start<input name="window_start" type="datetime-local" required /></label>
-            <label>End<input name="window_end" type="datetime-local" required /></label>
-            <label>Capacity<input name="capacity" type="number" min="1" max="100" defaultValue="4" required /></label>
-            <button type="submit">Add pickup time</button>
-          </form>
-          <div className="slot-list">
-            {slots.length ? slots.map((slot) => (
-              <article key={slot.id}>
-                <div><b>{areaById.get(slot.service_area_id) ?? "Area"}</b><span>{localDateTime(slot.window_start)} → {localDateTime(slot.window_end)}</span></div>
-                <div><span>{slot.booked_count}/{slot.capacity} booked</span><form action={togglePickupSlot}><input type="hidden" name="slot_id" value={slot.id} /><input type="hidden" name="active" value={slot.active ? "false" : "true"} /><button type="submit">{slot.active ? "Pause" : "Activate"}</button></form></div>
-              </article>
-            )) : <p className="empty">No pickup times yet. Add your first slot above.</p>}
-          </div>
-        </section>
+        <PickupCalendar slots={slots} today={today} />
 
         <section className="ops-card two-col">
           <div>
@@ -158,3 +134,4 @@ export default async function AdminOperationsPage({ searchParams }: Props) {
     </main>
   )}</Localize>;
 }
+

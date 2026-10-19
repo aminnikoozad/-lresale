@@ -3,12 +3,11 @@
 import { HOME_SUBCATEGORIES } from "@/lib/home-decor";
 import {
   isCatalogCategory,
-  isCatalogSubcategory,
 } from "@/lib/catalog-taxonomy";
 import { loadPilotSettings, pilotAllowsCategory } from "@/lib/pilot-settings";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { isPhoneVerificationRequired } from "@/lib/canadian-phone";
+import { normalizeCanadianPhone, isPhoneVerificationRequired } from "@/lib/canadian-phone";
 import { loadSellingRules } from "@/lib/business-rules";
 
 function value(formData: FormData, key: string) {
@@ -50,9 +49,18 @@ export async function createCollectionRequest(formData: FormData) {
   ]);
   const requestType = value(formData, "request_type");
   const category = value(formData, "category");
-  const submittedSubcategory = value(formData, "subcategory_hint");
-  const address = value(formData, "address");
-  const serviceAreaId = value(formData, "service_area_id");
+  const street = value(formData, "street_address");
+  const unit = value(formData, "address_unit");
+  const city = value(formData, "address_city");
+  const postalCode = value(formData, "postal_code").toUpperCase().replace(/\s/g, "");
+  const contactPhone = normalizeCanadianPhone(value(formData, "contact_phone"));
+  if (street.length < 5 || street.length > 200 || unit.length > 50 || city.length < 2 || city.length > 100 ||
+      !/^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTVWXYZ]\d[ABCEGHJ-NPRSTVWXYZ]\d$/.test(postalCode) || !contactPhone) {
+    redirect(accountMessage("Enter a complete pickup address, valid Canadian postal code and phone number.", "error"));
+  }
+  const formattedPostalCode = `${postalCode.slice(0, 3)} ${postalCode.slice(3)}`;
+  const address = [street, unit ? `Unit ${unit}` : "", city, "QC", formattedPostalCode, "Canada"].filter(Boolean).join(", ");
+  const mixedClothingAllowed = !pilot.enabled || ["women", "men", "kids"].every(entry => pilot.categories.includes(entry as "women" | "men" | "kids"));
   const pickupSlotId = value(formData, "pickup_slot_id");
   const itemCount = Number(value(formData, "item_count"));
   const brandNotes = value(formData, "brands");
@@ -66,9 +74,7 @@ export async function createCollectionRequest(formData: FormData) {
 
   if (
     !["bag", "pickup"].includes(requestType) ||
-    !isCatalogCategory(category) ||
-    !pilotAllowsCategory(category, pilot) ||
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(serviceAreaId) ||
+    !(category === "clothing" ? mixedClothingAllowed : isCatalogCategory(category) && pilotAllowsCategory(category, pilot)) ||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(pickupSlotId) ||
     address.length < 10 ||
     address.length > 500 ||
@@ -99,7 +105,7 @@ export async function createCollectionRequest(formData: FormData) {
   }
 
   const homeIntake: Record<string,string|boolean> = {};
-  let subcategoryHint = submittedSubcategory;
+  let subcategoryHint: string | null = null;
   if (category === "home_decor") {
     const type = value(formData, "home_type");
     if (!HOME_SUBCATEGORIES.includes(type as typeof HOME_SUBCATEGORIES[number])) {
@@ -112,9 +118,15 @@ export async function createCollectionRequest(formData: FormData) {
       if (text) homeIntake[key] = text;
     }
     homeIntake.fragile = formData.get("home_fragile") === "on";
-  } else if (!isCatalogSubcategory(category, subcategoryHint)) {
-    redirect(accountMessage("Choose a valid subcategory for the collection.", "error"));
   }
+
+  const { data: slot, error: slotError } = await supabase.from("pickup_slots")
+    .select("service_area_id,active,window_start,capacity,booked_count")
+    .eq("id", pickupSlotId).maybeSingle();
+  if (slotError || !slot || !slot.active || new Date(slot.window_start).getTime() <= Date.now() || slot.booked_count >= slot.capacity) {
+    redirect(accountMessage("This pickup time is no longer available. Please choose another time.", "error"));
+  }
+  const serviceAreaId = slot.service_area_id;
 
   if (needsPricingConsent) {
     const { error: pricingError } = await supabase.rpc("accept_team_pricing_mandate", { expected_version: "2026-10-15-team-v1" });
@@ -130,6 +142,8 @@ export async function createCollectionRequest(formData: FormData) {
       subcategory_hint: subcategoryHint,
       home_intake: homeIntake,
       address,
+      contact_phone: contactPhone,
+      pickup_address: { street, unit, city, province: "QC", postal_code: formattedPostalCode, country: "CA" },
       service_area_id: serviceAreaId,
       pickup_slot_id: pickupSlotId,
       item_count: itemCount,
@@ -214,3 +228,4 @@ export async function approveBundlePricing(formData: FormData) {
 
   redirect(accountMessage("Bundle price approved. Its commission rate is now permanently locked.", "success"));
 }
+

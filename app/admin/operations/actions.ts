@@ -116,3 +116,30 @@ export async function updateShippingSettings(formData: FormData) {
   revalidatePath("/");
   redirect(message("Canada-wide shipping settings saved.", "success"));
 }
+
+
+export async function savePickupCalendarDay(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  try {
+    const date = text(formData, "date");
+    const mode = text(formData, "mode");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !["open", "close", "save", "add"].includes(mode)) throw new Error("Invalid calendar action");
+    const slotId = text(formData, "slot_id") || null;
+    // Booked windows send no editable hours. The database preserves their times.
+    const start = text(formData, "start");
+    const end = text(formData, "end");
+    const { error } = await supabase.rpc("admin_save_pickup_calendar_day", {
+      p_day: date, p_mode: mode, p_slot_id: slotId,
+      p_start: start ? torontoLocalToIso(`${date}T${start}`) : null,
+      p_end: end ? torontoLocalToIso(`${date}T${end}`) : null,
+      p_capacity: Number(text(formData, "capacity")) || 4,
+      p_active: formData.get("active") === "on",
+    });
+    if (error) throw error;
+  } catch {
+    redirect(message("Calendar could not be saved. Check future hours, capacity and overlapping times. Booked appointment hours cannot be changed.", "error", "pickup-calendar"));
+  }
+  revalidatePath("/account", "layout");
+  revalidatePath("/admin/operations");
+  redirect(message("Pickup calendar saved.", "success", "pickup-calendar"));
+}
