@@ -399,19 +399,22 @@ export function ShopCatalog({
         </div> : null}
         {labels.map((tab) => (
           <TabsContent key={tab.value} value={tab.value}>
-            <div className="catalog-body catalog-body-collapsed">
-              <div className="catalog-results">
-                <div className="catalog-toolbar catalog-inline-toolbar">
+            <div className="catalog-body catalog-body-filter-rail">
+              <aside className="catalog-filter-rail" aria-label={locale === "fr" ? "Filtres" : "Filters"}>
                   <button className="catalog-filter-toggle" type="button" aria-expanded={filterOpen} aria-controls="catalog-inline-filters" onClick={()=>setFilterOpen(open=>!open)}>
                     <SlidersHorizontal /> Filters {activeFilterCount > 0 ? <span>{activeFilterCount}</span> : null}<span aria-hidden="true">{filterOpen ? "⌃" : "⌄"}</span>
                   </button>
-                  <div className="catalog-result-count" role="status" aria-live="polite">{loadError ? "Catalog unavailable" : <><strong>{filtered.length}</strong>{" "}{filtered.length===1?"item":"items"}</>}</div>
-                </div>
                 {filterOpen ? <section id="catalog-inline-filters" className="catalog-filter catalog-inline-filter" aria-label={locale === "fr" ? "Filtres du catalogue" : "Product filters"}>
-                  <div className="catalog-inline-filter-head"><strong>Filters</strong><button type="button" aria-label="Close filters" onClick={()=>setFilterOpen(false)}><X size={18}/></button></div>
                   {filterPanel}
                   <div className="catalog-inline-filter-footer"><Button type="button" onClick={()=>setFilterOpen(false)}>{locale === "fr" ? "Appliquer les filtres" : "Apply filters"}</Button></div>
                 </section> : null}
+              </aside>
+              <div className="catalog-results">
+                <div className="catalog-toolbar catalog-inline-toolbar">
+
+                  <div className="catalog-result-count" role="status" aria-live="polite">{loadError ? "Catalog unavailable" : <><strong>{filtered.length}</strong>{" "}{filtered.length===1?"item":"items"}</>}</div>
+                </div>
+
                 {chips.length > 0 ? <div className="catalog-active-filters" aria-label="Active filters">
                   {chips.map((chip) => <button type="button" key={chip.key} onClick={chip.remove} aria-label={`Remove ${chip.label}`}><span>{chip.label}</span><X aria-hidden="true" /></button>)}
                   <button type="button" onClick={clearFilters}>Clear all</button>
