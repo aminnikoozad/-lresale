@@ -39,7 +39,7 @@ export async function createCollectionRequest(formData: FormData) {
     redirect(accountMessage("Pricing terms could not be verified. Please try again.", "error"));
   }
   const needsPricingConsent = !mandate.data.accepted;
-  if (needsPricingConsent && (formData.get("pricing_mandate") !== "accepted" || formData.get("pricing_mandate_version") !== "2026-10-15-team-v1")) {
+  if (needsPricingConsent && (formData.get("collection_terms_accepted") !== "accepted" || formData.get("pricing_mandate_version") !== "2026-10-15-team-v1")) {
     redirect(accountMessage("Accept the pricing authorization in the collection form.", "error"));
   }
 
@@ -66,8 +66,7 @@ export async function createCollectionRequest(formData: FormData) {
   const brandNotes = value(formData, "brands");
   const estimatedValue = Number(value(formData, "estimated_value"));
   const estimatedValueCents = Math.round(estimatedValue * 100);
-  const allTermsAccepted = ["condition_confirmed", "policy_accepted", "pickup_policy_accepted", "service_fee_accepted"]
-    .every((name) => formData.get(name) === "accepted");
+  const allTermsAccepted = formData.get("collection_terms_accepted") === "accepted";
 
   const isBagRequest = requestType === "bag";
   const isFreePickupPreview = estimatedValueCents >= rules.pickupRules.freePickupThresholdCents;
@@ -97,7 +96,7 @@ export async function createCollectionRequest(formData: FormData) {
     ));
   }
 
-  if (!isBagRequest && !isFreePickupPreview && formData.get("pickup_fee_accepted") !== "accepted") {
+  if (!isBagRequest && !isFreePickupPreview && !allTermsAccepted) {
     redirect(accountMessage(
       `For pickups below ${cad(rules.pickupRules.freePickupThresholdCents)}, one flat pickup fee of ${cad(rules.pickupRules.lowValuePickupItemFeeCents)} applies to the whole pickup. Please accept the fee before submitting.`,
       "error",

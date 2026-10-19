@@ -458,18 +458,12 @@ function RequestDialog({
               />
             </label>
             <p>We collect batches with an estimated combined resale value of at least {collectionMinimum}. This is your estimate; each item is inspected and priced separately.</p>
-            {paidPickup ? (
-              <label className="check pickup-fee-check">
-                <input name="pickup_fee_accepted" value="accepted" required type="checkbox" />{" "}
-                I understand that pickups below {threshold} currently have one flat {lowValuePickupFee} pickup fee for the whole pickup, regardless of item count. This pickup fee is not waived by the launch offer.
-              </label>
-            ) : null}
-            <label className="check">
-              <input name="service_fee_accepted" value="accepted" required type="checkbox" />{" "}
-              {launchEligible
-                ? `I understand the regular batch service fee is ${processingFee}. If one of the ${launchOffer.remaining} currently remaining launch spots is still available when this first collection is successfully submitted, that service fee will be waived automatically. A sign-up alone does not reserve a spot.`
-                : `I understand this new batch records one ${processingFee} service fee. If I request a Shikimomo Bag, it is included in that fee and no separate Bag fee is added. This fee is intended to be deducted from seller earnings when settlement is available, not charged to my card upfront.`}
-            </label>
+            <details className="collection-terms-details">
+              <summary>View collection terms &amp; fees</summary>
+              <p>{launchEligible
+                ? `The regular batch service fee is ${processingFee}. It is waived only if a launch spot remains at successful submission; signing up does not reserve a spot.`
+                : `This batch records one ${processingFee} service fee, including a Shikimomo Bag if requested. It is deducted from seller earnings when settlement is available, not charged to your card upfront.`}</p>
+              {paidPickup ? <p>One flat {lowValuePickupFee} pickup fee applies below {threshold}; the launch offer does not waive this pickup fee.</p> : null}
             <div className="terms-box">
               <b>Required terms for {collectionLabel}</b>
               {category === "home_decor" ? (
@@ -498,29 +492,17 @@ function RequestDialog({
               <p>• Mixed clothing is welcome. Shikimomo sorts and categorizes each item after inspection.</p>
               <p>• <Link href="/sell-with-shikimomo" target="_blank">Read acceptance, pricing, fees and earnings in the Seller Guide.</Link></p>
             </div>
+              <p><Link href="/seller-terms" target="_blank" rel="noopener noreferrer">Seller Terms</Link> · <Link href="/pickup-policy" target="_blank" rel="noopener noreferrer">Pickup &amp; Missed Pickup Policy</Link></p>
+            </details>
+            {!teamPricingAccepted ? <input type="hidden" name="pricing_mandate_version" value="2026-10-15-team-v1" /> : null}
             <label className="check">
-              <input name="condition_confirmed" value="accepted" required type="checkbox" />{" "}
-              I confirm my {collectionLabel} items meet the cleaning, condition, ownership and minimum-value requirements, and understand Shikimomo may reject items after inspection.
-            </label>
-            {!teamPricingAccepted ? <>
-              <input type="hidden" name="pricing_mandate_version" value="2026-10-15-team-v1" />
-              <label className="check">
-                <input name="pricing_mandate" value="accepted" required type="checkbox" />{" "}
-                <span>I authorize Shikimomo to set and manage selling prices after inspection under the <Link href="/seller-terms" target="_blank" rel="noopener noreferrer">Seller Terms</Link>. This one-time authorization covers current and future items.</span>
-              </label>
-            </> : null}
-            <label className="check">
-              <input name="policy_accepted" value="accepted" required type="checkbox" />{" "}
-              I accept the selling period and commission rates.
-            </label>
-            <label className="check">
-              <input name="pickup_policy_accepted" value="accepted" required type="checkbox" />{" "}
-              <span>I accept the <Link href="/pickup-policy" target="_blank">Pickup &amp; Missed Pickup Policy</Link>.</span>
+              <input name="collection_terms_accepted" value="accepted" required type="checkbox" />{" "}
+              <span>I confirm my items meet the requirements and accept the collection terms, commission and displayed fees.{!teamPricingAccepted ? " I authorize Shikimomo to price my current and future items after inspection." : ""}</span>
             </label>
           </div>
           <div className="request-form-footer">
             <PendingSubmitButton disabled={!availableSlots.length} pendingLabel="Submitting request…">Submit collection request</PendingSubmitButton>
-            <small className="payment-note">A new batch code and final fee snapshot are created when you submit. Launch eligibility is finalized atomically at successful submission. Pickup still requires confirmation before dispatch.</small>
+            <small className="payment-note">Pickup requires confirmation by Shikimomo.</small>
           </div>
         </form>
       </DialogContent>
