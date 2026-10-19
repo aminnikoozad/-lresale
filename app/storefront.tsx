@@ -11,7 +11,6 @@ import { ArrowRight, ShieldCheck, Truck, UserRound, PackageCheck } from "lucide-
 import { Button } from "@/components/ui/button";
 import { CartNavLink } from "@/components/cart-store";
 import { createPublicClient } from "@/lib/supabase/public";
-import { CATALOG_CATEGORIES } from "@/lib/catalog-taxonomy";
 import { loadPilotSettings, pilotAllowsCategory } from "@/lib/pilot-settings";
 import { ShopCatalog, type CatalogCategory, type CatalogProduct } from "./shop-catalog";
 
@@ -96,7 +95,7 @@ export default async function Home() {
       priceDrop: homeMap.get(row.item_id)?.price_drop ?? false,
     }));
 
-  const navCategories = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value));
+
 
 
 
@@ -111,12 +110,7 @@ export default async function Home() {
         </div>
       </header>
 
-      <nav className="market-category-nav" aria-label="Shop departments">
-        <a href="#shop">All finds</a>
-        {navCategories.map((entry) => <a key={entry.value} href={`#${entry.value}`}>{entry.label}</a>)}
-        <Link href="/sell-with-shikimomo" className="market-how-link">How it works <ArrowRight aria-hidden="true" /></Link>
-        <Link href="/support">Contact &amp; support</Link>
-      </nav>
+
 
       <section className="hero" aria-labelledby="home-hero-title">
         <div className="hero-inner">
