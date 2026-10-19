@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { weightBand, validPostal, validateItemIds } from '../lib/postal.ts';
-import { mailingScenario, parseRates, combineRates, canadaPostRates } from '../lib/canada-post.ts';
+import { mailingScenario, parseRates, combineRates, canadaPostRates, CanadaPostError } from '../lib/canada-post.ts';
 const parcel={itemId:'00000000-0000-4000-8000-000000000001',weightGrams:501,lengthMm:100,widthMm:300,heightMm:200,mailingTube:false,unpackaged:false,band:2};
 const response=[{serviceCode:'DOM.RP',serviceName:'Regular Parcel',priceDetails:{due:12.34,taxes:{gst:{amt:0.59}}},serviceStandard:{expectedTransitTime:3}}];
 test('Four contiguous weight bands, boundaries and invalid weights',()=>{
@@ -30,4 +30,18 @@ test('OAuth + JSON rating uses fixed endpoints; no label purchase or fallback ra
  assert.equal(JSON.parse(String(calls[1].init?.body)).destination.domestic.postalCode,'K1A0B1');
  const unavailable:typeof fetch=async()=>new Response('',{status:503});
  await assert.rejects(canadaPostRates([parcel],'H2X1Y4','K1A0B1',{clientId:'test',clientSecret:'secret'},unavailable));
+});
+
+
+test('Carrier failures are classified without exposing carrier payloads or credentials',async()=>{
+ for(const [status,code] of [[401,'authentication'],[403,'authentication'],[429,'rate_limited'],[400,'invalid_request'],[422,'invalid_request'],[503,'unavailable']] as const){
+  const mock:typeof fetch=async()=>new Response('private carrier body',{status});
+  await assert.rejects(canadaPostRates([parcel],'H2X1Y4','K1A0B1',{clientId:'test',clientSecret:'secret'},mock),error=>error instanceof CanadaPostError && error.code===code && !error.message.includes('private'));
+ }
+});
+test('French rate tests request French carrier service names',async()=>{
+ const calls:RequestInit[]=[];
+ const mock:typeof fetch=async(_input,init)=>{calls.push(init!);return new Response(JSON.stringify(calls.length===1?{access_token:'token'}:response));};
+ await canadaPostRates([parcel],'H2X1Y4','K1A0B1',{clientId:'test',clientSecret:'secret',locale:'fr-CA'},mock);
+ assert.equal((calls[1].headers as Record<string,string>)['Accept-Language'],'fr-CA');
 });

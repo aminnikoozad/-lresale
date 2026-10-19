@@ -2001,5 +2001,13 @@
   "City": "Ville",
   "Give your clothes": "Offrez à vos vêtements",
   "a second life.": "une seconde vie.",
-  "We collect, inspect, photograph and sell your pieces. You earn when they sell.": "Nous collectons, inspectons, photographions et vendons vos articles. Vous recevez votre part après leur vente."
+  "We collect, inspect, photograph and sell your pieces. You earn when they sell.": "Nous collectons, inspectons, photographions et vendons vos articles. Vous recevez votre part après leur vente.",
+  "Production mode configured:": "Mode production configuré :",
+  "Production mode configured: ": "Mode production configuré : ",
+  "Connect your Canada Post account": "Connecter votre compte Postes Canada",
+  "Open the official Canada Post setup guide": "Ouvrir le guide officiel de configuration de Postes Canada",
+  ". Sign in with your business account, create a Production app and add the Rating API.": ". Connectez-vous avec votre compte d’entreprise, créez une application de production et ajoutez l’API Tarification.",
+  "Open secure Vercel environment settings": "Ouvrir les paramètres sécurisés des variables Vercel",
+  ". Add CANADA_POST_CLIENT_ID and CANADA_POST_CLIENT_SECRET from the app, and CANADA_POST_MODE=production. Redeploy after saving.": ". Ajoutez CANADA_POST_CLIENT_ID et CANADA_POST_CLIENT_SECRET de l’application, ainsi que CANADA_POST_MODE=production. Redéployez après l’enregistrement.",
+  "Enter your verified origin postal code and packed parcel measurements. Test the connection below, then enable live quotes when real rates have been verified.": "Saisissez le code postal de départ vérifié et les mesures des colis emballés. Testez la connexion ci-dessous, puis activez les devis après avoir vérifié les tarifs réels."
 }

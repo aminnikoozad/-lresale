@@ -40,3 +40,9 @@ Customers can still save delivery details without a quote for manual review. UI 
 Pending live acceptance when credentials are absent: real carrier response/rate comparison and authenticated mobile checkout. Default configuration is paused, with no invented warehouse address. No emails, labels or charges are triggered.
 
 The separate unmerged `shipping-canada-configurable-20260922` branch was inspected but not merged: it implements internal rate formulas, not this live carrier adapter. This implementation uses `postal_*` names to avoid silently overwriting that work.
+
+## Admin connection diagnostics
+
+Admin → Postal shipping now includes a production Rating-only probe requiring shipping permission and MFA. Supply a verified origin, destination, and packed parcel dimensions; no inventory, checkout order or label purchase is required. The probe never enables customer quoting automatically and never creates a shipment. It distinguishes missing production configuration, rejected credentials/API access, invalid route/package, throttling, no common service and temporary carrier failure. Provider payloads, credentials and tokens are not returned. French tests request French service names.
+
+Focused verification: `node --test tests/postal.test.ts tests/postal-connection.test.mjs`. Live connection acceptance still requires the owner's production credentials and verified origin. A mocked rate is never treated as activation evidence.

@@ -2,7 +2,15 @@ import type { Parcel, PostalRate } from "./postal.ts";
 // Canada Post Rating 4.0 JSON/OAuth API, April 2026. No label-purchase endpoint.
 const ROOT = "https://api.canadapost-postescanada.ca/prod/devportal-portaildesdeveloppeurs";
 export const SERVICES = ["DOM.RP", "DOM.EP", "DOM.XP", "DOM.PC"];
-type Credentials = { clientId: string; clientSecret: string; customerNumber?: string; contractId?: string };
+type Credentials = { clientId: string; clientSecret: string; customerNumber?: string; contractId?: string; locale?: "en-CA" | "fr-CA" };
+export class CanadaPostError extends Error {
+  readonly code: "authentication" | "rate_limited" | "invalid_request" | "unavailable";
+  constructor(code: "authentication" | "rate_limited" | "invalid_request" | "unavailable") {
+    super("Canada Post request failed");
+    this.name = "CanadaPostError";
+    this.code = code;
+  }
+}
 function money(value: unknown): number {
   if ((typeof value !== "number" && typeof value !== "string") || !/^\d{1,5}(\.\d{1,2})?$/.test(String(value))) throw new Error("Invalid carrier amount");
   return Math.round(Number(value) * 100);
@@ -33,7 +41,11 @@ export function mailingScenario(parcel: Parcel, origin: string, destination: str
 export async function canadaPostRates(parcels: Parcel[], origin: string, destination: string, credentials: Credentials, fetcher: typeof fetch = fetch): Promise<PostalRate[]> {
   const request = async (url: string, init: RequestInit) => {
     const response = await fetcher(url, { ...init, cache:"no-store", redirect:"error", signal:AbortSignal.timeout(12000) });
-    if (!response.ok) throw new Error("Carrier unavailable");
+    if (!response.ok) throw new CanadaPostError(
+      response.status === 401 || response.status === 403 ? "authentication" :
+      response.status === 429 ? "rate_limited" :
+      response.status === 400 || response.status === 422 ? "invalid_request" : "unavailable"
+    );
     const text = await response.text();
     if (text.length > 150000) throw new Error("Invalid carrier response");
     return JSON.parse(text);
@@ -43,7 +55,8 @@ export async function canadaPostRates(parcels: Parcel[], origin: string, destina
   const results: PostalRate[][] = [];
   // Bounded batches: never flood the carrier for a multi-item cart.
   for (let i=0;i<parcels.length;i+=4) {
-    results.push(...await Promise.all(parcels.slice(i,i+4).map(async parcel => parseRates(await request(`${ROOT}/rating/v1/prices`, {method:"POST",headers:{Authorization:`Bearer ${token.access_token}`,"Content-Type":"application/json",Accept:"application/json","Accept-Language":"en-CA"},body:JSON.stringify(mailingScenario(parcel,origin,destination,credentials))})))));
+    results.push(...await Promise.all(parcels.slice(i,i+4).map(async parcel => parseRates(await request(`${ROOT}/rating/v1/prices`, {method:"POST",headers:{Authorization:`Bearer ${token.access_token}`,"Content-Type":"application/json",Accept:"application/json","Accept-Language":credentials.locale ?? "en-CA"},body:JSON.stringify(mailingScenario(parcel,origin,destination,credentials))})))));
   }
   return combineRates(results);
 }
+
