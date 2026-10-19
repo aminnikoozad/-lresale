@@ -122,7 +122,6 @@ function cad(cents: number) {
 export function Dashboard({
   teamPricingAccepted = false,
   name,
-  username,
   message,
   messageType,
   balance,
@@ -145,10 +144,7 @@ export function Dashboard({
       <section className="welcome">
         <div>
           <p className="eyebrow dark">Seller account</p>
-          <h1>Welcome, {name}.</h1>
-          <div className="customer-identifiers" aria-label="Customer identifiers">
-            <span>@{username}</span>
-          </div>
+          <h1 style={{fontSize:"clamp(1.25rem, 2.4vw, 1.75rem)",lineHeight:1.3,letterSpacing:"-.02em"}}>Welcome, {name}.</h1>
           <p>
             See your balance, follow every item and arrange your next
             collection.
