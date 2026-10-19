@@ -7,7 +7,7 @@ import { connection } from "next/server";
 import type { HomeData } from "@/lib/home-decor";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Search, ShieldCheck, Truck, UserRound, PackageCheck } from "lucide-react";
+import { ArrowRight, ShieldCheck, Truck, UserRound, PackageCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CartNavLink } from "@/components/cart-store";
 import { createPublicClient } from "@/lib/supabase/public";
@@ -103,12 +103,8 @@ export default async function Home() {
   return <Localize>{(
     <main className="market-home">
       <a className="market-skip-link" href="#shop">Skip to the shop</a>
-      <header className="site-header market-header market-header-single-brand">
-        <form className="market-header-search" action="/shop#shop" method="get" role="search">
-          <Search aria-hidden="true" />
-          <input type="search" name="q" aria-label="Search the Shikimomo catalog" placeholder="Search type, brand or size" />
-          <button type="submit" aria-label="Search catalog"><ArrowRight aria-hidden="true" /></button>
-        </form>
+      <header className="site-header market-header market-header-single-brand" style={{ display: "flex", justifyContent: "flex-end" }}>
+
         <div className="header-actions">
           <Link href="/account" className="market-account-link"><UserRound aria-hidden="true" /><span>Account</span></Link>
           <CartNavLink />
