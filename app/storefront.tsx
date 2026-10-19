@@ -103,9 +103,7 @@ export default async function Home() {
   return <Localize>{(
     <main className="market-home">
       <a className="market-skip-link" href="#shop">Skip to the shop</a>
-      <div className="market-announcement">Shikimomo · Managed secondhand in Montréal</div>
-      <header className="site-header market-header">
-        <Link href="/" className="brand" aria-label="Shikimomo home"><BrandWordmark /></Link>
+      <header className="site-header market-header market-header-single-brand">
         <form className="market-header-search" action="/shop#shop" method="get" role="search">
           <Search aria-hidden="true" />
           <input type="search" name="q" aria-label="Search the Shikimomo catalog" placeholder="Search type, brand or size" />

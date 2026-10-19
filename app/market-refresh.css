@@ -267,3 +267,8 @@
 .catalog-body-filter-rail>.catalog-results{min-width:0}.catalog-body-filter-rail .catalog-toolbar{min-height:44px;justify-content:flex-end!important}
 @media(max-width:800px){.shop-catalog .catalog-body.catalog-body-filter-rail{grid-template-columns:180px minmax(0,1fr)!important;gap:16px!important}.catalog-body-filter-rail .catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:550px){.shop-catalog .catalog-body.catalog-body-filter-rail{grid-template-columns:145px minmax(0,1fr)!important;gap:12px!important}.catalog-filter-rail>.catalog-inline-filter.catalog-filter{padding:14px 9px!important}.catalog-filter-rail .catalog-filter-dropdown>summary{grid-template-columns:minmax(0,1fr) 52px!important;gap:4px!important;font-size:12px!important}.catalog-filter-rail .catalog-filter-choice{padding:5px!important;font-size:11px}.catalog-body-filter-rail .catalog-grid{grid-template-columns:minmax(0,1fr)!important}.catalog-filter-rail>.catalog-filter-toggle{padding:10px;font-size:13px}}
+
+/* The shared language bar already owns the top-left home logo. */
+.market-home .site-header.market-header.market-header-single-brand{grid-template-columns:minmax(0,1fr) auto!important;top:53px!important}
+@media(max-width:900px){.market-header-single-brand .market-header-search{grid-row:1;grid-column:1;width:100%}.market-header-single-brand .header-actions{grid-row:1;grid-column:2}}
+@media(max-width:650px){.market-home .site-header.market-header.market-header-single-brand{grid-template-columns:minmax(0,1fr)!important}.market-header-single-brand .market-header-search{grid-row:1;grid-column:1}.market-header-single-brand .header-actions{grid-row:2;grid-column:1;justify-content:flex-end}}
