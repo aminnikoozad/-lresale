@@ -108,7 +108,6 @@ export default async function Home() {
         <div className="header-actions">
           <Link href="/account" className="market-account-link"><UserRound aria-hidden="true" /><span>Account</span></Link>
           <CartNavLink />
-          <Button asChild className="header-sell-button"><Link href="/sell-with-shikimomo">Sell with Shikimomo</Link></Button>
         </div>
       </header>
 
@@ -122,10 +121,10 @@ export default async function Home() {
       <section className="hero" aria-labelledby="home-hero-title">
         <div className="hero-inner">
           <div className="hero-copy">
-            <h1 id="home-hero-title">Find your next<br />favourite piece.</h1>
-            <p>Find clothing by size, condition and price. See the details of each piece before adding it to your bag.</p>
+            <h1 id="home-hero-title">Give your clothes<br />a second life.</h1>
+            <p>We collect, inspect, photograph and sell your pieces. You earn when they sell.</p>
             <div className="hero-actions">
-              <Button asChild size="lg"><a href="#shop">Explore the shop <ArrowRight aria-hidden="true" /></a></Button>
+              <Button asChild size="lg"><Link href="/sell-with-shikimomo">Sell with Shikimomo <ArrowRight aria-hidden="true" /></Link></Button>
             </div>
           </div>
           <div className="hero-media">
