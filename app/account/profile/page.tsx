@@ -24,6 +24,5 @@ export default async function Profile({searchParams}:{searchParams:Promise<{mess
       </form>}
     </section>
     <section className="account-shared-card"><h2>Password &amp; security</h2><p>Use a password recovery link sent to your account email to reset your password.</p><Link href="/forgot-password">Recover my password</Link></section>
-    <section className="account-shared-card"><h2>Messages &amp; support</h2><p>Your conversations stay available whichever account workspace you use.</p><Link href="/account/messages">Open messages &amp; support</Link></section>
   </main></Localize>;
 }

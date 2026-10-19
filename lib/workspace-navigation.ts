@@ -16,13 +16,12 @@ export const accountNavigation: WorkspaceLink[] = [
   { href: "/account/seller/items", label: "Item tracking" },
   { href: "/account/seller/earnings", label: "Earnings & settlement" },
   { href: "/account/profile", label: "Profile & security" },
-  { href: "/account/messages", label: "Messages & support" },
 ];
 export function accountNavigationFor(mode: "buyer" | "seller" | null): WorkspaceLink[] {
   const paths = mode === "seller"
     ? ["/account/seller", "/account/seller/items", "/account/seller/earnings"]
     : mode === "buyer" ? ["/account/buyer", "/account/buyer/delivery"] : ["/account"];
-  return accountNavigation.filter(link => paths.includes(link.href) || link.href === "/account/messages" || (mode !== "seller" && link.href === "/account/profile"));
+  return accountNavigation.filter(link => paths.includes(link.href) || (mode !== "seller" && link.href === "/account/profile"));
 }
 export function adminNavigation(access: MenuAccess): WorkspaceLink[] {
   return [
