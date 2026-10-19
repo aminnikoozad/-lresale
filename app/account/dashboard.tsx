@@ -146,7 +146,6 @@ export function Dashboard({
           <h1>Welcome, {name}.</h1>
           <div className="customer-identifiers" aria-label="Customer identifiers">
             <span>@{username}</span>
-            <Link href="/account/profile">Profile &amp; security</Link>
           </div>
           <p>
             See your balance, follow every item and arrange your next
