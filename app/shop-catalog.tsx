@@ -169,20 +169,6 @@ export function ShopCatalog({
     previousFilters.current = filters;
   }, [filters, locationReady]);
 
-  useEffect(() => {
-    if (!filterOpen) return;
-    // Do not leave an invisible modal/focus trap open after rotating to desktop.
-    const desktop = window.matchMedia("(min-width: 901px)");
-    const closeOnDesktop = () => {
-      if (desktop.matches) setFilterOpen(false);
-    };
-    closeOnDesktop();
-    desktop.addEventListener("change", closeOnDesktop);
-    return () => {
-      desktop.removeEventListener("change", closeOnDesktop);
-    };
-  }, [filterOpen]);
-
   const categoryProducts = useMemo(
     () =>
       activeCategory === "all"
