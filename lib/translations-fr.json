@@ -531,7 +531,7 @@
   "How we use it": "Comment nous l'utilisons",
   "Human handling": "Manipulation humaine",
   "Human handoff queue": "La file d'attente humaine",
-  "I accept the": "J'accepte",
+  "I accept the": "J’accepte les",
   "I accept the applicable pickup fees shown in the policy.": "J'accepte les frais de ramassage applicables indiqués dans la politique.",
   "I accept the pickup policy.": "J'accepte la politique de ramassage.",
   "I accept the seller terms.": "J'accepte les conditions du vendeur.",
@@ -1975,5 +1975,6 @@
   "I have read and accept the": "J’ai lu et j’accepte la",
   ", including the return deadlines, item condition requirements and shipping costs.": ", y compris les délais de retour, les exigences sur l’état des articles et les frais de transport.",
   "Accept the Terms of Use and Returns & Refunds Policy to continue.": "Acceptez les conditions d’utilisation et la politique de retours et remboursements pour continuer.",
-  "and I acknowledge the": "et je prends connaissance de la"
+  "and I acknowledge the": "et je prends connaissance de la",
+  ", and acknowledge the": ", et je prends connaissance de la"
 }
