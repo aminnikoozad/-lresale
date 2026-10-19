@@ -325,17 +325,6 @@ export function ShopCatalog({
             <span id={entry.value} key={entry.value} />
           ))}
       </div>
-      <div className="section-heading">
-        <div>
-          <p className="catalog-breadcrumb">All finds{activeCategory !== "all" ? ` / ${departmentLabel}` : ""}</p>
-          <p className="eyebrow dark">The Shikimomo collection</p>
-          <h2>{activeCategory === "all" ? "Curated finds. Another life." : `Shop ${departmentLabel}`}</h2>
-        </div>
-        <p>
-          Search inspected items and narrow by category, subcategory, price,
-          brand, size, condition, colour, material and pattern.
-        </p>
-      </div>
       <div className="catalog-searchbar">
         <label>
           <Search />
