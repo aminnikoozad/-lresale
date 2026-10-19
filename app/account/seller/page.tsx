@@ -1,6 +1,5 @@
 
 import { Localize } from "@/components/site-language";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Dashboard } from "@/app/account/dashboard";
 import { CommissionSection } from "@/components/commission-section";
@@ -228,12 +227,8 @@ export default async function AccountPage({ searchParams }: Props) {
   return <Localize>{(
     <main className="account-shell">
 
-      {!pricingMandate.error && pricingMandate.data && !pricingMandate.data.accepted ? <section className="seller-review-box section-wrap">
-        <h2>Pricing by Shikimomo</h2>
-        <p>Before submitting a new collection request, review and accept the team pricing terms once. Shikimomo will then set prices after inspection without asking you to approve each item.</p>
-        <Link href="/account/seller/items">Review team pricing terms</Link>
-      </section> : null}
       <Dashboard
+        teamPricingAccepted={Boolean(pricingMandate.data?.accepted)}
         name={displayName}
         username={username}
         customerCode={customerCode}

@@ -91,6 +91,7 @@ type LaunchOffer = {
   waivedServiceFeeCents: number;
 };
 type Props = {
+  teamPricingAccepted?: boolean;
   name: string;
   username: string;
   customerCode: string;
@@ -119,6 +120,7 @@ function cad(cents: number) {
 }
 
 export function Dashboard({
+  teamPricingAccepted = false,
   name,
   username,
   message,
@@ -164,6 +166,7 @@ export function Dashboard({
             pickupDayText={pickupDayText}
             feeRules={feeRules}
             launchOffer={launchOffer}
+            teamPricingAccepted={teamPricingAccepted}
           />
           <RequestDialog
             type="pickup"
@@ -176,6 +179,7 @@ export function Dashboard({
             pickupDayText={pickupDayText}
             feeRules={feeRules}
             launchOffer={launchOffer}
+            teamPricingAccepted={teamPricingAccepted}
           />
         </div>
       </section>
@@ -247,6 +251,7 @@ export function Dashboard({
                 pickupDayText={pickupDayText}
                 feeRules={feeRules}
                 launchOffer={launchOffer}
+            teamPricingAccepted={teamPricingAccepted}
               />
             </div>
             {items.length ? (
@@ -344,6 +349,7 @@ export function Dashboard({
 }
 
 function RequestDialog({
+  teamPricingAccepted,
   label,
   icon,
   type,
@@ -355,6 +361,7 @@ function RequestDialog({
   feeRules,
   launchOffer,
 }: {
+  teamPricingAccepted: boolean;
   label: string;
   icon: React.ReactNode;
   type: "bag" | "pickup";
@@ -545,6 +552,13 @@ function RequestDialog({
               <input name="condition_confirmed" value="accepted" required type="checkbox" />{" "}
               I confirm my {categoryLabel(category)} items meet the cleaning, condition, ownership and minimum-value requirements, and understand Shikimomo may reject items after inspection.
             </label>
+            {!teamPricingAccepted ? <>
+              <input type="hidden" name="pricing_mandate_version" value="2026-10-15-team-v1" />
+              <label className="check">
+                <input name="pricing_mandate" value="accepted" required type="checkbox" />{" "}
+                <span>I authorize Shikimomo to set and manage selling prices after inspection under the <Link href="/seller-terms" target="_blank" rel="noopener noreferrer">Seller Terms</Link>. This one-time authorization covers current and future items.</span>
+              </label>
+            </> : null}
             <label className="check">
               <input name="policy_accepted" value="accepted" required type="checkbox" />{" "}
               I accept the selling period and commission rates.

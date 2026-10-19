@@ -1724,7 +1724,7 @@
   "Indexing is handled separately. Deferred Smart Shopping and payment-provider activation do not replace these store operations checks.": "L’indexation est traitée séparément. Le report de l’achat intelligent et l’activation du paiement ne remplacent pas ces vérifications des opérations de la boutique.",
   "Smart Shopping — deferred": "Achat intelligent — reporté",
   "Review and accept the team pricing terms.": "Consultez et acceptez les conditions de tarification par l’équipe.",
-  "Pricing terms could not be saved. Please try again.": "Les conditions de tarification n’ont pas pu être enregistrées. Veuillez réessayer.",
+  "Pricing terms could not be saved. Please try again.": "Impossible d’enregistrer les conditions de tarification. Veuillez réessayer.",
   "Review and accept the team pricing terms before booking a collection.": "Consultez et acceptez les conditions de tarification par l’équipe avant de réserver une collecte.",
   "Team pricing finalized. Add listing photos and publish when ready.": "Tarification par l’équipe finalisée. Ajoutez les photos et publiez lorsque l’article est prêt.",
   "Pricing could not be finalized. Check the seller authorization, physical inspection, current price and MFA.": "La tarification n’a pas pu être finalisée. Vérifiez l’autorisation du vendeur, l’inspection physique, le prix actuel et l’authentification multifacteur.",
@@ -1976,5 +1976,9 @@
   ", including the return deadlines, item condition requirements and shipping costs.": ", y compris les délais de retour, les exigences sur l’état des articles et les frais de transport.",
   "Accept the Terms of Use and Returns & Refunds Policy to continue.": "Acceptez les conditions d’utilisation et la politique de retours et remboursements pour continuer.",
   "and I acknowledge the": "et je prends connaissance de la",
-  ", and acknowledge the": ", et je prends connaissance de la"
+  ", and acknowledge the": ", et je prends connaissance de la",
+  "I authorize Shikimomo to set and manage selling prices after inspection under the": "J’autorise Shikimomo à fixer et gérer les prix de vente après inspection conformément aux",
+  ". This one-time authorization covers current and future items.": ". Cette autorisation unique couvre les articles actuels et futurs.",
+  "Pricing terms could not be verified. Please try again.": "Impossible de vérifier les conditions de tarification. Veuillez réessayer.",
+  "Accept the pricing authorization in the collection form.": "Acceptez l’autorisation de tarification dans le formulaire de collecte."
 }

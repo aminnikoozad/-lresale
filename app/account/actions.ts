@@ -36,8 +36,12 @@ export async function createCollectionRequest(formData: FormData) {
   if (isPhoneVerificationRequired() && !user.phone_confirmed_at) redirect("/verify-phone");
 
   const mandate = await supabase.rpc("my_team_pricing_mandate");
-  if (!mandate.error && mandate.data && !mandate.data.accepted) {
-    redirect("/account/seller/items?type=error&message=Review%20and%20accept%20the%20team%20pricing%20terms%20before%20booking%20a%20collection.");
+  if (mandate.error || !mandate.data) {
+    redirect(accountMessage("Pricing terms could not be verified. Please try again.", "error"));
+  }
+  const needsPricingConsent = !mandate.data.accepted;
+  if (needsPricingConsent && (formData.get("pricing_mandate") !== "accepted" || formData.get("pricing_mandate_version") !== "2026-10-15-team-v1")) {
+    redirect(accountMessage("Accept the pricing authorization in the collection form.", "error"));
   }
 
   const [rules, pilot] = await Promise.all([
@@ -110,6 +114,11 @@ export async function createCollectionRequest(formData: FormData) {
     homeIntake.fragile = formData.get("home_fragile") === "on";
   } else if (!isCatalogSubcategory(category, subcategoryHint)) {
     redirect(accountMessage("Choose a valid subcategory for the collection.", "error"));
+  }
+
+  if (needsPricingConsent) {
+    const { error: pricingError } = await supabase.rpc("accept_team_pricing_mandate", { expected_version: "2026-10-15-team-v1" });
+    if (pricingError) redirect(accountMessage("Pricing terms could not be saved. Please try again.", "error"));
   }
 
   const { data: savedRequest, error } = await supabase
