@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
-const supabaseOrigin = "https://lsdhobwrnmlkqnvkamlt.supabase.co";
+const configuredSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://lsdhobwrnmlkqnvkamlt.supabase.co";
+const supabaseOrigin = new URL(configuredSupabaseUrl).origin;
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -25,7 +26,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "lsdhobwrnmlkqnvkamlt.supabase.co",
+        hostname: new URL(supabaseOrigin).hostname,
         pathname: "/storage/v1/object/public/**",
       },
     ],
