@@ -55,10 +55,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const sqlStaging = process.env.VERCEL_ENV === "preview" && process.env.SHIKIMOMO_NEON_STAGING === "true";
   const locale = (await cookies()).get("shikimomo-language")?.value === "fr" ? "fr" : "en";
   return (
     <html lang={locale} className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body><LanguageProvider initialLocale={locale}><LanguageSwitch /><CartProvider>{children}<SupportFooter /><PickupConfirmationUi /><ExperienceSwitch /></CartProvider></LanguageProvider></body>
+      <body><LanguageProvider initialLocale={locale}><LanguageSwitch /><CartProvider>{children}{!sqlStaging && <><SupportFooter /><PickupConfirmationUi /><ExperienceSwitch /></>}</CartProvider></LanguageProvider></body>
     </html>
   );
 }

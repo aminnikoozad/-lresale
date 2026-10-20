@@ -6,6 +6,10 @@ export function resolveSupabaseEnvironment(env: Record<string, string | undefine
   const url = env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/\/+$/, "");
   const key = env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
   const isolated = env.VERCEL_ENV === "preview" || env.NEXT_PUBLIC_APP_ENV === "staging";
+  if (env.NEXT_PUBLIC_STAGING_BACKEND === "neon") {
+    if (env.VERCEL_ENV === "production" || env.NEXT_PUBLIC_APP_ENV !== "staging") throw new Error("Neon SQL rehearsal is preview-only");
+    return {url:"https://disabled.invalid",publishableKey:"sb_publishable_disabled_staging"};
+  }
   if (Boolean(url) !== Boolean(key)) throw new Error("Configure both public Supabase URL and publishable key");
   if (isolated && (!url || url === productionSupabaseUrl)) throw new Error("Staging requires a separate Supabase project");
   if (url) {

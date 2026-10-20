@@ -82,3 +82,22 @@ For production later: require the tested exact commit, separately approved produ
 For rollback: revert the application commit or disable new entry points; keep additive columns, audit/config versions and all historical data. Do not drop inventory, order or ledger tables or erase audit history. No active marketplace order exists from this branch. Before enabling actual marketplace orders, rollback must preserve servicing of existing orders, disputes, refunds and reconciliation while disabling new checkout.
 
 Financial/shipping incident handling is a **future launch gate**, not an implemented runbook: ambiguous provider outcomes must be reconciled by their idempotency reference before retry; refund and transfer reversal are separate; failed payout must not create another credit; label creation is not carrier acceptance; pickup-at-post-office is not delivery. Existing managed label incident instructions remain in [Canada Post label operations](canada-post-labels.md).
+
+## Neon SQL rehearsal preview
+
+When an independent Supabase environment is unavailable, this branch supports an explicitly limited Neon rehearsal at `/staging`. It is **not a replacement for hosted Supabase Auth/Storage acceptance**.
+
+The database contains schema definitions from the intended application, plus an explicitly simulated `auth` claim context and synthetic seller identities. No customer records, passwords, provider secrets, production scheduled jobs or production uploads are copied. Outbound dispatcher functions are disabled and notification dispatch triggers are not installed. Non-constraint performance indexes are not part of this rehearsal snapshot.
+
+The preview uses the same `DirectDraftEditor` component and the actual draft RPCs. Testers can switch between two synthetic sellers and verify draft isolation. It does not allow publishing, payment, postage purchase, financial release or arbitrary SQL. Production deployment always rejects this mode. Requests outside the rehearsal/comparison pages are redirected; application APIs are disabled. Supabase clients receive a deliberately unusable origin, never a production fallback.
+
+Preview variables must be scoped only to this review branch:
+
+- `SHIKIMOMO_NEON_STAGING=true`
+- `NEXT_PUBLIC_APP_ENV=staging`
+- `NEXT_PUBLIC_STAGING_BACKEND=neon`
+- `SHIKIMOMO_STAGING_DATABASE_URL`: server-only Secret; use a SQL-created restricted gateway role, not an API-created administrative Neon role. The URI must name the rehearsal database and a Neon host. A database marker is asserted before every operation, then the transaction switches to the authenticated role and supplies a synthetic identity context.
+
+Keep existing Vercel preview authentication enabled. Do not put real data into this environment. This test portal deliberately simulates identities; changing the selected seller is not a sign-in test.
+
+Hosted PostgreSQL checks passed for draft creation, own visibility, denial of cross-seller edits, stale versions, unsupported mode payload, raw writes, anonymous RPC access, premature publication, owner conversion and warehouse enrollment. Browser acceptance is reported separately from these SQL checks. Full production parity, real sign-in/Storage, providers and the transaction scenarios above remain required.

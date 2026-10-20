@@ -24,3 +24,10 @@ test('preview cannot fall back to production; project/key must be configured as 
  assert.throws(()=>resolveSupabaseEnvironment({NEXT_PUBLIC_SUPABASE_URL:'https://stage.supabase.co',NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:'sb_secret_test'}));
  assert.equal(resolveSupabaseEnvironment({VERCEL_ENV:'preview',NEXT_PUBLIC_SUPABASE_URL:'https://stage.supabase.co',NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test'}).url,'https://stage.supabase.co');
 });
+
+test('Neon rehearsal disables Supabase rather than reusing production and is rejected for production deployments',()=>{
+ const env={NEXT_PUBLIC_APP_ENV:'staging',NEXT_PUBLIC_STAGING_BACKEND:'neon',VERCEL_ENV:'preview'};
+ assert.equal(resolveSupabaseEnvironment(env).url,'https://disabled.invalid');
+ assert.throws(()=>resolveSupabaseEnvironment({...env,VERCEL_ENV:'production'}));
+ assert.throws(()=>resolveSupabaseEnvironment({...env,NEXT_PUBLIC_APP_ENV:'production'}));
+});
