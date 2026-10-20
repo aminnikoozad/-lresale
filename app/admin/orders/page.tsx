@@ -46,6 +46,7 @@ export default async function AdminOrders({ searchParams }: { searchParams: Prom
           <p>{order.recipient_name} · {order.address_line1}{order.address_line2 ? `, ${order.address_line2}` : ""}, {order.city}, {order.province} {order.postal_code}</p>
           <p>{order.items.map(item => `${item.name} (${money(item.priceCents)})`).join(" · ")}</p>
           <p>Items {money(order.subtotal_cents)} · Shipping {money(order.shipping_cents)} · Item tax {money(order.tax_cents)} · Total {money(order.total_cents)}</p>
+          {order.payment_status === "paid" ? <p><Link href={`/admin/orders/${order.id}/label`}>Canada Post label / tracking</Link></p> : null}
           {order.tracking_number ? <p>Tracking: {order.tracking_number}</p> : null}
           {order.status === "awaiting_payment" ? <p>Prepared only. No payment was taken. Reservation expires {order.reservation_expires_at ? new Date(order.reservation_expires_at).toLocaleString("en-CA", { timeZone: "America/Toronto" }) : "—"}.</p> : null}
           {next && order.payment_status === "paid" ? <form action={progressOrder} className="admin-item-form"><input type="hidden" name="order" value={order.id}/><input type="hidden" name="status" value={next}/>{next === "shipped" ? <label>Carrier tracking number <input name="tracking" minLength={5} maxLength={80} required/></label> : null}<button type="submit">Mark {next}</button></form> : null}
