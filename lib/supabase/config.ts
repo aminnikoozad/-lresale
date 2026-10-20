@@ -1,6 +1,10 @@
-export const SUPABASE_URL = "https://lsdhobwrnmlkqnvkamlt.supabase.co";
-export const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_t1Yh4jSDgkhfWFL3t449MA_QhTiKw9c";
-
-export function getSupabaseConfig() {
-  return { url: SUPABASE_URL, publishableKey: SUPABASE_PUBLISHABLE_KEY };
-}
+import { resolveSupabaseEnvironment } from "./environment";
+const config = resolveSupabaseEnvironment({
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
+  VERCEL_ENV: process.env.VERCEL_ENV,
+});
+export const SUPABASE_URL = config.url;
+export const SUPABASE_PUBLISHABLE_KEY = config.publishableKey;
+export function getSupabaseConfig() { return config; }

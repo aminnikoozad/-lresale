@@ -121,7 +121,7 @@ export default async function Home() {
             <h1 id="home-hero-title">Give your clothes<br />a second life.</h1>
             <p>We collect, inspect, photograph and sell your pieces. You earn when they sell.</p>
             <div className="hero-actions">
-              <Button asChild size="lg"><Link href="/sell-with-shikimomo">Sell with Shikimomo <ArrowRight aria-hidden="true" /></Link></Button>
+              <Button asChild size="lg"><Link href="/sell">Sell with Shikimomo <ArrowRight aria-hidden="true" /></Link></Button>
             </div>
           </div>
           <div className="hero-media">
