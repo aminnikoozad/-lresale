@@ -1,5 +1,7 @@
 # Pricing staging rehearsal — 20 October 2026
 
+Update: the subsequent [isolated Neon rehearsal](ai-pricing-neon-rehearsal-20261020.md) passed the hosted PostgreSQL flow. The report below records the earlier offline stage; real Supabase/browser acceptance remains outstanding.
+
 Status: **offline production-catalog SQL rehearsal passed; hosted staging and browser acceptance remain blocked**.
 The Supabase connector returned `Branching is supported only on the Pro plan or above`. No upgrade, paid resource, preview branch, production migration, merge or production deployment was performed.
 
