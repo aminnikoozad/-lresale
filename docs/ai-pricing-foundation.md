@@ -4,6 +4,8 @@ Status: **implemented locally, draft for staging; not deployed to production**.
 Base audited: `d6401cc041f556481bf56df1b66f5cad1d80d726` (20 October 2026).
 This is an individual-item pricing foundation, not a completed three-phase AI system.
 
+The subsequent [production-catalog rehearsal report](ai-pricing-staging-rehearsal-20261020.md) records the safe offline flow, a payment compatibility correction, preview isolation and the hosted-staging blocker.
+
 ## What is implemented
 
 - Admin queue at `/admin/pricing`, 50 rows per keyset page; per-item workspace at `/admin/items/{id}/pricing`, linked from the existing item manager.
@@ -35,6 +37,7 @@ This is an individual-item pricing foundation, not a completed three-phase AI sy
 New private tables: `market_comparables`, `pricing_analyses` (also the job queue), `pricing_approvals`, `pricing_reviews`, `pricing_publications`.
 New private view: `pricing_performance`, derived from online orders and existing seller credits.
 New item column: `public.items.pricing_approval_id`.
+A second forward-only migration, `20261020185852_pricing_payment_generated_earnings_compatibility.sql`, fixes the existing payment trigger's writes to generated earnings columns, with schema/function drift checks. No historical SQL migration is edited.
 Versioned pricing rules reuse `public.business_setting_versions`, key `ai_pricing_rules`.
 Approval and publication records serve as pricing history; no duplicate generic history table is created.
 
@@ -60,7 +63,7 @@ Existing team-pricing terms and commission rules are reused. Any change to those
 ## Safe staging runbook
 
 1. Use Node 22 (`>=22.13 <23`) and run `npm ci`.
-2. Set **both** `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to staging before building. CSP/image origins follow that URL. The legacy production defaults remain for existing production deployment; never assume an unconfigured preview is staging.
+2. Set **both** `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to staging before building. CSP/image origins follow that URL. The legacy production defaults remain for existing production deployment. Vercel previews now fail closed if staging credentials are absent or the known production URL is supplied.
 3. For the worker only, set staging `SUPABASE_URL` and `SUPABASE_SECRET_KEY` or `SUPABASE_SERVICE_ROLE_KEY` through the host's secret manager. The worker rejects a mismatched project URL. Configure a random `CRON_SECRET` of at least 32 characters.
 4. Verify the target project explicitly. Apply all required existing migrations and the new migration in staging. The new file is transactional. Do not apply it to production merely to preview the UI.
 5. Run `npm run test:pricing`, `npm run lint`, `npm run build`. The complete suite also has known baseline failures listed below; these are release-gate follow-ups, not suppressed tests.
