@@ -132,7 +132,7 @@ export default async function AccountPage({ searchParams }: Props) {
     supabase
       .from("items")
       .select(
-        "id,collection_request_id,name,status,initial_approved_price_cents,listed_price_cents,sold_price_cents,locked_seller_commission_bps,locked_platform_commission_bps,seller_pricing_approved_at,estimated_seller_earnings_cents,final_seller_earnings_cents",
+        "id,collection_request_id,name,status,sale_mode,initial_approved_price_cents,listed_price_cents,sold_price_cents,locked_seller_commission_bps,locked_platform_commission_bps,seller_pricing_approved_at,estimated_seller_earnings_cents,final_seller_earnings_cents",
       )
       .eq("owner_id", user.id)
       .order("created_at", { ascending: false }),
@@ -220,7 +220,7 @@ export default async function AccountPage({ searchParams }: Props) {
   const activeCategories = pilot.enabled
     ? pilot.categories
     : CATALOG_CATEGORIES.map((entry) => entry.value);
-  const rawItems = itemsResult.data ?? [];
+  const rawItems = (itemsResult.data ?? []).filter(item=>item.sale_mode==="managed_consignment");
   const rawRequests = requestsResult.data ?? [];
   const launchOfferEligible = launchOffer.active && rawRequests.length === 0;
 

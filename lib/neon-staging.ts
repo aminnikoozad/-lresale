@@ -50,3 +50,21 @@ export async function manageStagingDraft(actor:StagingActor,id:string,version:nu
   ]);
   return result[3][0].managed as {id:string;version:number};
 }
+export type RegisteredPhoto={item:string;owner:string;version:number;asset:string;role:string;defect:string;provider:string;key:string;sha:string;width:number;height:number;bytes:number};
+export async function stagingRegisterPhoto(actor:StagingActor,p:RegisteredPhoto) {
+  const sql=client();
+  const result=await sql.transaction([sql`select public.assert_synthetic_staging()`,sql`select set_config('request.jwt.claims',${claims(actor)},true)`,
+    sql`select public.register_marketplace_photo(${p.item}::uuid,${p.owner}::uuid,${p.version}::integer,${p.asset}::uuid,${p.role},${p.defect},${p.provider},${p.key},${p.sha},${p.width}::integer,${p.height}::integer,${p.bytes}::integer) as saved`]);
+  return result[2][0].saved;
+}
+export async function stagingPhoto(actor:StagingActor,id:string) {
+  const sql=client();
+  const result=await sql.transaction([sql`select public.assert_synthetic_staging()`,sql`select set_config('request.jwt.claims',${claims(actor)},true)`,sql`set local role authenticated`,sql`select public.my_marketplace_photo(${id}::uuid) as photo`]);
+  return result[3][0].photo as {key:string;provider:string;item:string}|null;
+}
+export async function stagingWithdrawPhoto(actor:StagingActor,id:string,version:number) {
+  const sql=client();await sql.transaction([sql`select public.assert_synthetic_staging()`,sql`select set_config('request.jwt.claims',${claims(actor)},true)`,sql`set local role authenticated`,sql`select public.withdraw_marketplace_photo(${id}::uuid,${version}::integer)`]);
+}
+export async function stagingSubmitEvidence(actor:StagingActor,id:string,version:number,flaws:string,noLabel:boolean,attest:boolean) {
+  const sql=client();const result=await sql.transaction([sql`select public.assert_synthetic_staging()`,sql`select set_config('request.jwt.claims',${claims(actor)},true)`,sql`set local role authenticated`,sql`select public.submit_marketplace_evidence(${id}::uuid,${version}::integer,${flaws},${noLabel},${attest}) as evidence`]);return result[3][0].evidence;
+}

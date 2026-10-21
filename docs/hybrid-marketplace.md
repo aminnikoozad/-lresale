@@ -125,3 +125,7 @@ Verification completed before preview publication:
 - An initial hosted check rejected a clothing type that was valid only in another category. The form was corrected to reuse the actual taxonomy, and the local fixture now includes that real database constraint. The constraint was preserved.
 
 Browser acceptance for this follow-up is recorded in the PR after exercising the deployed exact commit. This remains a SQL rehearsal with simulated identities: no real authentication, upload processing, provider payments/payouts, carrier label/QR or complete sale is claimed. Rollback reverts the UI/actions while retaining the additive closure column, audit history and inventory; production is untouched.
+
+## Account selling choice and seller photo evidence
+
+The follow-up account integration, private image pipeline, disclosure rules, provenance badges, actual test boundaries and blocked hosting-secret transfer are documented in [Direct listing policy and implementation](direct-listing-policy.md). Managed Bag/pickup remains the existing flow; direct photo evidence never substitutes for team inspection. The storage adapter is currently disabled in the preview pending explicit credential-transfer authorization.

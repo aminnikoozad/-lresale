@@ -1,0 +1,3 @@
+import { NextRequest,NextResponse } from "next/server";
+import { marketplaceActor,submitEvidence } from "@/lib/marketplace-media";
+export async function POST(req:NextRequest){try{if(req.headers.get("origin")!==req.nextUrl.origin) return new Response(null,{status:403});const ctx=await marketplaceActor();const {id,version,flaws,noLabel,attest}=await req.json();if(typeof id!=="string"||!/^[a-f0-9-]{36}$/i.test(id)||!Number.isSafeInteger(version)||version<1||!["no_known_flaws","has_flaws"].includes(flaws)||typeof noLabel!=="boolean"||attest!==true) throw new Error();await submitEvidence(ctx,id,version,flaws,noLabel,attest);return NextResponse.json({documented:true,purchasable:false});}catch{return NextResponse.json({error:"evidence_incomplete"},{status:400});}}

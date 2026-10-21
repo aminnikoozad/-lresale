@@ -28,9 +28,73 @@ async function fixture(){
  const taxonomy=sql('20260921170708_catalog_taxonomy_foundation_v2');
  await db.exec(taxonomy.slice(taxonomy.indexOf('create or replace function public.is_valid_catalog_subcategory'),taxonomy.indexOf('alter table public.collection_requests drop constraint')));
  await db.exec(sql('20261021014818_marketplace_draft_lifecycle'));
+ await db.exec(sql('20261021022254_marketplace_seller_photo_evidence'));
  return db;
 }
 const fields={name:'Blue shirt',category:'women',brand_kind:'unknown',description:'Real shirt',price_cents:4000};
+const completeFields={...fields,description:'Actual synthetic shirt with clear details for testing.',item_condition:'Good'};
+async function addPhoto(db:Awaited<ReturnType<typeof fixture>>,item:string,version:number,n:number,role:string,defect:string|null=null){
+ const asset=`90000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+ await db.exec('reset role');
+ const result=(await db.query<{v:{id:string;version:number}}>('select public.register_marketplace_photo($1,$2,$3,$4,$5,$6,$7,$8,$9,400,400,900) v',[item,seller,version,asset,role,defect,'neon_staging',`${seller}/${item}/${asset}.webp`,n.toString(16).padStart(64,'0')])).rows[0].v;
+ await identity(db,seller);return result;
+}
+
+test('direct disclosure requires four distinct views, explicit label status and seller attestation without physical inspection',async()=>{
+ const db=await fixture();try{
+ await identity(db,seller);
+ let saved=(await db.query<{v:{id:string;version:number}}>('select public.save_marketplace_draft(null,0,$1) v',[completeFields])).rows[0].v;
+ const item=saved.id;
+ const submit=(version=saved.version,noLabel=true)=>db.query("select public.submit_marketplace_evidence($1,$2,'no_known_flaws',$3,true)",[item,version,noLabel]);
+ await assert.rejects(submit(),/photos required/);
+ let n=0;for(const role of ['front','back','left','right']){saved=await addPhoto(db,item,saved.version,++n,role);}
+ await assert.rejects(submit(saved.version,false),/Label photo required/);
+ await assert.rejects(db.query("select public.submit_marketplace_evidence($1,$2,'no_known_flaws',true,false)",[item,saved.version]),/Confirm/);
+ await submit();
+ let own=(await db.query<{v:Array<{evidence_status:string;id:string}>}>('select public.my_marketplace_drafts() v')).rows[0].v;
+ assert.equal(own.find(i=>i.id===item)?.evidence_status,'documented');
+ await db.exec('reset role');
+ const evidence=(await db.query<{evidence_source:string;label_absent:boolean}>('select evidence_source,label_absent from public.clothing_listing_evidence where item_id=$1',[item])).rows[0];
+ assert.equal(evidence.evidence_source,'seller');assert.equal(evidence.label_absent,true);
+ assert.equal((await db.query<{inspected_at:null}>('select inspected_at from public.items where id=$1',[item])).rows[0].inspected_at,null);
+ await assert.rejects(db.query("update public.clothing_listing_evidence set evidence_source='team' where item_id=$1",[item]),/cannot claim team/);
+ await identity(db,seller);
+ await db.query('select public.withdraw_marketplace_photo($1,$2)',['90000000-0000-4000-8000-000000000004',saved.version]);
+ own=(await db.query<{v:Array<{evidence_status:string;id:string}>}>('select public.my_marketplace_drafts() v')).rows[0].v;
+ assert.equal(own.find(i=>i.id===item)?.evidence_status,'incomplete');
+ }finally{await db.close();}
+});
+
+test('each declared defect needs a processed close-up and text; duplicate views, raw registration and cross-owner access are rejected',async()=>{
+ const db=await fixture();try{
+ await identity(db,seller);
+ let saved=(await db.query<{v:{id:string;version:number}}>('select public.save_marketplace_draft(null,0,$1) v',[completeFields])).rows[0].v;const item=saved.id;
+ await assert.rejects(db.query("select public.register_marketplace_photo(null,null,1,null,null,null,null,null,null,400,400,100)"),/permission denied/);
+ let n=0;for(const role of ['front','back','left','right']) saved=await addPhoto(db,item,saved.version,++n,role);
+ await assert.rejects(addPhoto(db,item,saved.version,5,'defect'),/check constraint/);
+ saved=await addPhoto(db,item,saved.version,5,'defect','Small cuff stain');
+ await assert.rejects(db.query("select public.submit_marketplace_evidence($1,$2,'no_known_flaws',true,true)",[item,saved.version]),/conflicting/);
+ await assert.rejects(db.query("select public.submit_marketplace_evidence($1,$2,'has_flaws',true,true)",[item,saved.version]),/Each defect/);
+ saved=(await db.query<{v:{id:string;version:number}}>('select public.save_marketplace_draft($1,$2,$3) v',[item,saved.version,{...completeFields,condition_notes:'Small cuff stain'}])).rows[0].v;
+ await db.query("select public.submit_marketplace_evidence($1,$2,'has_flaws',true,true)",[item,saved.version]);
+ await identity(db,other);
+ assert.equal((await db.query<{v:unknown}>("select public.my_marketplace_photo('90000000-0000-4000-8000-000000000005') v")).rows[0].v,null);
+ await assert.rejects(db.query("select public.withdraw_marketplace_photo('90000000-0000-4000-8000-000000000005',$1)",[saved.version]),/unavailable/);
+ await assert.rejects(db.query("select public.submit_marketplace_evidence($1,$2,'has_flaws',true,true)",[item,saved.version]),/Editable/);
+ await db.exec('reset role');assert.equal((await db.query('select * from public.wallet_transactions')).rows.length,0);
+ }finally{await db.close();}
+});
+
+test('public provenance hides private drafts and requires recorded team inspection rather than seller evidence',async()=>{
+ const db=await fixture();try{
+ await identity(db,seller);
+ const direct=(await db.query<{v:{id:string}}>('select public.save_marketplace_draft(null,0,$1) v',[completeFields])).rows[0].v;
+ assert.deepEqual((await db.query<{v:unknown}>('select public.catalog_sale_provenance($1) v',[[direct.id]])).rows[0].v,[]);
+ // Existing seed inventory has publication metadata, but no physical-attestation audit.
+ const result=(await db.query<{v:Array<{team_inspected:boolean;sale_mode:string}>}>('select public.catalog_sale_provenance($1) v',[[ids[0]]])).rows[0].v;
+ assert.equal(result[0].sale_mode,'managed_consignment');assert.equal(result[0].team_inspected,false);
+ }finally{await db.close();}
+});
 test('direct drafts use existing inventory without a Bag, inspection, commission lock or warehouse enrollment',async()=>{
  const db=await fixture();try{
  await identity(db,seller);

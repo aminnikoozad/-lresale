@@ -2009,5 +2009,6 @@
   ". Sign in with your business account, create a Production app and add the Rating API.": ". Connectez-vous avec votre compte d’entreprise, créez une application de production et ajoutez l’API Tarification.",
   "Open secure Vercel environment settings": "Ouvrir les paramètres sécurisés des variables Vercel",
   ". Add CANADA_POST_CLIENT_ID and CANADA_POST_CLIENT_SECRET from the app, and CANADA_POST_MODE=production. Redeploy after saving.": ". Ajoutez CANADA_POST_CLIENT_ID et CANADA_POST_CLIENT_SECRET de l’application, ainsi que CANADA_POST_MODE=production. Redéployez après l’enregistrement.",
-  "Enter your verified origin postal code and packed parcel measurements. Test the connection below, then enable live quotes when real rates have been verified.": "Saisissez le code postal de départ vérifié et les mesures des colis emballés. Testez la connexion ci-dessous, puis activez les devis après avoir vérifié les tarifs réels."
+  "Enter your verified origin postal code and packed parcel measurements. Test the connection below, then enable live quotes when real rates have been verified.": "Saisissez le code postal de départ vérifié et les mesures des colis emballés. Testez la connexion ci-dessous, puis activez les devis après avoir vérifié les tarifs réels.",
+  "Choose how to sell": "Choisissez comment vendre"
 }
