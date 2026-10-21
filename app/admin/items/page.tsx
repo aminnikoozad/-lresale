@@ -8,7 +8,7 @@ import { AdminItemTaxonomyFields } from "@/components/admin-item-taxonomy-fields
 import { activePilotCategories, loadPilotSettings } from "@/lib/pilot-settings";
 import { createClient } from "@/lib/supabase/server";
 import { formatCadFromCents, loadSellingRules } from "@/lib/business-rules";
-import { saveClothingEvidence, createAdminBundle, createAdminItem, publishAdminItem, reviewAdminItem, finalizeTeamItemPricing, finalizeTeamBundlePricing } from "./actions";
+import { saveClothingEvidence, createAdminBundle, createAdminItem, publishAdminItem, reviewAdminItem, finalizeTeamBundlePricing } from "./actions";
 import "./items.css";
 
 export const dynamic = "force-dynamic";
@@ -71,12 +71,10 @@ export default async function AdminItemsPage({ searchParams }: Props) {
 
   if (permissionResult.error || !permissionResult.data) redirect("/account");
 
-  const [itemResult, mandateResult, pendingBundlesResult] = await Promise.all([
+  const [itemResult, pendingBundlesResult] = await Promise.all([
     supabase.rpc("admin_item_list_v4"),
-    supabase.rpc("admin_team_pricing_mandates"),
     supabase.rpc("admin_pending_team_bundles"),
   ]);
-  const teamPricingOwners = new Set<string>(Array.isArray(mandateResult.data) ? mandateResult.data : []);
   const pendingTeamBundles = (pendingBundlesResult.data ?? []) as Array<{id: string; title: string; price: number}>;
   const customers = (customerResult.data ?? []) as Customer[];
   const items = (itemResult.data ?? []) as AdminItem[];
@@ -105,6 +103,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
           <div>
             <p className="eyebrow dark">Admin → Items</p>
             <h1>Item & Bundle Management</h1>
+            <Link href="/admin/pricing">Open pricing queue →</Link>
             <p>
               Identify the seller by Customer ID, inspect and photograph every item, set brand, size,
               category, subcategory and price, then publish approved inventory to the live shop.
@@ -254,12 +253,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                   </div>
                 ) : <p className="form-note">Add at least one photo before publishing this item.</p>}
 
-                {teamPricingOwners.has(item.owner_id) && !item.seller_approved_at && ["accepted", "waiting_for_seller_approval"].includes(item.status) && item.initial_price_cents != null ? <form className="review-form" action={finalizeTeamItemPricing}>
-                  <input type="hidden" name="item_id" value={item.item_id} />
-                  <input type="hidden" name="expected_price" value={item.initial_price_cents} />
-                  <p>The seller authorized team pricing. Finalize the inspected item’s price and commission, then publish it without a separate seller approval.</p>
-                  <button type="submit">Finalize team pricing</button>
-                </form> : null}
+                <p><Link href={`/admin/items/${item.item_id}/pricing`}>AI Pricing · evidence, approval and history →</Link></p>
 
                 {item.category === "home_decor" ? (
                   <p className="locked-note">Use the <Link href="/admin/home-decor">Home &amp; Decor inspection workflow</Link> for acceptance and publication.</p>
@@ -286,9 +280,9 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                   <form className="review-form publish-form" action={publishAdminItem}>
                     <input type="hidden" name="item_id" value={item.item_id} />
                     <label>Shop price (CAD)
-                      <input name="listed_price" type="number" min="0.01" step="0.01" defaultValue={dollars(item.listed_price_cents ?? item.initial_price_cents)} required />
+                      <input name="listed_price" type="number" min="8" readOnly step="0.01" defaultValue={dollars(item.listed_price_cents ?? item.initial_price_cents)} required />
                     </label>
-                    <div className="publish-note">This price can be lower than the initial approved price; the locked commission tier does not change.</div>
+                    <div className="publish-note">This must match the final admin-approved price in AI Pricing. The locked commission tier does not change.</div>
                     <label><input type="checkbox" name="inspection_passed" value="yes" required /> I confirm the physical inspection passed: clean, intact and suitable for resale. Clothing and accessories are wearable without stains, tears, holes or significant damage.</label>
                     <button type="submit">Publish to Shop</button>
                   </form>

@@ -82,8 +82,8 @@ export default async function AdminPage() {
           <div className="area-grid">
             <article><div><b>1. Pickup Inbox</b><span>See address, area, item count, fee, status, username and Customer ID.</span></div><AdminRouteLink permitted={permitted} href="/admin/operations#pickup-requests">Open</AdminRouteLink></article>
             <article><div><b>2. Customer item intake</b><span>Add photos, brand, category, size, condition and proposed price to the correct seller.</span></div><AdminRouteLink permitted={permitted} href="/admin/items">Open</AdminRouteLink></article>
-            <article><div><b>3. Seller approval</b><span>The customer reviews the proposed initial price; commission locks when they approve.</span></div><AdminRouteLink permitted={permitted} href="/account">Customer view</AdminRouteLink></article>
-            <article><div><b>4. Publish to Shop</b><span>After recorded physical inspection, seller approval and photos, publish eligible items to the catalog.</span></div><AdminRouteLink permitted={permitted} href="/admin/items">Inventory</AdminRouteLink></article>
+            <article><div><b>3. Admin price approval</b><span>Review evidence and economics, then record the final price and decision reason.</span></div><AdminRouteLink permitted={permitted} href="/admin/pricing">AI Pricing</AdminRouteLink></article>
+            <article><div><b>4. Publish to Shop</b><span>After recorded physical inspection, admin price approval and photos, publish eligible items to the catalog.</span></div><AdminRouteLink permitted={permitted} href="/admin/items">Inventory</AdminRouteLink></article>
           </div>
         </section>) : null}
 
@@ -93,6 +93,7 @@ export default async function AdminPage() {
             <article><div><b>Pilot Control & Economics</b><span>Change pilot categories, live-item cap, pickup days, duration and record real operating costs without editing code.</span></div><AdminRouteLink permitted={permitted} href="/admin/pilot">Open</AdminRouteLink></article>
             <article><div><b>Pickup Scheduler</b><span>Create and pause customer-selectable time windows.</span></div><AdminRouteLink permitted={permitted} href="/admin/operations">Open</AdminRouteLink></article>
             <article><div><b>Item & Bundle Management</b><span>Inspect, price, photograph, bundle and publish seller items.</span></div><AdminRouteLink permitted={permitted} href="/admin/items">Open</AdminRouteLink></article>
+            {itemAccess.data === true ? <article><div><b>AI Pricing</b><span>Turn smart suggestions on or off, review evidence and approve final prices.</span></div><AdminRouteLink permitted={permitted} href="/admin/pricing">Open</AdminRouteLink></article> : null}
             <article><div><b>Selling Rules</b><span>Minimums, commissions and configurable business rules.</span></div><AdminRouteLink permitted={permitted} href="/admin/settings">Open</AdminRouteLink></article>
             <article><div><b>Security</b><span>Password, MFA status and privileged account controls.</span></div><AdminRouteLink permitted={permitted} href="/admin/security">Open</AdminRouteLink></article>
           </div>
