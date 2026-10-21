@@ -1,8 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
-import {fixture as buyerFixture, identity, seller, other, staff, ids} from './fixtures/buyer-sales-db.ts';
-const sql=(name:string)=>readFileSync(new URL(`../supabase/migrations/${name}.sql`,import.meta.url),'utf8');
+import {identity, seller, other, staff, ids} from './fixtures/buyer-sales-db.ts';
 import {marketplaceFixture as fixture} from './fixtures/marketplace-db.ts';
 
 const fields={name:'Blue shirt',category:'women',brand_kind:'unknown',description:'Real shirt',price_cents:4000};
