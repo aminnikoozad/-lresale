@@ -27,5 +27,6 @@ export async function marketplaceFixture(){
  await db.exec(taxonomy.slice(taxonomy.indexOf('create or replace function public.is_valid_catalog_subcategory'),taxonomy.indexOf('alter table public.collection_requests drop constraint')));
  await db.exec(sql('20261021014818_marketplace_draft_lifecycle'));
  await db.exec(sql('20261021022254_marketplace_seller_photo_evidence'));
+ await db.exec(sql('20261021124254_marketplace_policy_acceptance_and_photos'));
  return db;
 }

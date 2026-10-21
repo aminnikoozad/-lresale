@@ -84,3 +84,5 @@ Final security run: **198 tests, 191 passed, 7 failed**. The seven failure names
 Keep this branch and PR in review. Keep direct purchase/publication gates closed and production untouched. Apply additive migrations only in isolated staging; compare exact migration, grants and managed controls before any later production approval. Review both EN/FR paths and two-account authorization in a browser when available.
 
 Rollback the account/community entry points or deployment while retaining inventory, disclosures, private messages, moderation/audit history and all financial records. Do not delete evidence or cancel existing-order support. Roll back provider operations through provider-aware reconciliation/reversals, never by deleting ledger history. Disabling future direct purchases must not disable any future existing-order processing.
+
+Later policy follow-up: see [seller rules acceptance and relaxed photo angles](marketplace-policy-acceptance.md). It supersedes earlier fixed-angle requirements and test counts.

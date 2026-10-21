@@ -1,3 +1,4 @@
+import { isNeonStaging } from "@/lib/neon-staging";
 import { RequestListingReview } from "./request-listing-review";
 import { randomUUID } from "node:crypto";
 import type { DraftAction,MarketplaceDraft } from "@/lib/marketplace";
@@ -15,6 +16,7 @@ export function DirectDraftList({drafts,fr,save,manage,page=1}:{drafts:Marketpla
   const shown=drafts.slice((currentPage-1)*12,currentPage*12);
   return <div className="hybrid-drafts">
     <details className="hybrid-new-listing" name="direct-listing-editor"><summary className="hybrid-button">+ {t("New listing","Nouvelle annonce")}</summary><DirectDraftEditor fr={fr} action={save}/></details>
+    <p><Link href={`${isNeonStaging()?"/staging/community":"/account/marketplace"}#seller-rules`}>{t("Seller rules and review process","Règles de vente et procédure de révision")}</Link></p>
     <h2 className="hybrid-list-heading">{t("Your listings","Vos annonces")} <span>({drafts.length})</span></h2>
     {!drafts.length&&<p>{t("No private listings yet.","Aucune annonce privée pour le moment.")}</p>}
     {shown.map(d=><article key={d.id} className="hybrid-listing" aria-label={d.name}>

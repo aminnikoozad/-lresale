@@ -1,3 +1,5 @@
+export type SellerRulesDocument={version:number;value:{id:string;reviewOnly:boolean;commercialApproved:boolean;title:{en:string;fr:string};rules:Array<{id:string;en:string;fr:string}>}};
+export type SellerRulesStatus={document:SellerRulesDocument|null;accepted:boolean;acceptedAt:string|null};
 export type SellerProfile={id:string;name:string;city:string;bio:string;businessType:'individual'|'business';vacation:boolean;version:number};
 export type StoreItem={id:string;name:string;brand:string|null;category:string;size:string|null;item_condition:string|null;price:number;version:number;photos:string[]};
 export type SellerStore=Omit<SellerProfile,'version'>&{followed:boolean;items:StoreItem[]};
@@ -6,6 +8,9 @@ export type TradeWorkspace={self:string;shops:Array<{id:string;name:string;city:
 // Static RPC definitions are shared by both server adapters. No arbitrary SQL/RPC
 // name or parameter name comes from a request.
 export const communityRpcDefinitions={
+ marketplace_policy_document:[],
+ marketplace_seller_terms_status:[],
+ marketplace_accept_seller_terms:[['p_version','integer'],['p_locale','text'],['p_accept','boolean']],
  save_marketplace_seller:[['p_name','text'],['p_city','text'],['p_bio','text'],['p_business','text'],['p_vacation','boolean'],['p_version','integer']],
  marketplace_workspace:[['p_thread','uuid'],['p_before','timestamptz']],
  marketplace_store:[['p_seller','uuid'],['p_page','integer']],

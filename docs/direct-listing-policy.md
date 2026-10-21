@@ -11,11 +11,11 @@ Direct listings are compact cards. Add clothing and Edit open an exclusive edito
 ## SHIKIMOMO photo and disclosure rules
 
 - Real item, seller's own clear photos; no stock/AI substitutes or edits hiding condition.
-- Four distinct views: front, back, left and right. A brand/size-label photo is required unless the seller explicitly declares that no label exists. Conflicting label declarations are rejected.
+- At least one clear actual-item photo; no fixed front/back/left/right set or extra detail angle is required. Every known defect needs its own clear photo and description. A brand/size-label photo is required unless the seller explicitly declares that no label exists. Conflicting label declarations are rejected.
 - Declare every known stain, hole, repair, missing component and sign of wear. Each defect entry needs a processed close-up and a specific description. The saved listing's overall defect description must also be complete. No-known-defects and defect entries/text cannot coexist.
 - No guessing of unknown details. The seller must check any AI-suggested text.
 - The saved item needs a condition and descriptive text before evidence confirmation. Incomplete drafts remain allowed; they cannot be sold.
-- Confirmation records seller identity, time, listing version and `seller-disclosure-v1`. Editing content/photos or withdrawing photos invalidates readiness. Documentation is not moderation approval, physical inspection, authenticity certification or payout approval.
+- Confirmation records seller identity, time, listing version and `seller-disclosure-v2`. Editing content/photos or withdrawing photos invalidates readiness. Documentation is not moderation approval, physical inspection, authenticity certification or payout approval.
 - Settlement still needs valid payment, delivery, completion/review conditions, no active dispute/chargeback/hold and provider eligibility. Complete photos do not guarantee release or remove statutory rights.
 
 ## Source research (checked 2026-10-20, Montréal)
@@ -62,3 +62,7 @@ For the existing Supabase-backed account path, the adapter also requires an expl
 Apply only to isolated staging first. Keep direct publication and checkout closed. Review the exact preview before any production permission request. Roll back the UI/entry points while preserving additive inventory/evidence columns, asset registry, private objects and audit history. No ledger/order history may be deleted. An upload kill switch must not erase evidence or interrupt existing-order handling.
 
 Full security run after this change: **172 tests, 165 passed, 7 failed**. The failure names match the seven previously reproduced on untouched main: two account-workspace assertions, unsigned-in support copy, site-language VM/module loading, old hero expectations, and two support-page assertions. They were not suppressed or claimed fixed.
+
+## Updated seller acceptance and photo rules
+
+The later additive photo-policy migration removes the fixed-angle requirement only for direct listings. Managed evidence remains 3–8 photos. Old seller evidence must be reconfirmed under v2 without deleting existing audit history. See [policy acceptance implementation](marketplace-policy-acceptance.md).

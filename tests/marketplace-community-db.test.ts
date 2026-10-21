@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {applySellerPolicy} from './fixtures/marketplace-policy-db.ts';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
@@ -6,7 +7,7 @@ import {marketplaceFixture} from './fixtures/marketplace-db.ts';
 import {identity,seller,buyer,other,staff} from './fixtures/buyer-sales-db.ts';
 const migration=readFileSync(new URL('../supabase/migrations/20261021114432_marketplace_community_trading.sql',import.meta.url),'utf8');
 async function setup(){const db=await marketplaceFixture();// PGlite's fixed database is postgres; only the database-name fixture constant differs.
- await db.exec(migration.replace("current_database()='shikimomo_staging'","current_database()='postgres'"));await identity(db,seller);
+ await db.exec(migration.replace("current_database()='shikimomo_staging'","current_database()='postgres'"));await applySellerPolicy(db);await identity(db,seller);await db.query("select public.marketplace_accept_seller_terms(1,'en-CA',true)");
  await db.query("select public.save_marketplace_seller('Real seller','Montréal','Clothing in my closet','individual',false,0)");
  const items:string[]=[];for(let n=0;n<2;n++)items.push((await db.query<{v:{id:string}}>('select public.save_marketplace_draft(null,0,$1) v',[{name:`QA shirt ${n}`,category:'women',brand_kind:'unknown',price_cents:4000}])).rows[0].v.id);
  await db.exec('reset role');for(const i of items)await db.query('insert into private.marketplace_rehearsal_access values($1,$2)',[i,buyer]);await identity(db,buyer);
@@ -45,7 +46,7 @@ test('public seller projection hides owner and drafts, follows are real, reports
  await identity(db,staff,'authenticated','aal1');await assert.rejects(db.query('select public.admin_marketplace_queue()'),/MFA/);await identity(db,staff);assert.equal((await db.query<{v:{reports:unknown[]}}>('select public.admin_marketplace_queue() v')).rows[0].v.reports.length,1);
  await db.query('select public.admin_marketplace_moderate($1,$2,null,true,$3)',['report',report,'Reviewed synthetic fixture report']);
  await identity(db,'','anon');const s=(await db.query<{v:Record<string,unknown>}>('select public.marketplace_store($1,1) v',[sid])).rows[0].v;assert.equal('user_id' in s,false);assert.deepEqual(s.items,[]);await assert.rejects(db.query('select public.marketplace_workspace()'),/permission denied/);await assert.rejects(db.query('select * from private.marketplace_threads'),/permission denied/);
- await identity(db,other);await assert.rejects(db.query('select public.marketplace_report(null,$1,$2,$3)',[randomUUID(),'Cannot report unknown message',randomUUID()]),/unavailable/);await assert.rejects(db.query('select public.marketplace_request_review($1,1)',[items[0]]),/changed/);
+ await identity(db,other);await assert.rejects(db.query('select public.marketplace_report(null,$1,$2,$3)',[randomUUID(),'Cannot report unknown message',randomUUID()]),/unavailable/);await assert.rejects(db.query('select public.marketplace_request_review($1,1)',[items[0]]),/Accept the current/);
  }finally{await db.close();}});
 
 test('content review requires current seller photos and MFA; approval never publishes or records inspection',async()=>{const {db,items}=await setup();try{

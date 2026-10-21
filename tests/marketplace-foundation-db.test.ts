@@ -12,14 +12,14 @@ async function addPhoto(db:Awaited<ReturnType<typeof fixture>>,item:string,versi
  await identity(db,seller);return result;
 }
 
-test('direct disclosure requires four distinct views, explicit label status and seller attestation without physical inspection',async()=>{
+test('direct disclosure accepts one item photo without fixed angles, with label status and seller attestation',async()=>{
  const db=await fixture();try{
  await identity(db,seller);
  let saved=(await db.query<{v:{id:string;version:number}}>('select public.save_marketplace_draft(null,0,$1) v',[completeFields])).rows[0].v;
  const item=saved.id;
  const submit=(version=saved.version,noLabel=true)=>db.query("select public.submit_marketplace_evidence($1,$2,'no_known_flaws',$3,true)",[item,version,noLabel]);
- await assert.rejects(submit(),/photos required/);
- let n=0;for(const role of ['front','back','left','right']){saved=await addPhoto(db,item,saved.version,++n,role);}
+ await assert.rejects(submit(),/photo required/);
+ saved=await addPhoto(db,item,saved.version,1,'front');
  await assert.rejects(submit(saved.version,false),/Label photo required/);
  await assert.rejects(db.query("select public.submit_marketplace_evidence($1,$2,'no_known_flaws',true,false)",[item,saved.version]),/Confirm/);
  await submit();
@@ -31,7 +31,7 @@ test('direct disclosure requires four distinct views, explicit label status and 
  assert.equal((await db.query<{inspected_at:null}>('select inspected_at from public.items where id=$1',[item])).rows[0].inspected_at,null);
  await assert.rejects(db.query("update public.clothing_listing_evidence set evidence_source='team' where item_id=$1",[item]),/cannot claim team/);
  await identity(db,seller);
- await db.query('select public.withdraw_marketplace_photo($1,$2)',['90000000-0000-4000-8000-000000000004',saved.version]);
+ await db.query('select public.withdraw_marketplace_photo($1,$2)',['90000000-0000-4000-8000-000000000001',saved.version]);
  own=(await db.query<{v:Array<{evidence_status:string;id:string}>}>('select public.my_marketplace_drafts() v')).rows[0].v;
  assert.equal(own.find(i=>i.id===item)?.evidence_status,'incomplete');
  }finally{await db.close();}
