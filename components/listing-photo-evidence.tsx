@@ -1,16 +1,19 @@
 "use client";
 import { useState,useTransition } from "react";
+import { ListingPhotoPicker } from "./listing-photo-picker";
 import { useRouter } from "next/navigation";
 import type { MarketplaceDraft } from "@/lib/marketplace";
 
-export function ListingPhotoEvidence({draft,fr,enabled,uploadId}:{draft:MarketplaceDraft;fr:boolean;enabled:boolean;uploadId:string}) {
+export function ListingPhotoEvidence({draft,fr,enabled,uploadId,initialFile=null,onUploaded,onSaved}:{draft:MarketplaceDraft;fr:boolean;enabled:boolean;uploadId:string;initialFile?:File|null;onUploaded?:()=>void;onSaved?:()=>Promise<void>}) {
   const t=(en:string,french:string)=>fr?french:en;
   const router=useRouter();const [busy,setBusy]=useState(false);const [refreshing,startTransition]=useTransition();const [message,setMessage]=useState("");const [role,setRole]=useState("front");
+  const [file,setFile]=useState<File|null>(initialFile);
   const pending=busy||refreshing;
   const roles:Record<string,string>={front:t("Main item photo","Photo principale de l’article"),back:t("Back","Dos"),left:t("Left side","Côté gauche"),right:t("Right side","Côté droit"),size_label:t("Brand / size label","Étiquette de marque / taille"),defect:t("Defect close-up","Gros plan du défaut"),detail:t("Additional detail","Détail supplémentaire")};
   async function send(url:string,init:RequestInit) {
     setBusy(true);setMessage("");
     try {const result=await fetch(url,init);const data=await result.json();if(!result.ok){const code=data.error;setMessage(code==="media_unavailable"?t("Photo storage is not connected in this preview yet.","Le stockage des photos n’est pas encore connecté à cet aperçu."):code==="photo_heic_unavailable"?t("This HEIC photo cannot be decoded here. Export it as JPEG and try again.","Cette photo HEIC ne peut pas être décodée ici. Exportez-la en JPEG et réessayez."):code==="evidence_incomplete"?t("Check your item photo, label declaration, condition, and a clear photo with text for every defect. Save your description first.","Vérifiez la photo de l’article, l’étiquette, l’état et une photo nette avec texte pour chaque défaut. Enregistrez d’abord votre description."):t("Could not save. Use a clear photo under 3 MB, or refresh if the draft changed.","Enregistrement impossible. Utilisez une photo nette de moins de 3 Mo, ou actualisez si le brouillon a changé."));return;}
+      if(url==="/api/marketplace/photos"){setFile(null);onUploaded?.();}await onSaved?.();
       setMessage(t("Saved. Your listing is still private.","Enregistré. Votre annonce reste privée."));startTransition(()=>router.refresh());
     }catch{setMessage(t("Connection interrupted. Refresh before retrying.","Connexion interrompue. Actualisez avant de réessayer."));}finally{setBusy(false);}
   }
@@ -24,13 +27,13 @@ export function ListingPhotoEvidence({draft,fr,enabled,uploadId}:{draft:Marketpl
       <img src={photo.url} alt={`${roles[photo.role]??photo.role}${photo.defect?`: ${photo.defect}`:""}`} width={180} height={140}/><figcaption>{roles[photo.role]??photo.role}{photo.defect&&<p>{photo.defect}</p>}</figcaption><button type="button" disabled={pending} onClick={()=>void send(`/api/marketplace/photos/${photo.id}`,{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({version:draft.listing_version})})}>{t("Remove from draft","Retirer du brouillon")}</button>
     </figure>)}</div>
     {!enabled&&<p className="hybrid-notice">{t("Upload is disabled until private photo storage is connected to this preview.","Le téléversement est désactivé tant que le stockage privé n’est pas connecté à cet aperçu.")}</p>}
-    <form onSubmit={event=>{event.preventDefault();void send("/api/marketplace/photos",{method:"POST",body:new FormData(event.currentTarget)});}}>
+    <form onSubmit={event=>{event.preventDefault();if(!file)return;const body=new FormData(event.currentTarget);body.set("file",file);void send("/api/marketplace/photos",{method:"POST",body});}}>
       <input type="hidden" name="item" value={draft.id}/><input type="hidden" name="version" value={draft.listing_version}/><input type="hidden" name="upload_id" value={uploadId}/>
       <label>{t("Photo view","Vue de la photo")}<select name="role" value={role} onChange={event=>setRole(event.target.value)} disabled={!enabled||pending}>{Object.entries(roles).map(([key,label])=><option value={key} key={key}>{label}</option>)}</select></label>
       <label>{t("Explain this defect","Expliquez ce défaut")}<input name="defect" minLength={role==="defect"?3:undefined} maxLength={300} required={role==="defect"} disabled={!enabled||pending} placeholder={t("e.g. small stain on the left cuff","p. ex. petite tache sur le poignet gauche")}/></label>
-      <label>{t("Choose an actual item photo (max. 3 MB)","Choisissez une photo réelle de l’article (max. 3 Mo)")}<input type="file" name="file" accept="image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif" required disabled={!enabled||pending}/></label>
+      <ListingPhotoPicker file={file} onChange={setFile} fr={fr} disabled={pending}/>
       <small>{t("Images are decoded, oriented and stripped of location metadata. If HEIC is unsupported, use a JPEG export.","Les images sont décodées, orientées et débarrassées des métadonnées de localisation. Si le HEIC n’est pas pris en charge, exportez en JPEG.")}</small>
-      <button className="hybrid-button" type="submit" disabled={!enabled||pending}>{t("Add this photo","Ajouter cette photo")}</button>
+      <button className="hybrid-button" type="submit" disabled={!enabled||pending||!file}>{t("Add this photo","Ajouter cette photo")}</button>
     </form>
     <form onSubmit={event=>{event.preventDefault();const f=new FormData(event.currentTarget);void send("/api/marketplace/evidence",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:draft.id,version:draft.listing_version,flaws:f.get("flaws"),noLabel:f.get("no_label")==="on",attest:f.get("attest")==="on"})});}}>
       <label>{t("Known defects","Défauts connus")}<select name="flaws" required defaultValue="" disabled={pending}><option value="" disabled>{t("Choose after checking the item","Choisissez après vérification")}</option><option value="no_known_flaws">{t("No known defects after checking","Aucun défaut connu après vérification")}</option><option value="has_flaws">{t("Defects shown and described","Défauts montrés et décrits")}</option></select></label>

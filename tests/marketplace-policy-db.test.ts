@@ -18,5 +18,5 @@ test('new policy versions require fresh acceptance without rewriting prior snaps
  }finally{await db.close();}});
 test('staging-review rules cannot be accepted without the synthetic marker; drafts remain usable',async()=>{const db=await setup();try{
  await db.exec('drop function public.assert_synthetic_staging()');await identity(db,seller);await assert.rejects(db.query("select public.marketplace_accept_seller_terms(1,'en-CA',true)"),/outside synthetic staging/);
- const d=(await db.query<{v:{id:string;version:number}}>('select public.save_marketplace_draft(null,0,$1) v',[{name:'Draft before accepting terms',category:'women',brand_kind:'unknown',price_cents:2000}])).rows[0].v;await assert.rejects(db.query('select public.marketplace_request_review($1,$2)',[d.id,d.version]),/Accept the current/);
+ const d=(await db.query<{v:{id:string;version:number}}>('select public.save_marketplace_draft(null,0,$1) v',[{name:'Draft before accepting terms',category:'women',brand_kind:'unknown',price_cents:2000}])).rows[0].v;await assert.rejects(db.query('select public.marketplace_request_review($1,$2)',[d.id,d.version]),/explicit policy acceptance/);
  }finally{await db.close();}});

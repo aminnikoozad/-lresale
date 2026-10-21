@@ -3,9 +3,9 @@ import { CATALOG_SUBCATEGORIES,CLOTHING_CATEGORIES } from "@/lib/catalog-taxonom
 import { translate } from "@/lib/translations";
 import { DirectCategoryFields } from "./direct-category-fields";
 
-export function DirectDraftEditor({draft,fr,action}:{draft?:MarketplaceDraft;fr:boolean;action:(form:FormData)=>Promise<void>}) {
+export function DirectDraftEditor({draft,fr,action,clientSubmit=false}:{draft?:MarketplaceDraft;fr:boolean;action:(form:FormData)=>Promise<void>;clientSubmit?:boolean}) {
   const t=(en:string,french:string)=>fr?french:en;
-    return <form action={action} className="hybrid-draft-form">
+    return <form action={clientSubmit?undefined:action} onSubmit={clientSubmit?event=>{event.preventDefault();void action(new FormData(event.currentTarget));}:undefined} className="hybrid-draft-form">
       <input type="hidden" name="id" value={draft?.id ?? ""}/><input type="hidden" name="version" value={draft?.listing_version ?? 0}/>
       <h2>{draft ? t("Edit private draft", "Modifier le brouillon privé") : t("New private draft", "Nouveau brouillon privé")}</h2>
       <label>{t("Title", "Titre")}<input name="name" required minLength={2} maxLength={160} defaultValue={draft?.name}/></label>

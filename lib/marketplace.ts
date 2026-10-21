@@ -29,6 +29,7 @@ export type MarketplaceDraft = {
   description: string | null; condition_notes: string | null; listed_price_cents: number | null;
   marketplace_details: {brandKind?: string; sizeSystem?: string; labelAbsent?: boolean; measurements?: Partial<Record<MeasurementKey,number>>};
   marketplace_closure_reason?: "archived" | "sold_elsewhere" | null;
+  review_status?: "pending" | "approved" | "rejected" | null;
   evidence_status?: "documented" | "incomplete";
   photo_assets?: Array<{id:string;role:string;defect:string|null;url:string}>;
   listing_version: number; status: string; updated_at: string;

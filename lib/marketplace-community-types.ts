@@ -9,6 +9,7 @@ export type TradeWorkspace={self:string;shops:Array<{id:string;name:string;city:
 // name or parameter name comes from a request.
 export const communityRpcDefinitions={
  marketplace_policy_document:[],
+ my_marketplace_drafts:[],
  marketplace_seller_terms_status:[],
  marketplace_accept_seller_terms:[['p_version','integer'],['p_locale','text'],['p_accept','boolean']],
  save_marketplace_seller:[['p_name','text'],['p_city','text'],['p_bio','text'],['p_business','text'],['p_vacation','boolean'],['p_version','integer']],
@@ -22,6 +23,8 @@ export const communityRpcDefinitions={
  marketplace_make_offer:[['p_thread','uuid'],['p_items','uuid[]'],['p_amount','integer'],['p_parent','uuid'],['p_request','uuid']],
  marketplace_respond_offer:[['p_offer','uuid'],['p_accept','boolean']],
  marketplace_report:[['p_item','uuid'],['p_message','uuid'],['p_reason','text'],['p_request','uuid']],
+ marketplace_submit_listing:[['p_item','uuid'],['p_version','integer'],['p_policy_version','integer'],['p_locale','text'],['p_accept','boolean']],
+ marketplace_save_editor:[['p_request','uuid'],['p_item','uuid'],['p_version','integer'],['p_fields','jsonb']],
  marketplace_request_review:[['p_item','uuid'],['p_version','integer']],
 } as const;
 export type CommunityRpc=keyof typeof communityRpcDefinitions;
