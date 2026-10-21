@@ -83,10 +83,11 @@ export default async function PricingPage({
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const { supabase } = await requireAdmin();
-  const [{ data, error }, query, performance] = await Promise.all([
+  const [{ data, error }, query, performance, controls] = await Promise.all([
     supabase.rpc("admin_pricing_workspace", { target: id }),
     searchParams,
     supabase.rpc("admin_pricing_performance", { target: id }),
+    supabase.rpc("admin_pricing_control"),
   ]);
   if (error)
     throw new Error(
@@ -95,6 +96,7 @@ export default async function PricingPage({
   if (!data) notFound();
   const w = data as Workspace;
   const i = w.item;
+  const suggestionsEnabled = !controls.error && controls.data?.enabled === true;
   const latest = w.analyses.find((a) => a.status === "completed");
   const result = latest?.result;
   const outcomes = (performance.data ?? []) as Array<{
@@ -237,8 +239,9 @@ export default async function PricingPage({
             ) : null}
             <form action={requestAnalysis}>
               <input type="hidden" name="item_id" value={id} />
-              <button>Request analysis</button>
+              <button disabled={!suggestionsEnabled || !pricingWorkerReady()}>Request analysis</button>
             </form>
+            {!suggestionsEnabled ? <p className="pricing-notice">Smart pricing suggestions are off. Manual approval is available. <Link href="/admin/pricing">Pricing controls</Link></p> : null}
             <p className="pricing-muted">
               Identical requests are cached for the UTC day; up to 10 new
               analyses per item per 24 hours. The rules-only engine makes no
@@ -267,8 +270,8 @@ export default async function PricingPage({
               id={id}
               snapshot={w.snapshot}
               input={w.input}
-              suggestion={result?.suggestedCents ?? i.listed_price_cents}
-              analyses={w.analyses.filter((a) => a.status === "completed")}
+              suggestion={(suggestionsEnabled ? result?.suggestedCents : null) ?? i.listed_price_cents}
+              analyses={suggestionsEnabled ? w.analyses.filter((a) => a.status === "completed") : []}
             />
           ) : (
             <p>Only an owner or admin with MFA can approve a final price.</p>

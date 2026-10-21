@@ -21,7 +21,8 @@ const team = readFileSync(
   ),
   "utf8",
 );
-export async function pricingFixture() {
+export const pricingSwitchMigration = readFileSync(new URL("../../supabase/migrations/20261021015521_ai_pricing_admin_switch.sql", import.meta.url), "utf8");
+export async function pricingFixture(enableSuggestions = true) {
   const db = await buyerFixture();
   await db.exec(`
  create table public.admin_roles(user_id uuid primary key,role text);insert into public.admin_roles values('${staff}','owner'),('${other}','warehouse');
@@ -46,6 +47,12 @@ export async function pricingFixture() {
   await db.exec(`create trigger guard_commission before insert or update on public.items for each row execute function private.guard_item_commission();
  insert into private.team_pricing_mandates(owner_id,terms_version) values('${seller}','2026-10-15-team-v1');`);
   await db.exec(pricingMigration);
+  await db.exec(pricingSwitchMigration);
+  if (enableSuggestions) {
+    await identity(db, staff);
+    await db.query("select public.admin_set_pricing_enabled(1,true,'Enable suggestions for isolated regression tests')");
+    await db.exec("reset role");
+  }
   return db;
 }
 export async function newItem(

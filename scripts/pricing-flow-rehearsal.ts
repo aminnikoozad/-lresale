@@ -105,6 +105,7 @@ try {
   );
   await db.exec("reset role");
   await db.exec(applied);
+  await db.exec(readFileSync(new URL("../supabase/migrations/20261021015521_ai_pricing_admin_switch.sql", import.meta.url), "utf8"));
   assert.deepEqual(
     await one<unknown>(
       "select to_jsonb(i)-'pricing_approval_id' v from public.items i where id=$1",
@@ -181,6 +182,8 @@ try {
   assert.deepEqual(await one("select public.my_priced_items() v"), []);
   await assert.rejects(workspace());
   await identity(admin);
+  assert.equal((await one<{ enabled: boolean }>("select public.admin_pricing_control() v")).enabled, false);
+  await db.query("select public.admin_set_pricing_enabled(1,true,'Enable analysis after manual approval in isolated rehearsal')");
   const job = await one<string>(
     "select public.admin_request_pricing_analysis($1) v",
     [item],

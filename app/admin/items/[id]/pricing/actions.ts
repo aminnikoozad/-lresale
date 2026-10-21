@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin-auth";
+import { pricingWorkerReady, processPricingJobs } from "@/lib/pricing/server";
 const text = (f: FormData, key: string) => String(f.get(key) ?? "").trim();
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 function itemId(f: FormData) {
@@ -75,10 +76,17 @@ export async function requestAnalysis(f: FormData) {
   const { error } = await supabase.rpc("admin_request_pricing_analysis", {
     target: id,
   });
+  if (!error && pricingWorkerReady()) {
+    try {
+      await processPricingJobs();
+    } catch {
+      finish(id, "Analysis is queued; the worker is unavailable. Manual pricing remains available.", "");
+    }
+  }
   finish(
     id,
     error?.message ?? null,
-    "Analysis queued or reused from cache. Refresh after the pricing worker runs.",
+    "Analysis requested. Completed results appear below; queued jobs can be retried.",
   );
 }
 export async function approvePrice(f: FormData) {

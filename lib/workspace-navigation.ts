@@ -29,6 +29,7 @@ export function adminNavigation(access: MenuAccess): WorkspaceLink[] {
     ...(access.can_manage_items ? [
       { href: "/admin/customers", label: "Customers" },
       { href: "/admin/items", label: "Items" },
+      { href: "/admin/pricing", label: "AI Pricing" },
       { href: "/admin/processing", label: "Processing" },
       { href: "/admin/home-decor", label: "Home inventory" },
     ] : []),
