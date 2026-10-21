@@ -50,7 +50,7 @@ Public storefront seller identity and private shipping addresses are intentional
 | Direct publication / sale / team inspection claim | No transition available in P1 | Rejected even through legacy mutation paths | None |
 | Managed inspection / pricing / publication | Existing capabilities, MFA, mandate/inspection/evidence controls | Existing functions and locks | Existing behavior, unchanged by this migration |
 
-No archive, sold-elsewhere, conversion, dispute, refund, transfer or payout transition is claimed as implemented.
+The original P1 foundation did not include lifecycle actions. The follow-up below adds private archive, restore, copy and sold-elsewhere declarations. Conversion, dispute, refund, transfer and payout remain unimplemented.
 
 ## Verification evidence
 
@@ -101,3 +101,27 @@ Preview variables must be scoped only to this review branch:
 Keep existing Vercel preview authentication enabled. Do not put real data into this environment. This test portal deliberately simulates identities; changing the selected seller is not a sign-in test.
 
 Hosted PostgreSQL checks passed for draft creation, own visibility, denial of cross-seller edits, stale versions, unsupported mode payload, raw writes, anonymous RPC access, premature publication, owner conversion and warehouse enrollment. Browser acceptance is reported separately from these SQL checks. Full production parity, real sign-in/Storage, providers and the transaction scenarios above remain required.
+
+## Follow-up: private listing lifecycle (2026-10-20, Montréal)
+
+The user selected Neon for continued staging work. The migration `20261021014818_marketplace_draft_lifecycle.sql` extends the existing inventory and audit log; it creates no parallel inventory, order or financial ledger.
+
+| Action | Requirements | Result | Financial effect |
+| --- | --- | --- | --- |
+| Archive | Owner, editable direct draft, current version, no active reservation or order history | Existing item becomes archived with a closure reason; version increments | None |
+| Restore | Owner, archived unsold draft, current version, capacity below 200 active drafts, no reservation/order history | Same item returns to private draft; version increments | None |
+| Copy | Owner, current version, private/archived direct item, no reservation/order history | New independent private inventory ID with descriptive fields and measured dimensions | None; photos, evidence, inspection, commissions and transaction history are not copied |
+| Declare sold elsewhere | Owner, editable direct draft, current version, no reservation/order history | Archived with `sold_elsewhere`; same item cannot be restored | No order, payment, seller credit, earnings or verified-sale count |
+
+Actions authenticate in the server handler and again in the RPC. They serialize on the seller and lock the item row. A request UUID recorded in the existing audit event makes retries of the same action return the same result; reuse for another item/action is denied. Archiving/restoring invalidates stale edit forms. The current conservative lock includes any order history, even cancelled orders. No new table write grants or staff shortcuts were added.
+
+Both the real-account route and synthetic rehearsal use the shared editor/list. Category-specific clothing types reuse the existing catalog taxonomy and EN/FR translations. Optional centimetre measurements are preserved, validated in both server parsing and SQL, and never inferred. Blank measurements remain unknown. Private projection returns up to 400 rows, prioritizing the active drafts; older archives require future pagination.
+
+Verification completed before preview publication:
+
+- 14/14 focused PostgreSQL and helper tests pass, covering the lifecycle, request replay/misuse, ownership, stale versions, reservation/order locks, restore capacity, descriptions-only copies, measured values and managed inspection/publication regression.
+- TypeScript/preview build and targeted lint passed. The known baseline full-suite failures described above are not claimed fixed.
+- Migration applied only to the isolated synthetic Neon database. Hosted archive/restore/copy/sold-elsewhere assertions passed. Two concurrently issued copy transactions using the same request returned the same new inventory ID. Cross-seller access and anonymous execution were denied. Orders and wallet transactions remained zero.
+- An initial hosted check rejected a clothing type that was valid only in another category. The form was corrected to reuse the actual taxonomy, and the local fixture now includes that real database constraint. The constraint was preserved.
+
+Browser acceptance for this follow-up is recorded in the PR after exercising the deployed exact commit. This remains a SQL rehearsal with simulated identities: no real authentication, upload processing, provider payments/payouts, carrier label/QR or complete sale is claimed. Rollback reverts the UI/actions while retaining the additive closure column, audit history and inventory; production is untouched.

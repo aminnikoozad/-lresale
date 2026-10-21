@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { isNeonStaging,stagingDrafts } from "@/lib/neon-staging";
 import type { MarketplaceDraft } from "@/lib/marketplace";
-import { DirectDraftEditor } from "@/components/direct-draft-editor";
-import { saveNeonDraft,selectStagingActor } from "./actions";
+import { DirectDraftList } from "@/components/direct-draft-list";
+import { saveNeonDraft,manageNeonDraft,selectStagingActor } from "./actions";
 import "@/app/sell/sell.css";
 export const dynamic="force-dynamic";
 export const metadata={title:"SHIKIMOMO — SQL staging",robots:{index:false,follow:false}};
@@ -22,7 +22,8 @@ export default async function StagingPage({searchParams}:{searchParams:Promise<R
     <form action={selectStagingActor} className="hybrid-draft-form"><label>{t("Synthetic seller","Vendeur fictif")}<select name="actor" defaultValue={actor}><option value="a">Seller A / Vendeur A</option><option value="b">Seller B / Vendeur B</option></select></label><button className="hybrid-button" type="submit">{t("Switch test identity","Changer d’identité de test")}</button><p>{t("Switch sellers to verify that drafts remain isolated.","Changez de vendeur pour vérifier que les brouillons restent isolés.")}</p></form>
     <p><Link href="/sell">{t("Compare selling methods","Comparer les modes de vente")}</Link></p>
     {params.saved && <p role="status" className="hybrid-success">{t("Saved to the isolated staging database.","Enregistré dans la base de données de test isolée.")}</p>}
-    {params.error && <p role="alert" className="hybrid-error">{t("Save rejected. Check the fields or refresh if the listing version changed.","Enregistrement refusé. Vérifiez les champs ou actualisez la page si la version a changé.")}</p>}
-    {available?<div className="hybrid-drafts"><DirectDraftEditor fr={fr} action={saveNeonDraft}/>{drafts.map(d=><DirectDraftEditor key={d.id} fr={fr} action={saveNeonDraft} draft={d}/>)}</div>:<p role="alert">{t("Staging database is unavailable.","La base de données de test est indisponible.")}</p>}
+    {params.updated && <p role="status" className="hybrid-success">{t("Listing updated in staging.","Annonce mise à jour dans l’environnement de test.")}</p>}
+    {params.error && <p role="alert" className="hybrid-error">{t("Action rejected. Check the fields and confirmation, or refresh if the listing changed. Reserved or ordered inventory is locked.","Action refusée. Vérifiez les champs et la confirmation, ou actualisez si l’annonce a changé. Les articles réservés ou commandés sont verrouillés.")}</p>}
+    {available?<DirectDraftList fr={fr} drafts={drafts} save={saveNeonDraft} manage={manageNeonDraft}/>:<p role="alert">{t("Staging database is unavailable.","La base de données de test est indisponible.")}</p>}
   </main>;
 }

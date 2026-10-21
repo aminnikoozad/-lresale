@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {marketplaceCommission,parseCadCents} from '../lib/marketplace.ts';
+import {marketplaceCommission,parseCadCents,parseDraftFields,parseDraftAction} from '../lib/marketplace.ts';
 import {resolveSupabaseEnvironment,productionSupabaseUrl} from '../lib/supabase/environment.ts';
 const proposal={version:1,commissionBps:1500,minimumCommissionCents:150};
 test('commission applies once to the seller suborder with deterministic integer rounding',()=>{
@@ -11,6 +11,18 @@ test('commission applies once to the seller suborder with deterministic integer 
  assert.equal(marketplaceCommission(1010,proposal).commissionCents,152);
  assert.equal(marketplaceCommission(0,proposal).commissionCents,0);
  for(const n of [-1,1.1,NaN,Infinity,100000001]) assert.throws(()=>marketplaceCommission(n,proposal));
+});
+test('draft form preserves measured centimetres, unknowns and subcategory without accepting guessed or malformed numbers',()=>{
+ const form=new FormData();form.set('subcategory','Shirts');form.set('measurement_chest','51,5');form.set('measurement_length','70');
+ const fields=parseDraftFields(form);
+ assert.equal(fields.subcategory,'Shirts');assert.deepEqual(fields.measurements,{chest:51.5,length:70});assert.equal(fields.price_cents,null);
+ for(const value of ['NaN','-1','1e2','0','501','1.234']){form.set('measurement_chest',value);assert.throws(()=>parseDraftFields(form));}
+});
+test('listing actions require UUIDs, versions, allowed operations and explicit copy/off-platform confirmation',()=>{
+ const form=new FormData();form.set('id','10000000-0000-4000-8000-000000000001');form.set('request','20000000-0000-4000-8000-000000000001');form.set('version','2');form.set('operation','archive');
+ assert.equal(parseDraftAction(form).operation,'archive');
+ for(const op of ['copy','sold_elsewhere']){form.set('operation',op);assert.throws(()=>parseDraftAction(form));form.set('confirmed','on');assert.equal(parseDraftAction(form).operation,op);form.delete('confirmed');}
+ form.set('operation','payout');assert.throws(()=>parseDraftAction(form));
 });
 test('CAD parser avoids floating point input and accepts French decimal commas',()=>{
  for(const [value,cents] of [['40',4000],['8.01',801],['40,50',4050],['',null]] as const) assert.equal(parseCadCents(value),cents);
