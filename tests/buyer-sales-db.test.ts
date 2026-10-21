@@ -27,7 +27,7 @@ test('offer ownership, cents floor, concurrency reservation, failure/expiry and 
   await db.exec('reset role');assert.equal((await db.query<{n:number}>('select count(*)::int n from public.order_seller_credits')).rows[0].n,2);
   assert.equal((await db.query<{n:number}>("select count(*)::int n from public.sales_measurement_events where event_name='purchase'")).rows[0].n,1);
   assert.equal((await db.query<{n:number}>('select sum(seller_cents)::int n from public.order_seller_credits')).rows[0].n,3600); // full base 6000 x 60%, funded by platform
-  assert.equal((await db.query<{n:number}>("select sum(final_platform_earnings_cents)::int n from public.items where status='sold'")).rows[0].n,1800);
+  assert.equal((await db.query<{n:number}>("select sum(c.sale_cents-c.seller_cents-l.discount_cents)::int n from public.order_seller_credits c join public.order_items l on l.id=c.order_item_id")).rows[0].n,1800);
   await identity(db,buyer);assert.equal(await offer(db,ids.slice(2)),null);
   await assert.rejects(db.query('update public.buyer_offer_codes set disabled=false'));
  }finally{await db.close();}

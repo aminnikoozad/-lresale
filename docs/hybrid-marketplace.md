@@ -129,3 +129,7 @@ Browser acceptance for this follow-up is recorded in the PR after exercising the
 ## Account selling choice and seller photo evidence
 
 The follow-up account integration, private image pipeline, disclosure rules, provenance badges, actual test boundaries and blocked hosting-secret transfer are documented in [Direct listing policy and implementation](direct-listing-policy.md). Managed Bag/pickup remains the existing flow; direct photo evidence never substitutes for team inspection. The storage adapter is currently disabled in the preview pending explicit credential-transfer authorization.
+
+## Community trading follow-up
+
+See [current implementation, acceptance and remaining gates](marketplace-community.md). This report supersedes earlier readiness counts for the community increment. It does not authorize production or claim the complete marketplace experience.

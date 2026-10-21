@@ -1,3 +1,4 @@
+import { ItemTradeActions } from "@/components/item-trade-actions";
 
 import { BuyerViewEvent } from "@/components/buyer-view-event";
 import { cookies } from "next/headers";
@@ -90,6 +91,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
   const product = ((data ?? [])[0] ?? null) as Product | null;
   if (!product || !product.photo_urls?.length) notFound();
   const provenance=(await loadSaleProvenance(supabase,[id])).get(id);
+  const shop=provenance?.sale_mode==="peer_to_peer"?(await supabase.rpc("marketplace_item_shop",{p_item:id})).data as string|null:null;
   const fr=(await cookies()).get("shikimomo-language")?.value==="fr";
 
   const homeResult =
@@ -171,6 +173,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
           </div>
 
           <SaleProvenanceBadge value={provenance} fr={fr}/>
+          {shop&&<ItemTradeActions item={id} shop={shop} fr={fr}/>}
           {provenance?.team_inspected ? <div className="product-trust product-trust-primary">
             <ShieldCheck />
             <div>

@@ -1,4 +1,5 @@
 import "server-only";
+import type { MarketplaceDraft } from "./marketplace";
 import { cookies } from "next/headers";
 import { createClient as createAdmin } from "@supabase/supabase-js";
 import { S3Client,PutObjectCommand,GetObjectCommand,HeadObjectCommand } from "@aws-sdk/client-s3";
@@ -29,7 +30,7 @@ export async function marketplaceActor() {
 }
 export type MarketplaceActor=Awaited<ReturnType<typeof marketplaceActor>>;
 export async function checkPhotoDraft(ctx:MarketplaceActor,id:string,version:number) {
-  const item=ctx.actor?(await stagingDrafts(ctx.actor)).find(d=>d.id===id):(await ctx.client!.from("items").select("id,owner_id,sale_mode,status,listing_version").eq("id",id).eq("owner_id",ctx.id).eq("sale_mode","peer_to_peer").maybeSingle()).data;
+  const item=ctx.actor?(await stagingDrafts(ctx.actor)).find(d=>d.id===id):((await ctx.client!.rpc("my_marketplace_drafts")).data as MarketplaceDraft[]|null)?.find(d=>d.id===id);
   if(!item||item.status!=="listing_preparation"||item.listing_version!==version) throw new Error("draft_changed");
 }
 export async function storeProcessedPhoto(ctx:MarketplaceActor,p:RegisteredPhoto,bytes:Uint8Array) {

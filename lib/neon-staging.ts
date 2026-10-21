@@ -68,3 +68,13 @@ export async function stagingWithdrawPhoto(actor:StagingActor,id:string,version:
 export async function stagingSubmitEvidence(actor:StagingActor,id:string,version:number,flaws:string,noLabel:boolean,attest:boolean) {
   const sql=client();const result=await sql.transaction([sql`select public.assert_synthetic_staging()`,sql`select set_config('request.jwt.claims',${claims(actor)},true)`,sql`set local role authenticated`,sql`select public.submit_marketplace_evidence(${id}::uuid,${version}::integer,${flaws},${noLabel},${attest}) as evidence`]);return result[3][0].evidence;
 }
+
+/** Only static, reviewed community RPC definitions may reach this adapter. */
+export async function stagingCommunity(actor:StagingActor,name:import('./marketplace-community-types').CommunityRpc,args:Record<string,unknown>) {
+  const {communityRpcDefinitions}=await import('./marketplace-community-types');
+  if(!Object.hasOwn(communityRpcDefinitions,name)) throw new Error('Unknown action');
+  const definition=communityRpcDefinitions[name];
+  const query=`select public.${name}(${definition.map((d,i)=>`$${i+1}::${d[1]}`).join(',')}) as value`;
+  const sql=client();const result=await sql.transaction([sql`select public.assert_synthetic_staging()`,sql`select set_config('request.jwt.claims',${claims(actor)},true)`,sql`set local role authenticated`,sql.query(query,definition.map(d=>args[d[0]]??null))]);
+  return result[3][0].value;
+}
