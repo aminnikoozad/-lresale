@@ -2,6 +2,18 @@
 
 The owner explicitly requested production installation and an on/off control in the admin panel. This supersedes the earlier draft-only publication scope. Initial smart suggestions are **OFF**. Manual pricing and final admin approval remain available regardless of this switch.
 
+## Observed release result
+
+- PR #62 merged as `54b3d89cd09b530ce34c2865d58f5992a50cb0a1`.
+- Vercel production deployment `dpl_24cBegQxZRKMXVq3nDQtyBBD7ZBY` is **READY**, builds that exact commit, and has `shikimomo.com` and `www.shikimomo.com` assigned with no alias error.
+- All three reviewed migrations applied successfully to the production project. Migration count increased from 117 to 120. Items/orders/Bags remained 0/0/0; no synthetic rows were inserted into production. The selling-rule value fingerprint remained `c9df91412d10fcb582ee91020b2d001a`.
+- Production suggestions are **OFF**, with zero analyses and zero approvals. Anonymous and service roles lack permission to call the toggle. No production setting was enabled by a forged/simulated JWT.
+- Anonymous HTTP `/shop` returned 200. `/admin/pricing` and `/admin/mfa` redirected to `/secure-admin-login`.
+- In the connected browser, the existing signed-in account requesting `/admin/pricing` reached the real `/admin/mfa` six-digit authenticator challenge. The code was not entered by the agent; the tab was left for the user. Thus the real AAL1 step-up boundary was observed, but successful AAL2 entry and clicking the toggle inside the admin UI are **pending user MFA verification**.
+- Post-migration security advisors reported no ERROR-level findings. Five new private pricing tables have deny-by-default RLS and intentionally no direct policies; existing extension/password-protection warnings and executable guarded RPC notices remain. The advisor report is not evidence of real Auth/browser acceptance.
+
+![Actual MFA step-up gate after opening production admin pricing](screenshots/ai-pricing-mfa-gate.png)
+
 ## Runtime control
 
 - `/admin/pricing` shows status, a reasoned on/off action and versioned control history. The dashboard and inventory navigation link to it.
