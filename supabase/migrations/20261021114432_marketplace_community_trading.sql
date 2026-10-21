@@ -40,6 +40,7 @@ create table private.marketplace_offers (
  amount_cents integer not null check(amount_cents between 800 and 100000000),
  lines jsonb not null check(jsonb_typeof(lines)='array' and jsonb_array_length(lines) between 1 and 20),
  parent_id uuid references private.marketplace_offers(id),request_id uuid not null,
+ policy_version integer not null default 1,policy_snapshot jsonb not null default '{"offerHours":24,"commercialApproved":false}',
  status text not null default 'pending' check(status in ('pending','accepted','declined','countered','expired','invalidated')),
  expires_at timestamptz not null default(now()+interval '24 hours'),created_at timestamptz not null default now(),
  updated_at timestamptz not null default now(),unique(proposer_id,request_id),check(proposer_id<>recipient_id)
@@ -142,7 +143,7 @@ create function public.marketplace_read_thread(p_thread uuid) returns void langu
  update private.marketplace_notifications set read_at=now() where user_id=u and thread_id=p_thread and read_at is null;end$$;
 
 create function public.marketplace_make_offer(p_thread uuid,p_items uuid[],p_amount integer,p_parent uuid,p_request uuid) returns uuid language plpgsql security definer set search_path='' as $$
-declare u uuid:=private.marketplace_require_user();t private.marketplace_threads%rowtype;o private.marketplace_offers%rowtype;prior private.marketplace_offers%rowtype;ls jsonb;v uuid;r uuid;begin
+declare u uuid:=private.marketplace_require_user();t private.marketplace_threads%rowtype;o private.marketplace_offers%rowtype;prior private.marketplace_offers%rowtype;ls jsonb;v uuid;r uuid;pv integer;policy jsonb;hours integer;begin
  perform pg_advisory_xact_lock(hashtextextended(u::text,7404));
  select * into t from private.marketplace_threads where id=p_thread and u in(buyer_id,seller_id) for update;
  if t.id is null or private.marketplace_blocked(t.buyer_id,t.seller_id) then raise exception 'Conversation unavailable';end if;
@@ -162,8 +163,10 @@ declare u uuid:=private.marketplace_require_user();t private.marketplace_threads
  if o.id is null or o.recipient_id<>u or o.status<>'pending' or o.expires_at<=now() or (select array_agg(x->>'id' order by x->>'id') from jsonb_array_elements(o.lines)x)<>(select array_agg(x->>'id' order by x->>'id') from jsonb_array_elements(ls)x) then raise exception 'Offer unavailable';end if;
  update private.marketplace_offers set status='countered',updated_at=now() where id=o.id;
  end if;
+ select version,value into pv,policy from public.business_setting_versions where setting_key='marketplace_policy' and effective_at<=now() order by version desc limit 1;
+ hours:=(policy->>'offerHours')::integer;if pv is null or hours is null or hours not between 1 and 168 then raise exception 'Offer policy unavailable';end if;
  r:=case when u=t.buyer_id then t.seller_id else t.buyer_id end;
- insert into private.marketplace_offers(thread_id,buyer_id,seller_id,proposer_id,recipient_id,amount_cents,lines,parent_id,request_id) values(t.id,t.buyer_id,t.seller_id,u,r,p_amount,ls,p_parent,p_request) returning id into v;
+ insert into private.marketplace_offers(thread_id,buyer_id,seller_id,proposer_id,recipient_id,amount_cents,lines,parent_id,request_id,policy_version,policy_snapshot,expires_at) values(t.id,t.buyer_id,t.seller_id,u,r,p_amount,ls,p_parent,p_request,pv,jsonb_build_object('offerHours',hours,'commercialApproved',coalesce((policy->>'commercialApproved')::boolean,false)),now()+hours*interval '1 hour') returning id into v;
  insert into private.marketplace_messages(thread_id,sender_id,kind,body,request_id) values(t.id,null,case when p_parent is null then 'offer_created' else 'offer_countered' end,v::text,gen_random_uuid());
  update private.marketplace_threads set updated_at=now() where id=t.id;
  perform private.marketplace_notify(r,'offer:'||v,'offer',t.id);return v;end$$;

@@ -7,7 +7,7 @@ export async function marketplaceFixture(){
  alter table public.items alter column id set default gen_random_uuid();
  alter table public.items alter column inspected_at drop default,alter column published_at drop default,alter column seller_pricing_approved_at drop default,alter column locked_seller_commission_bps drop default,alter column locked_platform_commission_bps drop default;
  create table public.item_rule_overrides(item_id uuid,override_type text);
- create table public.business_setting_versions(setting_key text,version integer,value jsonb,reason text,unique(setting_key,version));
+ create table public.business_setting_versions(effective_at timestamptz not null default now(),setting_key text,version integer,value jsonb,reason text,unique(setting_key,version));
  create function public.get_selling_rules() returns jsonb language sql as $$select '{"sellingPeriodDays":90,"minimumIndividualItemValueCents":800}'::jsonb$$;
  create function private.has_team_pricing_mandate(uuid) returns boolean language sql as $$select false$$;
  create function private.current_commission_resolution(integer) returns table(rule_version integer,tier jsonb,seller_bps integer,platform_bps integer) language sql as $$select 1,'{}'::jsonb,6000,4000$$;
