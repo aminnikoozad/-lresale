@@ -39,3 +39,5 @@
 
 .account-workspace-switch>.account-admin-panel-link{padding:8px 14px;border:1px solid #37654f;border-radius:9px;background:#edf4ee;color:#294d39;font-size:14px;font-weight:650;white-space:nowrap}.account-workspace-switch>.account-admin-panel-link:hover{background:#dfecdf}
 @media(max-width:420px){.account-workspace-switch{gap:8px;padding-left:12px;padding-right:12px}.account-workspace-switch>.account-admin-panel-link{font-size:12px;padding:8px}.account-workspace-segments button{padding:8px 12px}}
+
+.seller-method-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px;padding:0;border:0}.seller-method-tabs a{display:inline-flex;align-items:center;justify-content:center;padding:11px 16px;min-height:44px;border:1px solid #bacbbf;border-radius:10px;background:#fff;color:#294d39;font-size:14px;font-weight:600;text-decoration:none}.seller-method-tabs a[aria-current=page]{background:#edf4ee;border-color:#37654f}.seller-method-tabs a:focus-visible{outline:3px solid #b47738;outline-offset:3px}@media(max-width:420px){.seller-method-tabs a{flex:1;font-size:13px;padding:10px}}

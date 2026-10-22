@@ -1,5 +1,4 @@
 import { CATALOG_CATEGORIES } from "@/lib/catalog-taxonomy";
-import { loadSaleProvenance } from "@/lib/sale-provenance";
 
 import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
@@ -66,7 +65,6 @@ export default async function Home() {
     : "Local delivery eligibility is confirmed from the delivery address. Shipping fees may apply outside the local area.";
 
   const activeCategories = pilot.enabled ? pilot.categories : CATALOG_CATEGORIES.map((entry) => entry.value);
-  const provenance=await loadSaleProvenance(supabase,((data??[]) as CatalogRow[]).map(row=>row.item_id));
   const catalogProducts: CatalogProduct[] = ((data ?? []) as CatalogRow[])
     .filter((row) =>
       typeof row.item_id === "string" &&
@@ -94,7 +92,6 @@ export default async function Home() {
       pattern: row.pattern,
       photoUrl: row.photo_url!,
       publishedAt: row.published_at,
-      provenance: provenance.get(row.item_id),
       home: homeMap.get(row.item_id)?.details,
       priceDrop: homeMap.get(row.item_id)?.price_drop ?? false,
     }));
@@ -124,7 +121,7 @@ export default async function Home() {
             <h1 id="home-hero-title">Give your clothes<br />a second life.</h1>
             <p>We collect, inspect, photograph and sell your pieces. You earn when they sell.</p>
             <div className="hero-actions">
-              <Button asChild size="lg"><Link href="/sell">Sell with Shikimomo <ArrowRight aria-hidden="true" /></Link></Button>
+              <Button asChild size="lg"><Link href="/sell-with-shikimomo">Sell with Shikimomo <ArrowRight aria-hidden="true" /></Link></Button>
             </div>
           </div>
           <div className="hero-media">

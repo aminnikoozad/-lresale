@@ -1,7 +1,6 @@
 "use client";
-import { Localize,useLocale } from "@/components/site-language";
-import { SellingMethodOptions } from "@/components/selling-method-options";
-import "@/app/sell/sell.css";
+import { Localize } from "@/components/site-language";
+import { SellingMethodTabs } from "@/components/selling-method-tabs";
 
 
 import { HomeIntake } from "@/components/home-intake";
@@ -139,10 +138,10 @@ export function Dashboard({
   pilotEnabled = true,
 }: Props) {
   const activeCategoryLabels = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value)).map((entry) => entry.label).join(", ");
-  const {locale}=useLocale();
   const showLaunchOffer = launchOffer.active && launchOffer.eligible;
   return <Localize>{(
     <div className="dashboard">
+      <SellingMethodTabs />
       <section className="welcome">
         <div>
           <p className="eyebrow dark">Seller account</p>
@@ -152,11 +151,10 @@ export function Dashboard({
             collection.
           </p>
         </div>
-      </section>
-      <SellingMethodOptions fr={locale==="fr"} managedControls={<div className="dash-actions">
+        <div className="dash-actions">
           <RequestDialog
             type="bag"
-            label={locale==="fr"?"Demander un sac Shikimomo":"Request a Shikimomo Bag"}
+            label="Request a Shikimomo Bag"
             icon={<Package />}
             pickupSlots={pickupSlots}
             activeCategories={activeCategories}
@@ -167,7 +165,7 @@ export function Dashboard({
           />
           <RequestDialog
             type="pickup"
-            label={locale==="fr"?"Utiliser mon propre sac / boîte":"Use my own bag / box"}
+            label="Use my own bag / box"
             icon={<Truck />}
             pickupSlots={pickupSlots}
             activeCategories={activeCategories}
@@ -176,7 +174,8 @@ export function Dashboard({
             launchOffer={launchOffer}
             teamPricingAccepted={teamPricingAccepted}
           />
-        </div>}/>
+        </div>
+      </section>
       {showLaunchOffer ? (
         <div className="launch-offer-account">
           <BadgePercent />

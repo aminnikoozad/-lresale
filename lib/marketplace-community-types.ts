@@ -1,4 +1,4 @@
-export type SellerRulesDocument={version:number;value:{id:string;reviewOnly:boolean;commercialApproved:boolean;title:{en:string;fr:string};rules:Array<{id:string;en:string;fr:string}>}};
+export type SellerRulesDocument={version:number;value:{id:string;reviewOnly:boolean;commercialApproved:boolean;submissionOnly?:boolean;submissionApproved?:boolean;title:{en:string;fr:string};rules:Array<{id:string;en:string;fr:string}>}};
 export type SellerRulesStatus={document:SellerRulesDocument|null;accepted:boolean;acceptedAt:string|null};
 export type SellerProfile={id:string;name:string;city:string;bio:string;businessType:'individual'|'business';vacation:boolean;version:number};
 export type StoreItem={id:string;name:string;brand:string|null;category:string;size:string|null;item_condition:string|null;price:number;version:number;photos:string[]};
