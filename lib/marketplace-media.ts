@@ -31,7 +31,7 @@ export type MarketplaceActor=Awaited<ReturnType<typeof marketplaceActor>>;
 export async function authorizePhotoUpload(ctx:MarketplaceActor,id:string,version:number,asset:string){
  if(ctx.actor)return stagingBeginPhotoUpload(ctx.actor,id,version,asset);
  const {error}=await ctx.client!.rpc("marketplace_begin_photo_upload",{p_item:id,p_version:version,p_asset:asset});
- if(error){if(error.message==='Photo upload rate limit')throw new Error('photo_rate_limit');if(error.message==='Maximum 20 photos per item')throw new Error('photo_count_limit');throw new Error('draft_changed');}
+ if(error){if(error.message==='Photo upload rate limit')throw new Error('photo_rate_limit');if(error.message==='Maximum 10 photos per item')throw new Error('photo_count_limit');throw new Error('draft_changed');}
 }
 export async function storeProcessedPhoto(ctx:MarketplaceActor,p:RegisteredPhoto,bytes:Uint8Array) {
   if(ctx.actor) {
