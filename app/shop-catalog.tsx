@@ -1,5 +1,6 @@
 "use client";
 import { BuyerViewEvent } from "@/components/buyer-view-event";
+import { SaleProvenanceBadge,type SaleProvenance } from "@/components/sale-provenance-badge";
 import { recordBuyerEvent } from "@/lib/buyer-analytics";
 import { Localize, useLocale } from "@/components/site-language";
 
@@ -51,6 +52,7 @@ export type CatalogProduct = {
   pattern: string | null;
   photoUrl: string;
   publishedAt: string | null;
+  provenance?:SaleProvenance;
   home?: HomeData;
   priceDrop?: boolean;
 };
@@ -610,6 +612,7 @@ export function ProductGrid({
   loadError: boolean;
   clearFilters: () => void;
 }) {
+  const {locale}=useLocale();
   if (loadError) return <Localize>{<div className="catalog-empty catalog-unavailable" role="status">
     <h3>We couldn’t load the collection</h3>
     <p>Please try again in a moment. Your filters are saved in this page’s address.</p>
@@ -672,6 +675,7 @@ export function ProductGrid({
               ) : null}
             </div>
             <div className="shop-card-copy">
+              <SaleProvenanceBadge value={product.provenance} fr={locale==="fr"}/>
               <small>{product.brand}</small>
               <Link href={`/item/${product.id}${selectedSizes.length ? `?${new URLSearchParams(selectedSizes.map(size=>["sizes",size])).toString()}` : ""}`} onClick={()=>void recordBuyerEvent("select_item",[product.id])}>
                 <h3 translate="no">{product.name}</h3>

@@ -1,0 +1,52 @@
+-- Owner-authorized rollout of private listing submission only. Financial gates stay closed.
+insert into public.business_setting_versions(setting_key,version,value,reason) values('marketplace_seller_terms',2,'{"id": "direct-listing-submission-v2", "reviewOnly": false, "submissionOnly": true, "submissionApproved": true, "commercialApproved": false, "title": {"en": "Listing submission rules", "fr": "Règles d’envoi d’une annonce"}, "rules": [{"id": "scope", "en": "These rules cover submitting a private clothing listing for SHIKIMOMO’s content review. Submission and content approval do not publish the listing or enable a sale, payment, shipping purchase or payout. Transaction terms and fees will be presented separately before real sales open.", "fr": "Ces règles encadrent l’envoi d’une annonce privée de vêtement à SHIKIMOMO pour révision du contenu. L’envoi et l’approbation ne publient pas l’annonce et n’activent aucune vente, aucun paiement, achat d’expédition ou versement. Les conditions de transaction et frais seront présentés séparément avant l’ouverture des ventes."}, {"id": "accuracy", "en": "I have the right to list this actual item and use the photos I provide. My title, price, description, size and condition must be accurate. I identify unknown details as unknown and do not claim authenticity without evidence.", "fr": "J’ai le droit de proposer cet article réel et d’utiliser les photos fournies. Le titre, le prix, la description, la taille et l’état doivent être exacts. Je signale les détails inconnus et n’affirme pas l’authenticité sans preuve."}, {"id": "photos", "en": "I provide a clear photo of the actual item. Extra angles are optional. I show the brand/size label or declare its absence. I disclose all known stains, holes, damage, repairs, missing parts and wear, with a clear photo and a specific written explanation for each defect. I do not use stock or AI images as a substitute or hide defects through editing.", "fr": "Je fournis une photo nette de l’article réel. Les angles supplémentaires sont facultatifs. Je montre l’étiquette de marque/taille ou déclare son absence. Je déclare les taches, trous, dommages, réparations, pièces manquantes et marques d’usure connus, avec une photo nette et une explication écrite précise pour chaque défaut. Je ne remplace pas mes photos par des images de catalogue ou d’IA et ne cache pas les défauts par retouche."}, {"id": "review", "en": "I submit this saved version for manual review. SHIKIMOMO may request corrections or refuse content that is inaccurate, unlawful, abusive or infringes another person’s rights. Content review is not a physical inspection or an authenticity guarantee. Material edits require renewed review and acceptance.", "fr": "J’envoie cette version enregistrée pour révision manuelle. SHIKIMOMO peut demander des corrections ou refuser un contenu inexact, illicite, abusif ou portant atteinte aux droits d’autrui. Cette révision n’est ni une inspection physique ni une garantie d’authenticité. Les modifications importantes nécessitent une nouvelle révision et acceptation."}, {"id": "privacy", "en": "I do not include bank details, identity documents, private addresses or other people’s personal information in the listing or its photos. Authorized staff may access the submission and photos to review it. The displayed policy version, listing version, language and acceptance time are recorded. The Privacy Policy explains how personal information is handled.", "fr": "Je n’inclus pas de coordonnées bancaires, documents d’identité, adresses privées ni renseignements personnels d’autrui dans l’annonce ou ses photos. Le personnel autorisé peut accéder à l’envoi et aux photos pour les examiner. La version des règles affichées, celle de l’annonce, la langue et l’heure d’acceptation sont enregistrées. La Politique de confidentialité explique le traitement des renseignements personnels."}, {"id": "rights", "en": "I can keep a draft without accepting these submission rules. This acceptance does not approve future fees, authorize a charge or payout, consent to marketing, impose mandatory legal arbitration or waive statutory rights.", "fr": "Je peux conserver un brouillon sans accepter ces règles d’envoi. Cette acceptation n’approuve pas de futurs frais, n’autorise aucun prélèvement ni versement, ne consent pas au marketing, n’impose aucun arbitrage juridique obligatoire et ne renonce à aucun droit légal."}]}'::jsonb,'Private listing submission and manual content review; no commercial terms activation');
+create or replace function public.marketplace_accept_seller_terms(p_version integer,p_locale text,p_accept boolean) returns jsonb language plpgsql security definer set search_path='' as $$declare u uuid:=private.marketplace_require_user();d jsonb;v jsonb;a private.marketplace_terms_acceptances%rowtype;begin
+ perform pg_advisory_xact_lock(hashtextextended(u::text,7406));d:=public.marketplace_policy_document();v:=d->'value';
+ if p_accept is distinct from true or p_locale is null or p_locale not in ('en-CA','fr-CA') or p_version is distinct from (d->>'version')::integer or v is null then raise exception 'Read and accept the current seller rules';end if;
+ if coalesce((v->>'reviewOnly')::boolean,true) then
+ if current_database()<>'shikimomo_staging' or to_regprocedure('public.assert_synthetic_staging()') is null then raise exception 'Review-only rules cannot be accepted outside synthetic staging';end if;
+ perform public.assert_synthetic_staging();
+ elsif coalesce((v->>'submissionOnly')::boolean,false) and coalesce((v->>'submissionApproved')::boolean,false) then
+ -- This receipt authorizes content submission only. No financial/publication flag changes.
+ null;
+ elsif coalesce((v->>'commercialApproved')::boolean,false) is not true then raise exception 'Seller rules are not approved';end if;
+ select * into a from private.marketplace_terms_acceptances where user_id=u and policy_version=p_version;
+ if a.user_id is not null then if a.policy_snapshot<>v then raise exception 'Policy content changed without a new version';end if;return jsonb_build_object('version',p_version,'acceptedAt',a.accepted_at,'commercialEnabled',false);end if;
+ insert into private.marketplace_terms_acceptances(user_id,policy_version,policy_snapshot,locale) values(u,p_version,v,p_locale) returning * into a;
+ insert into public.audit_logs(admin_user_id,action,entity_type,entity_id,new_value,reason) values(u,'marketplace.seller_rules_accepted','seller_terms',p_version::text,jsonb_build_object('version',p_version,'locale',p_locale,'reviewOnly',v->'reviewOnly'),'Explicit acceptance of the displayed policy version; no bank access, commercial activation or waiver of legal rights');
+ return jsonb_build_object('version',p_version,'acceptedAt',a.accepted_at,'commercialEnabled',false);end$$;
+revoke all on function public.marketplace_accept_seller_terms(integer,text,boolean) from public,anon;
+grant execute on function public.marketplace_accept_seller_terms(integer,text,boolean) to authenticated;
+
+-- Service-side processed images only. No browser grants or public bucket.
+do $bucket$ begin
+ if to_regclass('storage.buckets') is null then
+   if current_database()='shikimomo_staging' and to_regprocedure('public.assert_synthetic_staging()') is not null then perform public.assert_synthetic_staging();return;end if;
+   raise exception 'Private photo storage schema is required';
+ end if;
+ execute $sql$insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
+ values('shikimomo-listing-photos','shikimomo-listing-photos',false,1500000,array['image/webp']) on conflict(id) do nothing$sql$;
+ if exists(select 1 from storage.buckets where id='shikimomo-listing-photos' and public) then raise exception 'Listing photos bucket must remain private';end if;
+end $bucket$;
+
+-- Staff see only assets of a version-bound moderation record, with MFA and item capability.
+create or replace function public.my_marketplace_photo(p_asset uuid) returns jsonb
+language sql stable security definer set search_path='' as $$
+ select jsonb_build_object('key',a.storage_key,'provider',a.provider,'item',a.item_id)
+ from private.marketplace_photo_assets a
+ where a.id=p_asset and auth.uid() is not null and not coalesce((auth.jwt()->>'is_anonymous')::boolean,false)
+ and (a.owner_id=auth.uid() or (auth.jwt()->>'aal'='aal2' and public.can_manage_items() and a.withdrawn_at is null
+ and exists(select 1 from private.marketplace_listing_reviews r join public.items i on i.id=r.item_id where r.item_id=a.item_id and r.listing_version=i.listing_version)));
+$$;
+revoke all on function public.my_marketplace_photo(uuid) from public,anon;
+grant execute on function public.my_marketplace_photo(uuid) to authenticated;
+
+create or replace function public.admin_marketplace_queue() returns jsonb language plpgsql stable security definer set search_path='' as $$begin
+ if auth.uid() is null or auth.jwt()->>'aal' is distinct from 'aal2' or not public.can_manage_items() then raise exception 'Moderation capability with MFA required';end if;
+ return jsonb_build_object('reviews',coalesce((select jsonb_agg(x) from(select r.item_id,r.listing_version,r.status,r.requested_at,i.name,i.description,i.condition_notes,i.listed_price_cents,i.category,i.subcategory,i.size,i.item_condition,
+ (select jsonb_agg(jsonb_build_object('id',a.id,'role',a.role,'defect',a.defect,'url','/api/marketplace/photos/'||a.id::text) order by a.created_at,a.id) from private.marketplace_photo_assets a where a.item_id=i.id and a.withdrawn_at is null) as photos,
+ (select jsonb_build_object('policyVersion',s.policy_version,'locale',s.locale,'submittedAt',s.submitted_at) from private.marketplace_listing_submissions s where s.item_id=i.id and s.listing_version=i.listing_version order by s.policy_version desc limit 1) as acceptance
+ from private.marketplace_listing_reviews r join public.items i on i.id=r.item_id where r.status='pending' and r.listing_version=i.listing_version order by r.requested_at limit 100)x),'[]'::jsonb),
+ 'reports',coalesce((select jsonb_agg(x) from(select r.id,r.item_id,r.message_id,r.reason,r.created_at,m.body as reported_message from private.marketplace_reports r left join private.marketplace_messages m on m.id=r.message_id where r.status='open' order by r.created_at limit 100)x),'[]'::jsonb));end$$;
+revoke all on function public.admin_marketplace_queue() from public,anon;
+grant execute on function public.admin_marketplace_queue() to authenticated;

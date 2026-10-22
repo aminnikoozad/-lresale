@@ -1,5 +1,9 @@
+import { ItemTradeActions } from "@/components/item-trade-actions";
 
 import { BuyerViewEvent } from "@/components/buyer-view-event";
+import { cookies } from "next/headers";
+import { loadSaleProvenance } from "@/lib/sale-provenance";
+import { SaleProvenanceBadge } from "@/components/sale-provenance-badge";
 import { AvailableAlternatives } from "@/components/available-alternatives";
 import { catalogLocation,emptyCatalogFilters } from "@/lib/catalog-navigation";
 import { productAlternatives } from "@/lib/product-alternatives";
@@ -86,6 +90,9 @@ export default async function ProductPage({ params, searchParams }: Props) {
 
   const product = ((data ?? [])[0] ?? null) as Product | null;
   if (!product || !product.photo_urls?.length) notFound();
+  const provenance=(await loadSaleProvenance(supabase,[id])).get(id);
+  const shop=provenance?.sale_mode==="peer_to_peer"?(await supabase.rpc("marketplace_item_shop",{p_item:id})).data as string|null:null;
+  const fr=(await cookies()).get("shikimomo-language")?.value==="fr";
 
   const homeResult =
     product.category === "home_decor"
@@ -165,7 +172,9 @@ export default async function ProductPage({ params, searchParams }: Props) {
             <FavoriteButton itemId={product.item_id} />
           </div>
 
-          {product.inspected_at ? <div className="product-trust product-trust-primary">
+          <SaleProvenanceBadge value={provenance} fr={fr}/>
+          {shop&&<ItemTradeActions item={id} shop={shop} fr={fr}/>}
+          {provenance?.team_inspected ? <div className="product-trust product-trust-primary">
             <ShieldCheck />
             <div>
               <b>Inspected by Shikimomo</b>

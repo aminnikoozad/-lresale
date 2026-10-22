@@ -1,5 +1,6 @@
 "use client";
 import { Localize } from "@/components/site-language";
+import { SellingMethodTabs } from "@/components/selling-method-tabs";
 
 
 import { HomeIntake } from "@/components/home-intake";
@@ -140,6 +141,7 @@ export function Dashboard({
   const showLaunchOffer = launchOffer.active && launchOffer.eligible;
   return <Localize>{(
     <div className="dashboard">
+      <SellingMethodTabs />
       <section className="welcome">
         <div>
           <p className="eyebrow dark">Seller account</p>

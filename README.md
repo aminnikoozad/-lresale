@@ -1,6 +1,6 @@
 # Shikimomo
 
-Managed secondhand marketplace starting in Montréal, with Canada-wide shipping infrastructure. Shikimomo receives and inspects items, prepares listings, manages orders and coordinates fulfillment. It is not a peer-to-peer marketplace.
+Managed secondhand marketplace starting in Montréal, with Canada-wide shipping infrastructure. Shikimomo receives and inspects items, prepares listings, manages orders and coordinates fulfillment. The `feat/hybrid-marketplace-foundation` work adds private direct-sale drafts alongside this workflow. Direct publication, checkout and payouts remain disabled until the separate marketplace launch gates are met.
 
 ## Application
 
@@ -30,3 +30,7 @@ vercel.json requests automatic Git deployment for main and disables other branch
 Sushi is scoped exclusively to this repository. Its persisted owner request, runbook, tasks, reports and readiness matrix live on the separate **sushi/operations** branch under sushi/. Fetch that branch to read operational memory; never merge it into the application.
 
 Hosted hourly and GitHub PR-triggered iterations and daily/weekly reports are configured. Configuration is not evidence of a completed execution. A dedicated continuously running executor and immediate deployment/CI/payment/order/job failure triggers remain commissioning work. See that branch's current state for verified completion and blockers.
+
+## Hybrid marketplace foundation
+
+See [implementation and evidence](docs/hybrid-marketplace.md). `/sell` compares the two sale modes; `/account/seller/direct` saves private drafts in the existing inventory after applying the P1 migration to an isolated staging database. This branch does not enable direct sales. Preview builds now require explicit non-production Supabase configuration.

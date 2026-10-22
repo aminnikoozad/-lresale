@@ -9,17 +9,19 @@ export type MenuAccess = {
   has_aal2?: boolean;
 };
 export const accountNavigation: WorkspaceLink[] = [
+  { href: "/account/marketplace", label: "Messages, offers & shop" },
   { href: "/account", label: "Choose workspace" },
   { href: "/account/buyer", label: "Buyer account" },
   { href: "/account/buyer/delivery", label: "Delivery details" },
   { href: "/account/seller", label: "Selling dashboard" },
   { href: "/account/seller/items", label: "Item tracking" },
+  { href: "/account/seller/direct", label: "My direct sales" },
   { href: "/account/seller/earnings", label: "Earnings & settlement" },
   { href: "/account/profile", label: "Profile & security" },
 ];
 export function accountNavigationFor(mode: "buyer" | "seller" | null): WorkspaceLink[] {
   const paths = mode === "seller"
-    ? ["/account/seller", "/account/seller/items", "/account/seller/earnings"]
+    ? ["/account/seller", "/account/seller/items", "/account/seller/direct", "/account/seller/earnings", "/account/marketplace"]
     : mode === "buyer" ? ["/account/buyer", "/account/buyer/delivery"] : ["/account"];
   return accountNavigation.filter(link => paths.includes(link.href) || (mode !== "seller" && link.href === "/account/profile"));
 }
@@ -30,6 +32,7 @@ export function adminNavigation(access: MenuAccess): WorkspaceLink[] {
       { href: "/admin/customers", label: "Customers" },
       { href: "/admin/items", label: "Items" },
       { href: "/admin/pricing", label: "AI Pricing" },
+      { href: "/admin/marketplace", label: "Marketplace moderation" },
       { href: "/admin/processing", label: "Processing" },
       { href: "/admin/home-decor", label: "Home inventory" },
     ] : []),

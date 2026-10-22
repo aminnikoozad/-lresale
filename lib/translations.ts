@@ -5,7 +5,7 @@ const patterns = Object.entries(templates).filter(([key])=>key.replace(/ZXQ\d+ZX
  placeholders: key.match(/ZXQ\d+ZXQ/g) || [], value
 }));
 export type Locale = "en" | "fr";
-const dictionary: Record<string,string> = french;
+const dictionary: Record<string,string> = { ...french, "My direct sales": "Mes ventes directes" };
 export function translate(locale: Locale, text: string): string {
  if(locale!=="fr" || !text.trim())return text;
  const key=text.trim().replace(/\s+/g," ");

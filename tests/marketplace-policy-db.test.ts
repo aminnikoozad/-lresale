@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {marketplaceFixture} from './fixtures/marketplace-db.ts';
+import {applySellerPolicy} from './fixtures/marketplace-policy-db.ts';
+import {identity,seller,other} from './fixtures/buyer-sales-db.ts';
+async function setup(){const db=await marketplaceFixture();await db.exec(readFileSync(new URL('../supabase/migrations/20261021114432_marketplace_community_trading.sql',import.meta.url),'utf8'));await applySellerPolicy(db);return db;}
+test('explicit policy acceptance is owner scoped, immutable, idempotent and never activates commerce',async()=>{const db=await setup();try{
+ await identity(db,'','anon');assert.equal((await db.query<{v:{version:number;value:{reviewOnly:boolean}}}>('select public.marketplace_policy_document() v')).rows[0].v.value.reviewOnly,true);await assert.rejects(db.query("select public.marketplace_accept_seller_terms(1,'en-CA',true)"),/permission denied/);
+ await identity(db,seller);await assert.rejects(db.query("select public.marketplace_accept_seller_terms(1,'en-CA',false)"),/Read and accept/);await assert.rejects(db.query("select public.marketplace_accept_seller_terms(0,'en-CA',true)"),/Read and accept/);await assert.rejects(db.query("select public.marketplace_accept_seller_terms(1,'fa',true)"),/Read and accept/);
+ const first=(await db.query<{v:{acceptedAt:string;commercialEnabled:boolean}}>("select public.marketplace_accept_seller_terms(1,'fr-CA',true) v")).rows[0].v;assert.equal(first.commercialEnabled,false);assert.equal((await db.query<{v:typeof first}>("select public.marketplace_accept_seller_terms(1,'fr-CA',true) v")).rows[0].v.acceptedAt,first.acceptedAt);
+ await assert.rejects(db.query('select * from private.marketplace_terms_acceptances'),/permission denied/);await identity(db,other);assert.equal((await db.query<{v:{accepted:boolean}}>('select public.marketplace_seller_terms_status() v')).rows[0].v.accepted,false);
+ await db.exec('reset role');assert.equal((await db.query('select * from private.marketplace_terms_acceptances')).rows.length,1);await assert.rejects(db.query("update private.marketplace_terms_acceptances set locale='en-CA'"),/immutable/);for(const table of ['orders','wallet_transactions'])assert.equal((await db.query(`select * from public.${table}`)).rows.length,0);
+ }finally{await db.close();}});
+test('new policy versions require fresh acceptance without rewriting prior snapshots',async()=>{const db=await setup();try{
+ await identity(db,seller);await db.query("select public.marketplace_accept_seller_terms(1,'en-CA',true)");await db.exec('reset role');await db.exec("insert into public.business_setting_versions(setting_key,version,value,reason) select setting_key,2,value||'{\"id\":\"review-v2\"}'::jsonb,'Synthetic revision' from public.business_setting_versions where setting_key='marketplace_seller_terms' and version=1");await identity(db,seller);
+ assert.equal((await db.query<{v:{accepted:boolean}}>('select public.marketplace_seller_terms_status() v')).rows[0].v.accepted,false);await assert.rejects(db.query("select public.marketplace_accept_seller_terms(1,'en-CA',true)"),/current seller/);await db.query("select public.marketplace_accept_seller_terms(2,'en-CA',true)");await db.exec('reset role');const rows=(await db.query<{policy_version:number;policy_snapshot:{id:string}}>('select policy_version,policy_snapshot from private.marketplace_terms_acceptances order by policy_version')).rows;assert.equal(rows.length,2);assert.equal(rows[0].policy_snapshot.id,'direct-selling-review-v1');assert.equal(rows[1].policy_snapshot.id,'review-v2');
+ }finally{await db.close();}});
+test('staging-review rules cannot be accepted without the synthetic marker; drafts remain usable',async()=>{const db=await setup();try{
+ await db.exec('drop function public.assert_synthetic_staging()');await identity(db,seller);await assert.rejects(db.query("select public.marketplace_accept_seller_terms(1,'en-CA',true)"),/outside synthetic staging/);
+ const d=(await db.query<{v:{id:string;version:number}}>('select public.save_marketplace_draft(null,0,$1) v',[{name:'Draft before accepting terms',category:'women',brand_kind:'unknown',price_cents:2000}])).rows[0].v;await assert.rejects(db.query('select public.marketplace_request_review($1,$2)',[d.id,d.version]),/explicit policy acceptance/);
+ }finally{await db.close();}});

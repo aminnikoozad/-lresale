@@ -1,14 +1,11 @@
-import { resolvePublicProject } from "./project-config";
-
-const configured = resolvePublicProject({
-  url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  publishableKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  preview: process.env.VERCEL_ENV === "preview",
-  fallbackPublishableKey: "sb_publishable_t1Yh4jSDgkhfWFL3t449MA_QhTiKw9c",
+import { resolveSupabaseEnvironment } from "./environment";
+const config = resolveSupabaseEnvironment({
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
+  NEXT_PUBLIC_STAGING_BACKEND: process.env.NEXT_PUBLIC_STAGING_BACKEND,
+  VERCEL_ENV: process.env.VERCEL_ENV,
 });
-export const SUPABASE_URL = configured.url;
-export const SUPABASE_PUBLISHABLE_KEY = configured.publishableKey;
-
-export function getSupabaseConfig() {
-  return configured;
-}
+export const SUPABASE_URL = config.url;
+export const SUPABASE_PUBLISHABLE_KEY = config.publishableKey;
+export function getSupabaseConfig() { return config; }

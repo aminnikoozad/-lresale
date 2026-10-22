@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
-const configuredSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://lsdhobwrnmlkqnvkamlt.supabase.co";
-const supabaseOrigin = new URL(configuredSupabaseUrl).origin;
+import { resolveSupabaseEnvironment } from "./lib/supabase/environment";
+const { url: supabaseOrigin } = resolveSupabaseEnvironment(process.env);
+const supabaseHost = new URL(supabaseOrigin);
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -25,8 +26,9 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: new URL(supabaseOrigin).hostname,
+        protocol: supabaseHost.protocol === "https:" ? "https" : "http",
+        hostname: supabaseHost.hostname,
+        port: supabaseHost.port,
         pathname: "/storage/v1/object/public/**",
       },
     ],

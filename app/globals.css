@@ -21,3 +21,4 @@
 .catalog-filter-dropdown>summary:focus-visible{outline:2px solid #426951;outline-offset:4px}
 
 .catalog-filter-dropdown>summary{display:grid;grid-template-columns:minmax(0,1fr) 76px;gap:8px;font-size:14px;line-height:1.4}.catalog-filter-dropdown>summary>span:first-child{min-width:0;overflow-wrap:anywhere}.catalog-filter-choice{min-width:0;width:100%;box-sizing:border-box}
+.sale-provenance-badge{display:inline-block;font-size:.75rem;line-height:1.4;font-weight:650;border-radius:8px;padding:6px 9px;margin:4px 0;background:#e6efe8;color:#244c42}.sale-provenance-badge.seller{background:#f6eddd;color:#6b4c21}

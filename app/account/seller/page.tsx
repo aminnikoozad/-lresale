@@ -129,7 +129,7 @@ export default async function AccountPage({ searchParams }: Props) {
       .select("*")
       .eq("id", user.id)
       .maybeSingle(),
-    supabase.rpc("my_priced_items"),
+    supabase.rpc("my_managed_priced_items"),
     supabase
       .from("collection_requests")
       .select("id,batch_code,request_type,category,status,confirmation_status,created_at,item_count,pickup_fee_cents,pickup_pricing_mode,priority_pickup,processing_fee_cents,bag_fee_cents,promotion_claim_number,service_fee_waived_cents")
@@ -214,7 +214,7 @@ export default async function AccountPage({ searchParams }: Props) {
   const activeCategories = pilot.enabled
     ? pilot.categories
     : CATALOG_CATEGORIES.map((entry) => entry.value);
-  const rawItems = (itemsResult.data ?? []) as Array<{ id: string; collection_request_id: string | null; name: string; status: string; initial_approved_price_cents: number | null; listed_price_cents: number | null; sold_price_cents: number | null; locked_seller_commission_bps: number | null; locked_platform_commission_bps: number | null; seller_pricing_approved_at: string | null; estimated_seller_earnings_cents: number | null; final_seller_earnings_cents: number | null }>;
+  const rawItems = ((itemsResult.data ?? []) as Array<{ id: string; collection_request_id: string | null; name: string; status: string; initial_approved_price_cents: number | null; listed_price_cents: number | null; sold_price_cents: number | null; locked_seller_commission_bps: number | null; locked_platform_commission_bps: number | null; seller_pricing_approved_at: string | null; estimated_seller_earnings_cents: number | null; final_seller_earnings_cents: number | null; sale_mode?: string }>).filter(item=>item.sale_mode!=="peer_to_peer");
   const rawRequests = requestsResult.data ?? [];
   const launchOfferEligible = launchOffer.active && rawRequests.length === 0;
 
