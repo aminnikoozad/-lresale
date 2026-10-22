@@ -1,12 +1,11 @@
 import "server-only";
-import type { MarketplaceDraft } from "./marketplace";
 import { cookies } from "next/headers";
 import { createClient as createAdmin } from "@supabase/supabase-js";
 import { S3Client,PutObjectCommand,GetObjectCommand,HeadObjectCommand } from "@aws-sdk/client-s3";
 import { createHash } from "node:crypto";
 import { createClient } from "./supabase/server";
 import { getSupabaseConfig } from "./supabase/config";
-import { isNeonStaging,stagingActors,stagingDrafts,stagingPhoto,stagingRegisterPhoto,stagingWithdrawPhoto,stagingSubmitEvidence,type StagingActor,type RegisteredPhoto } from "./neon-staging";
+import { isNeonStaging,stagingActors,stagingPhoto,stagingRegisterPhoto,stagingWithdrawPhoto,stagingSubmitEvidence,stagingBeginPhotoUpload,type StagingActor,type RegisteredPhoto } from "./neon-staging";
 
 const bucket="shikimomo-listing-photos";
 export function marketplaceMediaEnabled() {
@@ -29,9 +28,10 @@ export async function marketplaceActor() {
   return {id:user.id,actor:null,client};
 }
 export type MarketplaceActor=Awaited<ReturnType<typeof marketplaceActor>>;
-export async function checkPhotoDraft(ctx:MarketplaceActor,id:string,version:number) {
-  const item=ctx.actor?(await stagingDrafts(ctx.actor)).find(d=>d.id===id):((await ctx.client!.rpc("my_marketplace_drafts")).data as MarketplaceDraft[]|null)?.find(d=>d.id===id);
-  if(!item||item.status!=="listing_preparation"||item.listing_version!==version) throw new Error("draft_changed");
+export async function authorizePhotoUpload(ctx:MarketplaceActor,id:string,version:number,asset:string){
+ if(ctx.actor)return stagingBeginPhotoUpload(ctx.actor,id,version,asset);
+ const {error}=await ctx.client!.rpc("marketplace_begin_photo_upload",{p_item:id,p_version:version,p_asset:asset});
+ if(error){if(error.message==='Photo upload rate limit')throw new Error('photo_rate_limit');if(error.message==='Maximum 20 photos per item')throw new Error('photo_count_limit');throw new Error('draft_changed');}
 }
 export async function storeProcessedPhoto(ctx:MarketplaceActor,p:RegisteredPhoto,bytes:Uint8Array) {
   if(ctx.actor) {

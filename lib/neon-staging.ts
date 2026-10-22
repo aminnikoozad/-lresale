@@ -78,3 +78,9 @@ export async function stagingCommunity(actor:StagingActor,name:import('./marketp
   const sql=client();const result=await sql.transaction([sql`select public.assert_synthetic_staging()`,sql`select set_config('request.jwt.claims',${claims(actor)},true)`,sql`set local role authenticated`,sql.query(query,definition.map(d=>args[d[0]]??null))]);
   return result[3][0].value;
 }
+
+export async function stagingBeginPhotoUpload(actor:StagingActor,id:string,version:number,asset:string){
+ const sql=client();
+ try{await sql.transaction([sql`select public.assert_synthetic_staging()`,sql`select set_config('request.jwt.claims',${claims(actor)},true)`,sql`set local role authenticated`,sql`select public.marketplace_begin_photo_upload(${id}::uuid,${version}::integer,${asset}::uuid)`]);}
+ catch(error){const message=error instanceof Error?error.message:'';if(message==='Photo upload rate limit')throw new Error('photo_rate_limit');if(message==='Maximum 20 photos per item')throw new Error('photo_count_limit');throw new Error('draft_changed');}
+}
