@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   backup:
-    # Enable only after secrets, private bucket and separate key recovery exist.
+    # Enable only after system secrets and the private destination bucket exist.
     if: vars.R2_BACKUP_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60

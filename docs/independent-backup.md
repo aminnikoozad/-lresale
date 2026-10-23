@@ -21,9 +21,12 @@ Repository Actions secrets:
 | R2_BACKUP_ACCESS_KEY_ID | Dedicated bucket-scoped S3 access key |
 | R2_BACKUP_SECRET_ACCESS_KEY | Matching S3 secret |
 
-Store an independent recovery copy of the encryption key in the owner's password
-manager/offline recovery kit BEFORE activation. Losing it makes backups unusable.
-Also preserve OAuth/SMTP/edge function configuration and secrets separately.
+Owner policy: keep keys only in the system's secret store. Do not export recovery
+key files or save key values in assistant memory, documents, source, or reports.
+The initial exported key was superseded before any backup ran and its file was
+removed. Recovery jobs must obtain the current key through the system secret
+store; losing that secret makes the encrypted backups unusable. Preserve the
+necessary OAuth/SMTP/edge-function configuration inside system secret stores too.
 
 After adding secrets, set repository variable `R2_BACKUP_ENABLED=true` and run
 **Independent R2 Backup** manually. Scheduled runs occur at 08:17 UTC daily
@@ -62,7 +65,8 @@ point until the replacement is proven.
 ## Recovery drill (isolated environment only)
 
 1. Pick a `.verified.json`, download the referenced encrypted object, and verify
-   its SHA-256 against the marker. Retrieve the separately stored encryption key.
+   its SHA-256 against the marker. Supply the encryption key to the recovery job
+   through the system secret store; do not export it as a file.
 2. With Node 22, use `decryptFile` in `scripts/backup-crypto.mjs` to decode to a
    new temporary file; never extract until authenticated decryption succeeds.
 3. Inspect `tar -tzf` first, then extract into an empty private temporary directory.
