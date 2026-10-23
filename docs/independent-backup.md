@@ -15,7 +15,7 @@ Repository Actions secrets:
 
 | Secret | Value |
 | --- | --- |
-| BACKUP_DATABASE_URL | Production session-pooler port 5432 URL, with URL-encoded database password and TLS |
+| BACKUP_DATABASE_URL | Production session-pooler port 5432 URL for dedicated shikimomo_backup_reader, with password and TLS |
 | BACKUP_SUPABASE_SERVICE_ROLE_KEY | Production server-only key, for reading private Storage objects |
 | BACKUP_ENCRYPTION_KEY | 32 cryptographically random bytes, hex encoded |
 | R2_BACKUP_ACCESS_KEY_ID | Dedicated bucket-scoped S3 access key |
@@ -27,6 +27,14 @@ The initial exported key was superseded before any backup ran and its file was
 removed. Recovery jobs must obtain the current key through the system secret
 store; losing that secret makes the encrypted backups unusable. Preserve the
 necessary OAuth/SMTP/edge-function configuration inside system secret stores too.
+
+The existing Vercel POSTGRES_URL_NON_POOLING points to a different Supabase project
+and must not be used for production backups. A dedicated `shikimomo_backup_reader`
+login was provisioned in the actual production project with `pg_read_all_data`,
+`BYPASSRLS`, read-only transactions by default and a 30-minute statement timeout.
+It has no superuser, role creation, database creation or replication attribute.
+Its password is only in the Actions connection secret. This account can read
+private/Auth data for backup; it is never exposed to the browser or Data API.
 
 After adding secrets, set repository variable `R2_BACKUP_ENABLED=true` and run
 **Independent R2 Backup** manually. Scheduled runs occur at 08:17 UTC daily

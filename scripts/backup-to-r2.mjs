@@ -25,8 +25,9 @@ const url = new URL(required('BACKUP_SUPABASE_URL'));
 if (url.href !== `https://${project}.supabase.co/`) throw new Error('Backup source must be Shikimomo production');
 const db = new URL(required('BACKUP_DATABASE_URL'));
 if (!['postgres:', 'postgresql:'].includes(db.protocol) || !db.password ||
-    !(db.hostname === `db.${project}.supabase.co` ||
-      (db.hostname.endsWith('.pooler.supabase.com') && decodeURIComponent(db.username) === `postgres.${project}`)) ||
+    !((db.hostname === `db.${project}.supabase.co` && ['postgres', 'shikimomo_backup_reader'].includes(decodeURIComponent(db.username))) ||
+      (db.hostname.endsWith('.pooler.supabase.com') && (db.port || '5432') === '5432' &&
+       [`postgres.${project}`, `shikimomo_backup_reader.${project}`].includes(decodeURIComponent(db.username)))) ||
     db.pathname !== '/postgres') throw new Error('Use the production direct or session-pooler connection');
 const endpoint = new URL(required('R2_BACKUP_ENDPOINT'));
 if (endpoint.protocol !== 'https:' || !/^[a-f0-9]{32}\.r2\.cloudflarestorage\.com$/.test(endpoint.hostname) || endpoint.pathname !== '/' || endpoint.username || endpoint.password || endpoint.search) throw new Error('Invalid R2 endpoint');
