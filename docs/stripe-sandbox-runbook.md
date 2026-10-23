@@ -91,3 +91,17 @@ Actual Stripe Shell fixture `checkout.session.completed` succeeded, and signed e
 Workflow SDK 5.2.3 now enqueues a durable per-receipt workflow after the SQL receipt commits and before the webhook acknowledgement. Failed enqueue returns 503 for provider retry. Duplicate starts remain safe under existing SQL leases and payment idempotency. Steps use server environment credentials internally, receive only an event ID, and return only a terminal boolean; keys, addresses, cookies, raw provider errors and webhook URLs are never workflow inputs or outputs. Sleep and retry are durable and do not depend on a browser request or preview cron. The existing cron remains a manual recovery option; periodic financial reconciliation is still separate unfinished commercial work.
 
 Migration `20261023041500_stripe_receipt_workflow.sql` adds service-only event-specific claims and minimal state reads over the same inbox, plus permanent evidence rejection. SDK/signature tests and queue SQL tests: 12 pass. Next.js production build compiles the workflow and passes. Actual hosted workflow execution is the next verification step. New Checkout remains independently disabled until this succeeds.
+
+## Completed real sandbox payment and replay verification
+
+Preview deployment `dpl_4houwBkVq2yZpT6TxHHJfVzPC3qL` uses commit `772d937cb55701fdc9e0df25ee39f288275528bb`, with test-only new Checkout enabled after delivery and workflow verification. Production remains unchanged.
+
+- Provider fixture receipt was replayed from Stripe. Workflow run `wrun_41M5KFDYYK0GSH2V799MKAHRTZ` completed in approximately two seconds. The unrelated fixture was correctly held with `provider_evidence_rejected`; it did not create an order or financial credit.
+- Synthetic Buyer B opened hosted Checkout through the staging page for order `03baf23e-bf5b-4d24-a1a3-e548c6f28202`, using the existing managed synthetic item and current admin approval. The charge was CAD46: CAD40 merchandise plus explicitly synthetic CAD5 shipping and CAD1 tax fixtures, not live shipping or tax calculations.
+- Stripe's public test card was used, with synthetic contact/cardholder details and no saved payment method. The test payment succeeded. Signed provider event `evt_1UTZu31Ao9w9gQ7QLDbCFVz1` reached the SQL inbox and was processed by the durable workflow. Run `wrun_41M5KFJYS10GVVQVF34ECFC4KT` completed in approximately two seconds.
+- Database evidence: order and payment statuses `paid`; payment attempt `succeeded`; existing item `sold`; one `order_seller_credits` row and one existing `wallet_transactions` row.
+- The same successful event was explicitly resent through Stripe. After replay, the event remained `processed`, with exactly one receipt, one seller-credit row and one wallet entry. No second inventory sale or credit was created.
+
+These are actual Stripe sandbox/API/webhook/browser and hosted Neon results, not mocked provider responses. They do not establish live payment readiness, direct marketplace financial release, connected-account verification or any bank payout. No bank account was connected or paid. Remaining commercial disputes, refunds/transfers/payout allocation, reconciliation, real carrier QR, policy/economic approvals and full Safari E2E remain launch gates.
+
+Secrets remain in service configuration; never copy the credential-bearing webhook URL into this file or workflow metadata. This report contains only synthetic identifiers and test evidence.
