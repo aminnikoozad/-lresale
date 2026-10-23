@@ -9,7 +9,7 @@ export async function POST(req:NextRequest){
     step='database_owner';
     const binding=await beginTestSeller();
     step='provider_account';
-    const account=binding.accountId??await client.createSeller(binding.requestId);
+    const account=binding.accountId??await client.createSeller(binding.requestId,`shikimomo-sandbox-${binding.user}@example.com`);
     step='database_binding';
     await stripeTestRpc({name:'bindSeller',user:binding.user,request:binding.requestId,account});
     step='provider_link';

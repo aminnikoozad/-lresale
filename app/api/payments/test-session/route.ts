@@ -6,6 +6,7 @@ export async function POST(req:NextRequest){
   if(req.headers.get('origin')!==req.nextUrl.origin)return NextResponse.json({error:'origin'},{status:403,headers});
   try{
     const client=stripeSandbox();
+    if(process.env.STRIPE_TEST_CHECKOUT_ENABLED!=='true')throw new Error('stripe_test_checkout_disabled');
     if(req.nextUrl.origin!==client.config.origin)throw new Error('stripe_test_disabled');
     const body=await readBoundedJson(req,1024) as {order?:unknown};
     if(typeof body?.order!=='string'||!/^[0-9a-f-]{36}$/i.test(body.order))throw new Error('invalid_order');

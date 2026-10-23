@@ -52,9 +52,10 @@ export class StripeSandbox {
     if(!uuid.test(s.metadata?.order_id??'')||!uuid.test(s.metadata?.attempt_id??'')||!Number.isSafeInteger(s.amount_total))throw new Error('stripe_payment_mismatch');
     return {eventId:event.id,digest,eventType:event.type,attemptId:s.metadata!.attempt_id,orderId:s.metadata!.order_id,sessionId:s.id,paymentId:p.id,amountCents:s.amount_total!,currency:'CAD'};
   }
-  async createSeller(requestId:string){
+  async createSeller(requestId:string,contactEmail:string){
+    if(!/^shikimomo-sandbox-[0-9a-f-]{36}@example\.com$/i.test(contactEmail))throw new Error('synthetic_contact_required');
     await this.assertPlatform();
-    const a=await this.stripe.v2.core.accounts.create({dashboard:'express',identity:{country:'CA'},
+    const a=await this.stripe.v2.core.accounts.create({contact_email:contactEmail,dashboard:'express',identity:{country:'CA'},
       defaults:{currency:'cad',locales:['en-CA','fr-CA'],responsibilities:{fees_collector:'application',losses_collector:'application'}},
       configuration:{recipient:{capabilities:{stripe_balance:{stripe_transfers:{requested:true}}}}},
       metadata:{shikimomo_test_request:requestId}}, {idempotencyKey:`seller-v2-${requestId}`});

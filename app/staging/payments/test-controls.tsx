@@ -1,6 +1,6 @@
 'use client';
 import {useState} from 'react';
-export function StripeTestControls({fr,enabled}:{fr:boolean;enabled:boolean}){
+export function StripeTestControls({fr,enabled,checkoutEnabled}:{fr:boolean;enabled:boolean;checkoutEnabled:boolean}){
   const [busy,setBusy]=useState(false),[message,setMessage]=useState('');
   async function open(path:string,body:Record<string,string>){
     if(busy)return;setBusy(true);setMessage('');
@@ -17,10 +17,11 @@ export function StripeTestControls({fr,enabled}:{fr:boolean;enabled:boolean}){
     <p>{fr?'Créez d’abord le profil vendeur dans le compte fictif. Les coordonnées bancaires et documents sont recueillis chez Stripe.':'First complete the seller profile in the synthetic account. Bank and identity details are collected on Stripe.'}</p>
     <button className="hybrid-button" disabled={!enabled||busy} onClick={()=>void open('/api/payments/test-seller',{})}>{fr?'Ouvrir l’inscription Stripe de test':'Open Stripe test onboarding'}</button>
     <h2>{fr?'Commande gérée fictive':'Synthetic managed order'}</h2>
+    {enabled&&!checkoutEnabled&&<p role="status">{fr?'Nouveaux paiements désactivés : la réception des webhooks et le traitement en arrière-plan doivent être validés.':'New checkout disabled: webhook delivery and background processing must be verified first.'}</p>}
     <p>{fr?'Utilisez une commande fictive réservée avec montants de livraison et de taxes validés. Aucun article réel ni vente directe.':'Use a reserved synthetic order with confirmed shipping and tax amounts. No real inventory or direct sales.'}</p>
     <form onSubmit={e=>{e.preventDefault();void open('/api/payments/test-session',{order:String(new FormData(e.currentTarget).get('order')??'')});}}>
-      <label>{fr?'Référence UUID de commande fictive':'Synthetic order UUID'}<input name="order" required pattern="[0-9a-fA-F-]{36}" maxLength={36} disabled={!enabled||busy}/></label>
-      <button className="hybrid-button" disabled={!enabled||busy}>{fr?'Ouvrir le paiement Stripe de test':'Open Stripe test checkout'}</button>
+      <label>{fr?'Référence UUID de commande fictive':'Synthetic order UUID'}<input name="order" required pattern="[0-9a-fA-F-]{36}" maxLength={36} disabled={!checkoutEnabled||busy}/></label>
+      <button className="hybrid-button" disabled={!checkoutEnabled||busy}>{fr?'Ouvrir le paiement Stripe de test':'Open Stripe test checkout'}</button>
     </form>
     {message&&<p role="alert">{message}</p>}
   </section>;

@@ -17,7 +17,7 @@ export default async function TestPayments(){
     <h1>{fr?'Paiements de test Stripe':'Stripe test payments'}</h1>
     <p className="hybrid-notice">{fr?'Identité fictive sur Neon. Utilisez uniquement les données de test Stripe; aucun paiement réel. Les ventes directes et les versements aux vendeurs restent désactivés.':'Synthetic identity on Neon. Use Stripe test data only; no real payments. Direct sales and seller transfers remain disabled.'}</p>
     <p>{fr?'Le retour depuis Stripe ne confirme ni le paiement ni la vérification du vendeur. Un webhook vérifié et traité est nécessaire.':'Returning from Stripe does not confirm payment or seller verification. A verified, processed webhook is required.'}</p>
-    <StripeTestControls fr={fr} enabled={enabled}/>
+    <StripeTestControls fr={fr} enabled={enabled} checkoutEnabled={enabled&&process.env.STRIPE_TEST_CHECKOUT_ENABLED==='true'}/>
     <p><Link href="/staging">{fr?'Retour au compte fictif':'Back to synthetic account'}</Link></p>
   </main>;
 }

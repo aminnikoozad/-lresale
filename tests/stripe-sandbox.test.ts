@@ -37,11 +37,11 @@ test('new sellers use Accounts v2 recipient onboarding with stable keys and prov
  Object.assign(sdk.accounts,{create:async()=>{throw new Error('Legacy account creation must not run');}});
  Object.assign(sdk.v2.core.accounts,{create:async(p:Record<string,unknown>,o:unknown)=>{accountPayload=p;accountOptions=o;return{id:'acct_synthetic',livemode:false};}});
  Object.assign(sdk.v2.core.accountLinks,{create:async(p:Record<string,unknown>)=>{linkPayload=p;return{url:'https://connect.stripe.com/setup/test',livemode:false};}});
- assert.equal(await adapter.createSeller(attempt),'acct_synthetic');assert.deepEqual(accountOptions,{idempotencyKey:`seller-v2-${attempt}`});
+ assert.equal(await adapter.createSeller(attempt,`shikimomo-sandbox-${attempt}@example.com`),'acct_synthetic');assert.deepEqual(accountOptions,{idempotencyKey:`seller-v2-${attempt}`});
  assert.deepEqual(accountPayload.identity,{country:'CA'});assert.deepEqual(accountPayload.configuration,{recipient:{capabilities:{stripe_balance:{stripe_transfers:{requested:true}}}}});
- assert.equal(accountPayload.contact_email,undefined);assert.equal(accountPayload.identity_verification,undefined);
+ assert.equal(accountPayload.contact_email,`shikimomo-sandbox-${attempt}@example.com`);assert.equal(accountPayload.identity_verification,undefined);
  assert.equal((await adapter.onboarding('acct_synthetic')).url,'https://connect.stripe.com/setup/test');assert.equal(linkPayload.account,'acct_synthetic');
  assert.deepEqual(linkPayload.use_case,{type:'account_onboarding',account_onboarding:{refresh_url:`${config.origin}/staging/payments`,return_url:`${config.origin}/staging/payments`}});
  Object.assign(sdk.v2.core.accountLinks,{create:async()=>({url:'https://unapproved.example/setup',livemode:false})});await assert.rejects(adapter.onboarding('acct_synthetic'),/account_mismatch/);
- Object.assign(sdk.v2.core.accounts,{create:async()=>({id:'acct_synthetic',livemode:true})});await assert.rejects(adapter.createSeller(attempt),/account_mismatch/);
+ Object.assign(sdk.v2.core.accounts,{create:async()=>({id:'acct_synthetic',livemode:true})});await assert.rejects(adapter.createSeller(attempt,`shikimomo-sandbox-${attempt}@example.com`),/account_mismatch/);
 });
