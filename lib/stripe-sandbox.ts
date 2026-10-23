@@ -54,12 +54,18 @@ export class StripeSandbox {
   }
   async createSeller(requestId:string){
     await this.assertPlatform();
-    const a=await this.stripe.accounts.create({type:'express',country:'CA',capabilities:{transfers:{requested:true}},metadata:{shikimomo_test_request:requestId}}, {idempotencyKey:`seller-${requestId}`});
+    const a=await this.stripe.v2.core.accounts.create({dashboard:'express',identity:{country:'CA'},
+      defaults:{currency:'cad',locales:['en-CA','fr-CA'],responsibilities:{fees_collector:'application',losses_collector:'application'}},
+      configuration:{recipient:{capabilities:{stripe_balance:{stripe_transfers:{requested:true}}}}},
+      metadata:{shikimomo_test_request:requestId}}, {idempotencyKey:`seller-v2-${requestId}`});
+    if(a.livemode||!/^acct_[A-Za-z0-9]+$/.test(a.id))throw new Error('stripe_account_mismatch');
     return a.id;
   }
   async onboarding(account:string){
     await this.assertPlatform();
-    return this.stripe.accountLinks.create({account,type:'account_onboarding',refresh_url:`${this.config.origin}/staging/payments`,return_url:`${this.config.origin}/staging/payments`});
+    const link=await this.stripe.v2.core.accountLinks.create({account,use_case:{type:'account_onboarding',account_onboarding:{refresh_url:`${this.config.origin}/staging/payments`,return_url:`${this.config.origin}/staging/payments`}}});
+    if(link.livemode||new URL(link.url).protocol!=='https:'||new URL(link.url).hostname!=='connect.stripe.com')throw new Error('stripe_account_mismatch');
+    return link;
   }
   async refund(paymentId:string,cents:number,requestId:string){
     if(!Number.isSafeInteger(cents)||cents<1)throw new Error('invalid_total');

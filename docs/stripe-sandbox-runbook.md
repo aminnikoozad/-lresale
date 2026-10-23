@@ -63,3 +63,11 @@ No real Stripe API payment, bank payout or carrier QR was exercised by these tes
 Keep the PR and preview isolated until actual sandbox evidence is reviewed. Production launch is a separate decision after the remaining gates and provider requirements are satisfied.
 
 For this sandbox only, disable new test Checkout by setting `STRIPE_TEST_ENABLED=false`; this disables all sandbox endpoints, including receipt and worker processing. During an active test incident, prefer blocking new session/onboarding requests at the preview access layer while leaving receipt/worker processing available until provider events reconcile. Do not delete attempts, webhook receipts, accounts or ledger history. Production rollback must preserve existing order processing and financial records; do not drop these schema additions as a rollback method.
+
+## Authorized sandbox connection attempt — 2026-10-23
+
+The user explicitly approved storing the existing sandbox API key and endpoint signing secret in the branch-scoped Vercel preview. Both are saved as Secret variables for `feat/hybrid-marketplace-foundation` only. Endpoint `we_1UTZL91Ao9w9gQ7QfEoPRJxe` listens to the two Checkout events, Snapshot API `2026-09-30.endive`, at the stable branch alias. No live credentials or production flags were configured.
+
+The first real provider request reached Stripe successfully, but `POST /v1/accounts` returned HTTP 400 (`req_qVCBdwxHPrcdqT`): this new integration requires Accounts v2. The adapter now uses `v2.core.accounts.create` with Canadian recipient capabilities and `v2.core.accountLinks.create`, retaining hosted details collection and stable request mapping. Eleven focused Stripe tests pass, including a new v2-only onboarding test, plus TypeScript. This supersedes the earlier statement that no actual provider request occurred; it still does not establish a successful payment or payout.
+
+Both isolated Neon payment gates were enabled for sandbox testing. The first seller mapping remains unbound following the rejected v1 request. No order was marked paid and no seller income was released by this test.

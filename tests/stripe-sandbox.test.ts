@@ -32,3 +32,16 @@ test('checkout preserves stable idempotency and CAD, and never transfers seller 
  await adapter.createSession({orderId:order,attemptId:attempt,idempotencyKey:attempt,totalCents:4000,expiresAt:Math.floor(Date.now()/1000)+2100,currency:'CAD'});
  assert.deepEqual(options,{idempotencyKey:attempt});assert.equal(payload.mode,'payment');assert.equal((payload.payment_intent_data as Record<string,unknown>).transfer_data,undefined);assert.deepEqual(payload.adaptive_pricing,{enabled:false});assert.match(String(payload.success_url),/\/staging\/payments\?order=/);
 });
+test('new sellers use Accounts v2 recipient onboarding with stable keys and provider-hosted details',async()=>{
+ const {sdk,adapter}=client();let accountPayload:Record<string,unknown>={},accountOptions:unknown,linkPayload:Record<string,unknown>={};
+ Object.assign(sdk.accounts,{create:async()=>{throw new Error('Legacy account creation must not run');}});
+ Object.assign(sdk.v2.core.accounts,{create:async(p:Record<string,unknown>,o:unknown)=>{accountPayload=p;accountOptions=o;return{id:'acct_synthetic',livemode:false};}});
+ Object.assign(sdk.v2.core.accountLinks,{create:async(p:Record<string,unknown>)=>{linkPayload=p;return{url:'https://connect.stripe.com/setup/test',livemode:false};}});
+ assert.equal(await adapter.createSeller(attempt),'acct_synthetic');assert.deepEqual(accountOptions,{idempotencyKey:`seller-v2-${attempt}`});
+ assert.deepEqual(accountPayload.identity,{country:'CA'});assert.deepEqual(accountPayload.configuration,{recipient:{capabilities:{stripe_balance:{stripe_transfers:{requested:true}}}}});
+ assert.equal(accountPayload.contact_email,undefined);assert.equal(accountPayload.identity_verification,undefined);
+ assert.equal((await adapter.onboarding('acct_synthetic')).url,'https://connect.stripe.com/setup/test');assert.equal(linkPayload.account,'acct_synthetic');
+ assert.deepEqual(linkPayload.use_case,{type:'account_onboarding',account_onboarding:{refresh_url:`${config.origin}/staging/payments`,return_url:`${config.origin}/staging/payments`}});
+ Object.assign(sdk.v2.core.accountLinks,{create:async()=>({url:'https://unapproved.example/setup',livemode:false})});await assert.rejects(adapter.onboarding('acct_synthetic'),/account_mismatch/);
+ Object.assign(sdk.v2.core.accounts,{create:async()=>({id:'acct_synthetic',livemode:true})});await assert.rejects(adapter.createSeller(attempt),/account_mismatch/);
+});
