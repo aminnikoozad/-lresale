@@ -20,6 +20,8 @@ Hosted database privilege checks: authenticated users cannot SELECT private prov
 
 Thirty targeted tests pass (Stripe, buyer-sales, pricing/payment and marketplace foundation). These use official SDK signature verification, mocked provider API responses and PGlite database fixtures. They are not actual Stripe payments, bank payouts, hosted Postgres concurrency tests or Safari E2E. Production build and TypeScript pass. The existing full security suite has previously reported seven baseline failures; this change does not claim a clean full suite.
 
+Preview deployment `dpl_kw2Cqia6yAYwAPj8PJg6XwRBE1n7` reached READY. Chrome browser verified the disabled English page and switched successfully to French. Hosted database disabled-gate check also passed. These are UI/guard checks, not a completed payment scenario.
+
 ## Connection steps still required
 
 1. Review and authorize test credential storage in the branch-scoped Vercel preview of `lresale`. Never paste keys into chat, commit them, or configure them in production. Use `config/stripe-test.env.example` as the variable inventory.
