@@ -1,7 +1,12 @@
 # Independent production backups to Cloudflare R2
 
-Status: implementation prepared; NOT operational until the first verified run
-and isolated restore drill succeed. The schedule is gated off by default.
+Status: daily backups enabled. First verified production backup completed on
+2026-10-23 at 04:07 UTC in [Actions run 39898577366](https://github.com/aminnikoozad/-lresale/actions/runs/39898577366).
+Database archive listing, R2 read-back checksum, authenticated decryption and tar
+listing passed. Storage had 2 buckets and 0 objects, confirmed independently by SQL.
+The private R2 destination contains the archive and verification marker.
+An isolated database/application restore drill has NOT been performed; recovery
+is not yet fully tested. No lifecycle expiry or bucket lock is configured.
 
 ## Destination and activation
 
