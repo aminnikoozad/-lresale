@@ -1,6 +1,6 @@
 # Independent production backups to Cloudflare R2
 
-Status: daily backups enabled. First verified production backup completed on
+Status: weekly backups enabled. First verified production backup completed on
 2026-10-23 at 04:07 UTC in [Actions run 39898577366](https://github.com/aminnikoozad/-lresale/actions/runs/39898577366).
 Database archive listing, R2 read-back checksum, authenticated decryption and tar
 listing passed. Storage had 2 buckets and 0 objects, confirmed independently by SQL.
@@ -42,10 +42,10 @@ Its password is only in the Actions connection secret. This account can read
 private/Auth data for backup; it is never exposed to the browser or Data API.
 
 After adding secrets, set repository variable `R2_BACKUP_ENABLED=true` and run
-**Independent R2 Backup** manually. Scheduled runs occur at 08:17 UTC daily
+**Independent R2 Backup** manually. Scheduled runs occur at 08:17 UTC every Friday
 (04:17 Montréal daylight time / 03:17 standard time). GitHub schedules can be
 delayed: this is not continuous replication or automatic failover. Configure the
-owner's GitHub Actions failure notifications and monitor missing daily runs.
+owner's GitHub Actions failure notifications and monitor missing weekly runs.
 
 ## Coverage and retention
 
@@ -65,7 +65,7 @@ unmarked archives; never use one as a verified recovery point.
 
 Storage and the database do not share an atomic snapshot. Reconcile uploads,
 deletions and writes made during a run; a failed object download aborts the run.
-Full daily media copies consume storage and Supabase outbound transfer; the R2
+Full weekly media copies consume storage and Supabase outbound transfer; the R2
 free allowance is shared with Satpolis and is not a guarantee of zero charges.
 
 Target retention: 30 days. Do not enable automatic deletion until several backups
