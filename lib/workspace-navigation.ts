@@ -1,5 +1,6 @@
 export type WorkspaceLink = { href: string; label: string };
 export type MenuAccess = {
+  role?: string;
   can_manage_items?: boolean;
   can_manage_pickups?: boolean;
   can_manage_shipping?: boolean;
@@ -28,6 +29,7 @@ export function accountNavigationFor(mode: "buyer" | "seller" | null): Workspace
 export function adminNavigation(access: MenuAccess): WorkspaceLink[] {
   return [
     { href: "/admin", label: "Dashboard" },
+    ...(access.role === "owner" ? [{ href: "/admin/finance", label: "Payments & payouts" }] : []),
     ...(access.can_manage_items ? [
       { href: "/admin/customers", label: "Customers" },
       { href: "/admin/items", label: "Items" },

@@ -7,7 +7,7 @@ export async function proxy(request: NextRequest) {
     const marketplaceApi=/^\/api\/marketplace\/(photos(?:\/[a-f0-9-]{36})?|evidence|community)$/.test(path);
     const stripeTestApi=/^\/api\/payments\/test-(session|seller|webhook)$/.test(path)||path==='/api/cron/stripe-test-events';
     if(path.startsWith("/api/")&&!marketplaceApi&&!stripeTestApi) return NextResponse.json({error:"Unavailable in SQL staging"},{status:503});
-    if(!/^\/staging(?:\/(?:community|payments))?$/.test(path) && !/^\/closet\/[a-f0-9-]{36}$/.test(path) && path!=="/sell" && path!=="/marketplace-rules" && !marketplaceApi && !stripeTestApi && !path.startsWith("/_next/") && !path.includes(".")) return NextResponse.redirect(new URL("/staging",request.url));
+    if(!/^\/staging(?:\/(?:community|payments|finance))?$/.test(path) && !/^\/closet\/[a-f0-9-]{36}$/.test(path) && path!=="/sell" && path!=="/marketplace-rules" && !marketplaceApi && !stripeTestApi && !path.startsWith("/_next/") && !path.includes(".")) return NextResponse.redirect(new URL("/staging",request.url));
     const response=NextResponse.next();
     response.headers.set("Cache-Control","private, no-store");response.headers.set("X-Robots-Tag","noindex, nofollow, noarchive");return response;
   }
