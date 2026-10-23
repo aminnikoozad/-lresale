@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withWorkflow } from "workflow/next";
 
 import { resolveSupabaseEnvironment } from "./lib/supabase/environment";
 const { url: supabaseOrigin } = resolveSupabaseEnvironment(process.env);
@@ -52,4 +53,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withWorkflow(nextConfig);
