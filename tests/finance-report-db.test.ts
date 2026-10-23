@@ -32,6 +32,7 @@ test('owner report exposes authoritative paid shares, funded coupons, reversals 
  const db=await fixture();try{
   await db.exec(`alter table public.profiles add column full_name text;alter table public.items add column sale_mode text default 'managed_consignment';alter table public.wallet_transactions add column created_at timestamptz default now();create table public.admin_roles(user_id uuid,role text);insert into public.admin_roles values('${staff}','owner');update public.profiles set full_name='Synthetic Seller' where id='${seller}';`);
   await db.exec(migration);
+  await db.exec(readFileSync(new URL('../supabase/migrations/20261023043902_finance_parties_and_simple_details.sql',import.meta.url),'utf8'));
   await identity(db,staff);await db.query('select public.admin_save_buyer_offer(true,1000,6000,800,1)');
   await identity(db,buyer);
   const offer=(await db.query<{v:{code:string}}>('select public.my_first_purchase_offer($1::uuid[])v',[ids.slice(0,2)])).rows[0].v;
@@ -40,8 +41,8 @@ test('owner report exposes authoritative paid shares, funded coupons, reversals 
   await identity(db,staff,'service_role');await db.query("select public.accept_verified_buyer_payment($1,'finance-event','finance-payment',repeat('a',64),$2,'CAD',true)",[payment.id,payment.amount]);
   await identity(db,staff);
   const report=async(kind:string)=>(await db.query<{v:Array<Record<string,unknown>>}>('select public.owner_finance_report($1,1)v',[kind])).rows[0].v;
-  const payments=await report('payments');assert.equal(payments.length,1);assert.equal(payments[0].status,'paid');
-  const shares=await report('earnings');assert.equal(shares.length,2);
+  const payments=await report('payments');assert.equal(payments[0].buyerName,'Test Buyer');const purchased=payments[0].items as Array<Record<string,unknown>>;assert.equal(purchased[0].sellerName,'Synthetic Seller');assert.equal(purchased[0].soldBy,'SHIKIMOMO');assert.equal(purchased[0].name,'Shirt');assert.equal(payments.length,1);assert.equal(payments[0].status,'paid');
+  const shares=await report('earnings');assert.equal(shares.length,2);assert.equal(shares[0].buyerName,'Test Buyer');assert.equal(shares[0].sellerName,'Synthetic Seller');
   assert.equal(shares.reduce((a,r)=>a+Number(r.sellerCents),0),3600);
   assert.equal(shares.reduce((a,r)=>a+Number(r.platformAfterCouponCents),0),1800);
   assert.ok(shares.every(r=>r.bankConfirmation==='not_connected'));
