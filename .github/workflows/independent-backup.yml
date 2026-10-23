@@ -1,0 +1,40 @@
+name: Independent R2 Backup
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 8 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shikimomo-production-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    # Enable only after system secrets and the private destination bucket exist.
+    if: vars.R2_BACKUP_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify backup encryption
+        run: node --test tests/backup-crypto.test.mjs
+      - name: Back up production database and storage to private R2
+        run: node scripts/backup-to-r2.mjs
+        env:
+          BACKUP_SUPABASE_URL: https://lsdhobwrnmlkqnvkamlt.supabase.co
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.BACKUP_SUPABASE_SERVICE_ROLE_KEY }}
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+          R2_BACKUP_ENDPOINT: https://d119f74fa45849437fea4648e91c7c6d.r2.cloudflarestorage.com
+          R2_BACKUP_BUCKET: shikimomo-backups
+          R2_BACKUP_ACCESS_KEY_ID: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
+          R2_BACKUP_SECRET_ACCESS_KEY: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}
