@@ -21,3 +21,18 @@ test('browser preparation bounds dimensions, retries encoding, returns upload-re
  failDecode=false;outputTooBig=true;await assert.rejects(prepareListingPhoto(new File(['photo'],'item.jpg')),/compression/);assert.equal(canvas.width,0);assert.equal(revoked.length,3);
  }finally{Object.defineProperty(globalThis,'Image',{configurable:true,writable:true,value:originalImage});Object.defineProperty(globalThis,'document',{configurable:true,writable:true,value:originalDocument});}
 });
+
+test('admin preparation fits eight photos and rejection evidence inside the action body budget',async t=>{
+ const originalImage=globalThis.Image,originalDocument=globalThis.document;
+ t.mock.method(URL,'createObjectURL',()=> 'blob:admin-photo');
+ t.mock.method(URL,'revokeObjectURL',()=>{});
+ let encodes=0;
+ const canvas={width:0,height:0,getContext:()=>({fillStyle:'',fillRect(){},drawImage(_image:unknown,_x:number,_y:number,w:number,h:number){assert.equal(w,1200);assert.equal(h,900);}}),toBlob(callback:(blob:Blob)=>void,type:string){encodes++;callback(new Blob([new Uint8Array(encodes===1?500_000:300_000)],{type}));}};
+ Object.defineProperty(globalThis,'Image',{configurable:true,writable:true,value:class{naturalWidth=4000;naturalHeight=3000;onload=()=>{};set src(value:string){if(value)queueMicrotask(()=>this.onload());}}});
+ Object.defineProperty(globalThis,'document',{configurable:true,writable:true,value:{createElement:()=>canvas}});
+ try{
+  const photo=await prepareListingPhoto(new File(['photo'],'coat.jpg'),{maxBytes:350_000});
+  assert(photo.size<=350_000);assert(photo.size*9+100_000<4_000_000);
+  assert.equal(photo.type,'image/jpeg');assert.equal(encodes,2);assert.equal(canvas.width,0);
+ }finally{Object.defineProperty(globalThis,'Image',{configurable:true,writable:true,value:originalImage});Object.defineProperty(globalThis,'document',{configurable:true,writable:true,value:originalDocument});}
+});

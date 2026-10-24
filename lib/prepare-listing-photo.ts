@@ -1,5 +1,5 @@
 // Local compression only. The server independently decodes, validates and strips metadata.
-export async function prepareListingPhoto(file: File): Promise<File> {
+export async function prepareListingPhoto(file: File, options: {maxBytes?: number} = {}): Promise<File> {
   if (!/\.(jpe?g|png|webp|avif|hei[cf])$/i.test(file.name)) throw new Error('format');
   if (file.size > 25_000_000) throw new Error('source_size');
   const url = URL.createObjectURL(file);
@@ -13,7 +13,8 @@ export async function prepareListingPhoto(file: File): Promise<File> {
     });
     const w = image.naturalWidth, h = image.naturalHeight;
     if (!w || !h || w * h > 50_000_000 || Math.min(w, h) < 300) throw new Error('dimensions');
-    const scale = Math.min(1, 1800 / Math.max(w, h));
+    const limit = options.maxBytes ?? 3_000_000;
+    const scale = Math.min(1, (options.maxBytes ? 1200 : 1800) / Math.max(w, h));
     const canvas = document.createElement('canvas');
     canvas.width = Math.round(w * scale); canvas.height = Math.round(h * scale);
     if (Math.min(canvas.width, canvas.height) < 300) throw new Error('dimensions');
@@ -23,9 +24,9 @@ export async function prepareListingPhoto(file: File): Promise<File> {
     context.fillStyle = '#ffffff'; context.fillRect(0, 0, canvas.width, canvas.height);
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
     try {
-      for (const quality of [0.88, 0.78, 0.68]) {
+      for (const quality of (options.maxBytes ? [0.82, 0.65, 0.48, 0.32, 0.2] : [0.88, 0.78, 0.68])) {
         const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
-        if (blob && blob.size > 0 && blob.size <= 3_000_000)
+        if (blob && blob.size > 0 && blob.size <= limit)
           return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', {type: 'image/jpeg'});
       }
       throw new Error('compression');

@@ -2,9 +2,8 @@
 import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import Link from "next/link";
-import {CustomerPicker} from "@/components/customer-picker";
+import { AdminIntakeWizard } from "@/components/admin-intake-wizard";
 import { redirect } from "next/navigation";
-import { AdminItemTaxonomyFields } from "@/components/admin-item-taxonomy-fields";
 import { activePilotCategories, loadPilotSettings } from "@/lib/pilot-settings";
 import { createClient } from "@/lib/supabase/server";
 import { formatCadFromCents, loadSellingRules } from "@/lib/business-rules";
@@ -138,34 +137,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
               </p>
             </div>
           </div>
-          <form className="admin-item-form" action={createAdminItem} encType="multipart/form-data">
-            {collectionRequestId ? <input type="hidden" name="collection_request_id" value={collectionRequestId} /> : null}
-            <CustomerPicker customers={customers} initial={ownerDefault}/>
-            <label>Item name
-              <input name="name" minLength={2} maxLength={160} required placeholder="Example: Aritzia wool coat" />
-            </label>
-            <AdminItemTaxonomyFields activeCategories={activePilotCategories(pilot).map((entry) => entry.value)} />
-            <label>Initial proposed price (CAD)
-              <input name="initial_price" type="number" min="0.01" step="0.01" required placeholder="20.00" />
-            </label>
-            <label>Decision if below minimum
-              <select name="below_minimum_action" defaultValue="normal">
-                <option value="normal">Normal individual listing</option>
-                <option value="bundle_candidate">Add to Bundle candidates</option>
-                <option value="reject">Reject Item</option>
-                <option value="manual_review">Manual Review</option>
-                <option value="override">Continue with Owner/Admin Override</option>
-              </select>
-            </label>
-            <label className="full photo-field">Listing photos
-              <input name="photos" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple />
-              <span>Up to 8 photos · maximum 8 MB each · JPG, PNG, WEBP or AVIF.</span>
-            </label>
-            <label className="full">Reason / internal note
-              <textarea name="reason" maxLength={500} rows={3} placeholder="Required for reject, manual review or below-minimum override." />
-            </label>
-            <button className="primary-action" type="submit">Save customer item</button>
-          </form>
+          <AdminIntakeWizard customers={customers} ownerDefault={ownerDefault} collectionRequestId={collectionRequestId} activeCategories={activePilotCategories(pilot).map(entry=>entry.value)} action={createAdminItem}/>
           <p className="form-note">Live categories: {activePilotCategories(pilot).map((entry) => entry.label).join(", ")}. Category and subcategory feed the customer-facing catalog filters. Shoes use the same Size field as shoe size.</p>
         </section>
 
