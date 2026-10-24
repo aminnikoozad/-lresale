@@ -84,3 +84,11 @@ export async function stagingBeginPhotoUpload(actor:StagingActor,id:string,versi
  try{await sql.transaction([sql`select public.assert_synthetic_staging()`,sql`select set_config('request.jwt.claims',${claims(actor)},true)`,sql`set local role authenticated`,sql`select public.marketplace_begin_photo_upload(${id}::uuid,${version}::integer,${asset}::uuid)`]);}
  catch(error){const message=error instanceof Error?error.message:'';if(message==='Photo upload rate limit')throw new Error('photo_rate_limit');if(message==='Maximum 10 photos per item')throw new Error('photo_count_limit');throw new Error('draft_changed');}
 }
+
+/** Isolated synthetic owner only; never accepts a browser-supplied identity or role. */
+export async function stagingFinance(kind:import('./finance-report').FinanceKind,page:number) {
+ const sql=client();
+ const ownerClaims=JSON.stringify({sub:'71000000-0000-4000-8000-000000000003',role:'authenticated',aal:'aal2',is_anonymous:false});
+ const result=await sql.transaction([sql`select public.assert_synthetic_staging()`,sql`select set_config('request.jwt.claims',${ownerClaims},true)`,sql`set local role authenticated`,sql`select public.owner_finance_report(${kind},${page}::integer) as report`]);
+ return result[3][0].report as import('./finance-report').FinanceRow[];
+}
