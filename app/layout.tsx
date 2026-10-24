@@ -57,9 +57,17 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const sqlStaging = process.env.VERCEL_ENV === "preview" && process.env.SHIKIMOMO_NEON_STAGING === "true";
   const locale = (await cookies()).get("shikimomo-language")?.value === "fr" ? "fr" : "en";
+  const organization = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "@id": new URL("/#organization", siteConfig.siteUrl).href,
+    name: "Shikimomo",
+    url: siteConfig.siteUrl,
+    logo: new URL("/favicon.svg", siteConfig.siteUrl).href,
+  };
   return (
     <html lang={locale} className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body><LanguageProvider initialLocale={locale}><LanguageSwitch /><CartProvider>{children}{!sqlStaging && <><SupportFooter /><PickupConfirmationUi /><ExperienceSwitch /></>}</CartProvider></LanguageProvider></body>
+      <body><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organization).replace(/</g, "\\u003c") }} /><LanguageProvider initialLocale={locale}><LanguageSwitch /><CartProvider>{children}{!sqlStaging && <><SupportFooter /><PickupConfirmationUi /><ExperienceSwitch /></>}</CartProvider></LanguageProvider></body>
     </html>
   );
 }
