@@ -1,4 +1,8 @@
 import { ItemConditionGuide } from "@/components/item-condition-fields";
+import { cache } from "react";
+import type { Metadata } from "next";
+import { siteConfig } from "@/lib/site-config";
+import { isItemId, productSeo, serializeJsonLd } from "@/lib/product-seo";
 import { itemConditionLabel } from "@/lib/item-condition";
 import { ItemTradeActions } from "@/components/item-trade-actions";
 
@@ -71,17 +75,32 @@ function inspectionDate(value: string | null) {
   );
 }
 
+// Share the same anonymous read between metadata and the visible page per request.
+const loadProduct = cache(async (id: string) => {
+  const supabase = createPublicClient();
+  let result = await supabase.rpc("buyer_catalog_item_detail", { target_item_id: id });
+  if (result.error?.code === "PGRST202") result = await supabase.rpc("catalog_item_detail_v3", { target_item_id: id });
+  return { product: ((result.data ?? [])[0] ?? null) as Product | null, error: result.error };
+});
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  if (!isItemId(id)) notFound();
+  const { product, error } = await loadProduct(id);
+  // A temporary data outage must fail, not tell Google to remove a real item.
+  if (error) throw new Error("Public product temporarily unavailable");
+  if (!product || !product.photo_urls?.length) notFound();
+  const french = (await cookies()).get("shikimomo-language")?.value === "fr";
+  return productSeo(product, siteConfig.siteUrl, french).metadata;
+}
+
 export default async function ProductPage({ params, searchParams }: Props) {
   const [{ id }, search] = await Promise.all([params,searchParams]);
   const selectedSizes=(Array.isArray(search.sizes)?search.sizes:search.sizes?[search.sizes]:[]).filter(s=>s.length<=40).slice(0,10);
-  if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  if (!isItemId(id)) notFound();
 
   const supabase = createPublicClient();
-  let { data, error } = await supabase.rpc("buyer_catalog_item_detail", {
-    target_item_id: id,
-  });
-  // Backward compatibility until the reviewed additive migration is applied.
-  if (error?.code === "PGRST202") ({data,error} = await supabase.rpc("catalog_item_detail_v3", {target_item_id:id}));
+  const { product, error } = await loadProduct(id);
   if (error) {
     console.error("[product] catalog detail failed", {
       code: error.code,
@@ -90,7 +109,6 @@ export default async function ProductPage({ params, searchParams }: Props) {
     return <Localize><main className="section-wrap"><h1>Item temporarily unavailable</h1><p>We could not verify this item. Please try again.</p><Link href="/shop">Back to shop</Link></main></Localize>;
   }
 
-  const product = ((data ?? [])[0] ?? null) as Product | null;
   if (!product || !product.photo_urls?.length) notFound();
   const provenance=(await loadSaleProvenance(supabase,[id])).get(id);
   const shop=provenance?.sale_mode==="peer_to_peer"?(await supabase.rpc("marketplace_item_shop",{p_item:id})).data as string|null:null;
@@ -128,6 +146,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
 
   return <Localize>{(
     <main className="product-page section-wrap">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(productSeo(product, siteConfig.siteUrl, fr).structuredData) }} />
       <BuyerViewEvent name="view_item" ids={[id]} />
       <div className="product-topbar">
         <Link href={catalogLocation("/shop","",{...emptyCatalogFilters(),sizes:selectedSizes})}>
