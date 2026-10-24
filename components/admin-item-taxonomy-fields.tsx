@@ -1,6 +1,6 @@
 "use client";
 import { ItemConditionFields } from "./item-condition-fields";
-import { Localize } from "@/components/site-language";
+import { Localize, useLocale } from "@/components/site-language";
 
 
 import { useMemo, useState } from "react";
@@ -13,6 +13,7 @@ import {
 import { catalogAttributeOptions } from "@/lib/catalog-attributes";
 
 export function AdminItemTaxonomyFields({ activeCategories }: { activeCategories: CatalogCategory[] }) {
+  const {locale} = useLocale();
   const [category, setCategory] = useState<CatalogCategory>("women");
   const [subcategory, setSubcategory] = useState("");
   const options = useMemo(() => subcategoriesFor(category), [category]);
@@ -65,7 +66,7 @@ export function AdminItemTaxonomyFields({ activeCategories }: { activeCategories
         <input key={category} name="size" list="intake-size-options" maxLength={40} placeholder="Search or enter size" />
         <datalist id="intake-size-options">{attributes.sizes.map(value => <option key={value} value={value} />)}</datalist>
       </label>
-      {["women","men","kids"].includes(category) ? <ItemConditionFields/> : <label>Condition
+      {["women","men","kids"].includes(category) ? <ItemConditionFields fr={locale === "fr"}/> : <label>Condition
         <select name="item_condition" defaultValue="Excellent">{attributes.conditions.map(value => <option key={value} value={value}>{value}</option>)}</select>
       </label>}
       {([{name:"color", label:"Colour", values:attributes.colors},{name:"material",label:"Material",values:attributes.materials},{name:"pattern",label:"Pattern",values:attributes.patterns}]).map(field => <label key={field.name}>{field.label}<select name={field.name} defaultValue=""><option value="">Select</option>{field.values.map(value => <option key={value} value={value}>{value}</option>)}</select></label>)}
