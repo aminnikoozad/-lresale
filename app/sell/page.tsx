@@ -1,7 +1,16 @@
+import { publicPageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import "./sell.css";
-export const metadata = {title: "Sell | SHIKIMOMO"};
+export function generateMetadata() {
+  return publicPageMetadata("/sell", {
+    title: "Sell Secondhand Clothes in Montréal | Shikimomo",
+    description: "Explore selling with Shikimomo in Montréal. Learn about managed consignment, inspection, team pricing, fees and the direct-selling mode in preparation.",
+  }, {
+    title: "Vendre ses vêtements d’occasion à Montréal | Shikimomo",
+    description: "Découvrez la vente avec Shikimomo à Montréal : dépôt-vente géré, inspection, prix et frais, ainsi que le mode de vente directe en préparation.",
+  });
+}
 export default async function SellPage() {
   const fr = (await cookies()).get("shikimomo-language")?.value === "fr";
   return <main className="hybrid-shell" lang={fr ? "fr" : "en"} translate="no">
