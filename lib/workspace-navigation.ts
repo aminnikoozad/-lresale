@@ -16,7 +16,7 @@ export const accountNavigation: WorkspaceLink[] = [
   { href: "/account/seller", label: "Selling dashboard" },
   { href: "/account/seller/items", label: "Item tracking" },
   { href: "/account/seller/direct", label: "My direct sales" },
-  { href: "/account/seller/earnings", label: "Earnings & settlement" },
+  { href: "/account/seller/earnings", label: "Earnings & payouts" },
   { href: "/account/profile", label: "Profile & security" },
 ];
 export function accountNavigationFor(mode: "buyer" | "seller" | null): WorkspaceLink[] {

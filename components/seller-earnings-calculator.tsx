@@ -51,10 +51,10 @@ export function SellerEarningsCalculator({
       </div>
       {result ? (
         <div className="calculator-result">
-          <div><span>Your commission tier</span><b>{result.sellerBps / 100}%</b></div>
+          <div><span>Your percentage</span><b>{result.sellerBps / 100}%</b></div>
           <div><span>Your share from this item</span><b>{cad(result.sellerShareCents)}</b></div>
           <div><span>Batch service fee</span><b>− {cad(processingFeeCents)}</b></div>
-          <div className="calculator-total"><span>Conservative example net</span><strong>{cad(result.conservativeNetCents)}</strong></div>
+          <div className="calculator-total"><span>Estimated amount after fees</span><strong>{cad(result.conservativeNetCents)}</strong></div>
           <small>{`The ${cad(processingFeeCents)} fee is charged once per batch, not once per item, and includes a Shikimomo Bag if you request one. This conservative example assumes this is the only item in the batch that sells.`}</small>
         </div>
       ) : (

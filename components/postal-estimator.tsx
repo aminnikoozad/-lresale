@@ -13,7 +13,7 @@ export function PostalEstimator({ itemIds, destination, onSelect }: { itemIds: s
   const [entered,setEntered]=useState("");
   const postal=postalCode(destination??entered);
   const cartKey=[...itemIds].sort().join(",");
-  return <Localize>{<section className="postal-estimator" aria-label="Postal shipping calculator"><h3>Postal delivery · Canada</h3><p>Sending outside Montréal? Calculate Canada Post rates from the packed items and destination. Eligible local delivery is reviewed separately.</p>
+  return <Localize>{<section className="postal-estimator" aria-label="Postal shipping calculator"><h3>Postal delivery · Canada</h3><p>Sending outside Montréal? Check Canada Post rates for your parcel and destination. We check local delivery separately.</p>
     {destination===undefined?<label>Destination postal code<Input value={entered} onChange={e=>setEntered(e.target.value)} autoComplete="postal-code" maxLength={7} placeholder="K1A 0B1"/></label>:null}
     <QuotePanel key={`${postal}:${cartKey}`} itemIds={itemIds} postal={postal} onSelect={onSelect}/>
   </section>}</Localize>;

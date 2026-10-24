@@ -57,7 +57,7 @@ function pickupWindowLabel(start: string, end: string) {
 
 function pickupDayText(days: number[]) {
   const names = ["Sundays", "Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays"];
-  return days.map((day) => names[day]).filter(Boolean).join(", ") || "configured days";
+  return days.map((day) => names[day]).filter(Boolean).join(", ") || "available days";
 }
 
 function titleCase(value: string) {

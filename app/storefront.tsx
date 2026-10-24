@@ -61,8 +61,8 @@ export default async function Home() {
   const localRadius = Number(shipping.localFreeRadiusKm);
   const localCenter = shipping.localCenterName || "Montréal";
   const shippingSummary = Number.isFinite(localRadius) && localRadius > 0
-    ? `Free local delivery in ${localCenter} and within the configured ${localRadius} km local radius when the delivery address is eligible. Shipping fees apply outside the local area.`
-    : "Local delivery eligibility is confirmed from the delivery address. Shipping fees may apply outside the local area.";
+    ? `Free delivery in ${localCenter} and within ${localRadius} km. Shipping fees apply elsewhere in Canada.`
+    : "Enter your address to check local delivery. Shipping fees may apply elsewhere.";
 
   const activeCategories = pilot.enabled ? pilot.categories : CATALOG_CATEGORIES.map((entry) => entry.value);
   const catalogProducts: CatalogProduct[] = ((data ?? []) as CatalogRow[])
@@ -131,20 +131,20 @@ export default async function Home() {
       </section>
 
       <div className="market-service-strip" aria-label="How Shikimomo is different">
-        <span><ShieldCheck aria-hidden="true" /><span><strong>Checked before listing</strong>Real pieces. Accountable inspection.</span></span>
+        <span><ShieldCheck aria-hidden="true" /><span><strong>Checked before listing</strong>Every piece checked by our team.</span></span>
         <span><PackageCheck aria-hidden="true" /><span><strong>Details before you decide</strong>Size, colour, condition and price.</span></span>
-        <span><PackageCheck aria-hidden="true" /><span><strong>Know where you stand</strong>Shipping and policies before payment.</span></span>
+        <span><PackageCheck aria-hidden="true" /><span><strong>Know where you stand</strong>Delivery and return details up front.</span></span>
       </div>
 
       <ShopCatalog products={catalogProducts} now={requestTime} activeCategories={activeCategories} loadError={Boolean(error)} />
 
       <section className="shipping-strip" aria-label="Canada delivery policy"><Truck aria-hidden="true" /><div><strong>{shipping.canadaWideEnabled === false ? "Delivery, with the details up front." : "Finds worth sending across Canada."}</strong><span>{shippingSummary}</span></div><Link href="/shipping-policy">Delivery details <ArrowRight aria-hidden="true" /></Link></section>
 
-      <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Company-managed shopping</p><h2>Listings are prepared and reviewed by Shikimomo.</h2><p>{pilot.enabled ? "During the pilot, only the categories enabled in Pilot Settings are accepted and published." : "Shikimomo reviews accepted items before publication."} If an item does not match its listing, contact Support and we’ll review the case under the current approved policy.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
+      <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Checked by our team</p><h2>We inspect and photograph every item.</h2><p>{pilot.enabled ? "For now, we accept women’s, men’s and kids’ clothing." : "We check each item before listing it."} If an item doesn’t match its listing, contact Support. We’ll look into it.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
 
       <footer>
         <div className="brand"><BrandWordmark /></div>
-        <p>{pilot.enabled ? `${navCategories.map((entry) => entry.label).join(" · ")} pilot` : "Women · Men · Kids · Shoes · Accessories · Electronics · Home & Decor"}</p>
+        <p>{pilot.enabled ? `${navCategories.map((entry) => entry.label).join(" · ")} collections` : "Women · Men · Kids · Shoes · Accessories · Electronics · Home & Decor"}</p>
         <div className="footer-links">
           <Link href="/support">Contact &amp; support</Link>
           <Link href="/sell-with-shikimomo">Seller guide</Link>

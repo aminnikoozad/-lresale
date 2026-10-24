@@ -24,7 +24,7 @@ export function DirectDraftEditor({draft,fr,action,clientSubmit=false}:{draft?:M
         {([["chest",t("Chest (cm)","Poitrine (cm)")],["waist",t("Waist (cm)","Taille (cm)")],["hip",t("Hip (cm)","Hanches (cm)")],["length",t("Length (cm)","Longueur (cm)")],["sleeve",t("Sleeve (cm)","Manche (cm)")],["inseam",t("Inseam (cm)","Entrejambe (cm)")],["shoulder",t("Shoulder (cm)","Épaules (cm)")]] as const).map(([key,label])=><label key={key}>{label}<input name={`measurement_${key}`} inputMode="decimal" maxLength={6} defaultValue={draft?.marketplace_details.measurements?.[key]??""}/></label>)}
       </div></details>
       <label className="hybrid-check"><input type="checkbox" name="label_absent" defaultChecked={draft?.marketplace_details.labelAbsent}/>{t("The item has no brand or size label", "L’article n’a pas d’étiquette de marque ou de taille")}</label>
-      <p>{t("Saving does not publish your item. Photos, shipping setup and seller onboarding will be required before sales open.", "L’enregistrement ne publie pas votre article. Les photos, les paramètres d’expédition et l’inscription vendeur seront nécessaires avant l’ouverture des ventes.")}</p>
+      <p>{t("Saving keeps your item private. Before selling, you’ll need photos, delivery details and a completed seller account.", "Votre article reste privé. Avant de vendre, il faudra des photos, les détails de livraison et un compte vendeur complet.")}</p>
       <button className="hybrid-button" type="submit">{t("Save private draft", "Enregistrer le brouillon privé")}</button>
       {draft && <span className="hybrid-draft-version">{t("Listing version", "Version de l’annonce")} {draft.listing_version}</span>}
     </form>;
