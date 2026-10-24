@@ -2,9 +2,8 @@ import type { MetadataRoute } from "next";
 import { siteConfig } from "@/lib/site-config";
 
 const publicRoutes = [
-  "",
   "/shop",
-  "/assistant",
+  "/sell",
   "/support",
   "/sell-with-shikimomo",
   "/pickup-policy",
@@ -16,11 +15,9 @@ const publicRoutes = [
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
   return publicRoutes.map((path) => ({
     url: `${siteConfig.siteUrl}${path}`,
-    lastModified: now,
-    changeFrequency: path === "" ? "daily" : "monthly",
+    changeFrequency: path === "/shop" ? "daily" : "monthly",
     priority: path === "" ? 1 : 0.6,
   }));
 }
