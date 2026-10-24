@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 import { isSeoPreview } from "@/lib/supabase/environment";
+import { isPrivateSearchRoute } from "@/lib/indexing";
 
 export async function proxy(request: NextRequest) {
   if (isSeoPreview(process.env)) {
@@ -22,7 +23,11 @@ export async function proxy(request: NextRequest) {
     const response=NextResponse.next();
     response.headers.set("Cache-Control","private, no-store");response.headers.set("X-Robots-Tag","noindex, nofollow, noarchive");return response;
   }
-  return updateSession(request);
+  const response = await updateSession(request);
+  if (isPrivateSearchRoute(request.nextUrl.pathname)) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  }
+  return response;
 }
 
 export const config = {

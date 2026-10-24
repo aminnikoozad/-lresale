@@ -44,7 +44,12 @@ test("shared profile contains no seller ledger and private buyer/seller reads re
   assert.doesNotMatch(read("app/account/profile/page.tsx"),/wallet_transactions|Pending sale earnings/);
   assert.match(read("app/account/seller/earnings/page.tsx"),/eq\("user_id",user.id\)/);
   assert.match(read("app/account/buyer/delivery/page.tsx"),/eq\("buyer_id",user.id\)/);
-  assert.match(read("app/account/messages/page.tsx"),/eq\("customer_id",user.id\).*eq\("customer_visible",true\)/s);
+  assert.match(read("app/account/messages/page.tsx"),/redirect\("\/support"\)/);
+  const support=read("components/customer-support.tsx");
+  assert.match(support,/from\("support_conversations"\).*eq\("customer_id",userId\)/);
+  assert.match(support,/from\("support_messages"\).*eq\("conversation_id",id\)/);
+  const policies=read("supabase/migrations/20260905184700_security_audit_rls_performance.sql");
+  assert.match(policies,/create policy read_messages on public.support_messages[\s\S]*?c.id=support_messages.conversation_id and \(c.customer_id=\(select auth.uid\(\)\) or private.is_support_admin\(\)\)/);
   assert.match(read("app/account/workspace-actions.ts"),/httpOnly: true/);
   assert.match(read("app/account/workspace-actions.ts"),/auth\.getUser\(\)/);
   assert.doesNotMatch(read("app/account/workspace-actions.ts"),/admin_roles|updateUser|user_metadata/);
