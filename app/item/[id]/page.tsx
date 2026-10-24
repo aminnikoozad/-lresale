@@ -1,3 +1,5 @@
+import { ItemConditionGuide } from "@/components/item-condition-fields";
+import { itemConditionLabel } from "@/lib/item-condition";
 import { ItemTradeActions } from "@/components/item-trade-actions";
 
 import { BuyerViewEvent } from "@/components/buyer-view-event";
@@ -202,7 +204,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
             {product.item_condition ? (
               <div>
                 <dt>Condition</dt>
-                <dd>{product.item_condition}</dd>
+                <dd>{itemConditionLabel(product.item_condition,fr)}{["women","men","kids"].includes(product.category) ? <ItemConditionGuide fr={fr}/> : null}</dd>
               </div>
             ) : null}
             {product.color ? (

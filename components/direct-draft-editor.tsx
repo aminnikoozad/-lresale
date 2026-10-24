@@ -1,3 +1,4 @@
+import { ItemConditionFields } from "./item-condition-fields";
 import type { MarketplaceDraft } from "@/lib/marketplace";
 import { CATALOG_SUBCATEGORIES,CLOTHING_CATEGORIES } from "@/lib/catalog-taxonomy";
 import { translate } from "@/lib/translations";
@@ -16,9 +17,10 @@ export function DirectDraftEditor({draft,fr,action,clientSubmit=false}:{draft?:M
         <label>{t("Other brand name", "Nom de l’autre marque")}<input name="brand" maxLength={100} defaultValue={draft?.marketplace_details.brandKind === "other" ? draft.brand ?? "" : ""}/></label>
       </div>
       <label>{t("Description", "Description")}<textarea name="description" maxLength={2000} defaultValue={draft?.description ?? ""}/></label>
+      <ItemConditionFields value={draft?.item_condition} fr={fr}/>
       <label>{t("Flaws and signs of wear", "Défauts et signes d’usure")}<textarea name="condition_notes" maxLength={1000} defaultValue={draft?.condition_notes ?? ""}/></label>
-      <details open={Boolean(draft)}><summary>{t("Size, condition and material", "Taille, état et matière")}</summary><div className="hybrid-form-grid">
-        {([["size",t("Size (leave blank if unknown)", "Taille (laisser vide si inconnue)"),draft?.size,40], ["size_system",t("Sizing system", "Système de tailles"),draft?.marketplace_details.sizeSystem,40], ["item_condition",t("Condition declared by you", "État déclaré par vous"),draft?.item_condition,80], ["color",t("Colour", "Couleur"),draft?.color,80], ["material",t("Material (if known)", "Matière (si connue)"),draft?.material,100]] as const).map(([name,label,value,max]) => <label key={name}>{label}<input name={name} maxLength={max} defaultValue={value ?? ""}/></label>)}
+      <details open={Boolean(draft)}><summary>{t("Size and material", "Taille et matière")}</summary><div className="hybrid-form-grid">
+        {([["size",t("Size (leave blank if unknown)", "Taille (laisser vide si inconnue)"),draft?.size,40], ["size_system",t("Sizing system", "Système de tailles"),draft?.marketplace_details.sizeSystem,40], ["color",t("Colour", "Couleur"),draft?.color,80], ["material",t("Material (if known)", "Matière (si connue)"),draft?.material,100]] as const).map(([name,label,value,max]) => <label key={name}>{label}<input name={name} maxLength={max} defaultValue={value ?? ""}/></label>)}
       </div></details>
       <details><summary>{t("Measurements in centimetres","Mesures en centimètres")}</summary><p>{t("Enter measurements you took yourself. Leave unknown measurements blank.","Entrez les mesures que vous avez prises. Laissez vides les mesures inconnues.")}</p><div className="hybrid-form-grid">
         {([["chest",t("Chest (cm)","Poitrine (cm)")],["waist",t("Waist (cm)","Taille (cm)")],["hip",t("Hip (cm)","Hanches (cm)")],["length",t("Length (cm)","Longueur (cm)")],["sleeve",t("Sleeve (cm)","Manche (cm)")],["inseam",t("Inseam (cm)","Entrejambe (cm)")],["shoulder",t("Shoulder (cm)","Épaules (cm)")]] as const).map(([key,label])=><label key={key}>{label}<input name={`measurement_${key}`} inputMode="decimal" maxLength={6} defaultValue={draft?.marketplace_details.measurements?.[key]??""}/></label>)}

@@ -2,7 +2,7 @@ import type { CatalogCategory } from "./catalog-taxonomy";
 
 // Shared by item intake and storefront filters. Values are stored in English.
 export const CATALOG_BRANDS = ["Adidas","Aldo","American Eagle","Aritzia","Banana Republic","Calvin Klein","Carter's","Columbia","Converse","COS","Gap","H&M","Joe Fresh","Lacoste","Levi's","Lululemon","Mango","Massimo Dutti","New Balance","Nike","Old Navy","OshKosh B'gosh","Patagonia","Puma","Ralph Lauren","Reebok","Roots","The North Face","Tommy Hilfiger","Under Armour","Uniqlo","Vans","Zara","Unbranded"];
-export const CATALOG_CONDITIONS = ["New with tags","Like new","Excellent","Very good","Good"];
+export const CATALOG_CONDITIONS = ["New with tags","Like new","Excellent","Very good","Good","New","Acceptable"];
 export const CATALOG_COLORS = ["Black","White","Grey","Beige","Brown","Blue","Navy","Green","Red","Pink","Purple","Yellow","Orange","Gold","Silver","Multicolour"];
 export const CATALOG_MATERIALS = ["Cotton","Linen","Wool","Cashmere","Silk","Denim","Polyester","Viscose","Nylon","Acrylic","Leather","Faux leather","Fleece","Velvet","Blend"];
 export const CATALOG_PATTERNS = ["Solid","Striped","Checked","Plaid","Floral","Polka dot","Animal print","Graphic","Geometric","Camouflage","Colour block","Abstract"];
