@@ -23,6 +23,10 @@ const contentSecurityPolicy = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  async redirects() {
+    // Send an HTTP redirect before rendering streams the root page shell.
+    return [{ source: "/", destination: "/shop", permanent: true }];
+  },
   images: {
     remotePatterns: [
       {
