@@ -38,6 +38,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const description = fr ? "Achetez et vendez des vêtements, chaussures, appareils électroniques et articles pour la maison d’occasion avec collecte prise en charge et livraison au Canada." : "Sell and shop quality secondhand clothing, shoes, electronics and selected Home & Decor pieces with managed pickup and Canada-wide shopping.";
   return {
   metadataBase: new URL(siteConfig.siteUrl),
+  ...(process.env.VERCEL_ENV === "preview" ? { robots: { index: false, follow: false } } : {}),
   title: {
     default: title,
     template: "%s | Shikimomo",

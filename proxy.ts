@@ -1,7 +1,19 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
+import { isSeoPreview } from "@/lib/supabase/environment";
 
 export async function proxy(request: NextRequest) {
+  if (isSeoPreview(process.env)) {
+    const path = request.nextUrl.pathname;
+    const publicPages = ["/", "/shop", "/sell", "/sell-with-shikimomo", "/robots.txt", "/sitemap.xml", "/manifest.webmanifest"];
+    const allowed = publicPages.includes(path) || path.startsWith("/_next/");
+    const response = !["GET", "HEAD"].includes(request.method) || !allowed
+      ? NextResponse.json({ error: "Unavailable in rendering-only preview" }, { status: 503 })
+      : NextResponse.next();
+    response.headers.set("Cache-Control", "private, no-store");
+    response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+    return response;
+  }
   if (process.env.VERCEL_ENV === "preview" && process.env.SHIKIMOMO_NEON_STAGING === "true") {
     const path=request.nextUrl.pathname;
     const marketplaceApi=/^\/api\/marketplace\/(photos(?:\/[a-f0-9-]{36})?|evidence|community)$/.test(path);

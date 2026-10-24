@@ -11,6 +11,10 @@ export function createPublicClient() {
   const { url, publishableKey } = getSupabaseConfig();
 
   return createSupabaseClient(url, publishableKey, {
+    // This preview exercises the unavailable-catalogue state without making any network request.
+    ...(url === "https://disabled.invalid" && process.env.NEXT_PUBLIC_STAGING_BACKEND === "seo" ? {
+      global: { fetch: async () => new Response(JSON.stringify({ message: "Catalogue unavailable in rendering-only preview", code: "SEO_PREVIEW" }), { status: 503, headers: { "Content-Type": "application/json" } }) },
+    } : {}),
     auth: {
       persistSession: false,
       autoRefreshToken: false,
