@@ -1,3 +1,4 @@
+import "./local-service-banner.css";
 import { CATALOG_CATEGORIES } from "@/lib/catalog-taxonomy";
 
 import { Localize } from "@/components/site-language";
@@ -45,11 +46,12 @@ export default async function Home() {
   await connection();
   const requestTime = new Date().getTime();
   const supabase = createPublicClient();
-  const [{ data, error }, { data: shippingData, error: shippingError }, { data: homeData, error: homeError }, pilot] = await Promise.all([
+  const [{ data, error }, { data: shippingData, error: shippingError }, { data: homeData, error: homeError }, pilot, { data: sellingData, error: sellingError }] = await Promise.all([
     supabase.rpc("catalog_items_v3"),
     supabase.rpc("get_shipping_policy"),
     supabase.rpc("home_catalog_details"),
     loadPilotSettings(supabase),
+    supabase.rpc("get_public_selling_rules"),
   ]);
 
   if (error) console.error("[home] catalog load failed", { code: error.code, message: error.message });
@@ -63,6 +65,16 @@ export default async function Home() {
   const shippingSummary = Number.isFinite(localRadius) && localRadius > 0
     ? `Free delivery in ${localCenter} and within ${localRadius} km. Shipping fees apply elsewhere in Canada.`
     : "Enter your address to check local delivery. Shipping fees may apply elsewhere.";
+
+  // Only advertise rates returned by the public policies; do not promise free
+  // services from fallback defaults when settings could not be loaded.
+  const pickupPolicy = sellingData?.pickupRules;
+  const pickupThreshold = pickupPolicy?.freePickupThresholdCents;
+  const collectionFee = pickupPolicy?.processingFeeCents;
+  const showLocalDelivery = !shippingError && Number.isFinite(localRadius) && localRadius > 0;
+  const showFreePickup = !sellingError && Number.isSafeInteger(pickupThreshold) && pickupThreshold >= 0
+    && Number.isSafeInteger(collectionFee) && collectionFee >= 0;
+  const cad = (cents: number) => new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: cents % 100 === 0 ? 0 : 2 }).format(cents / 100);
 
   const activeCategories = pilot.enabled ? pilot.categories : CATALOG_CATEGORIES.map((entry) => entry.value);
   const catalogProducts: CatalogProduct[] = ((data ?? []) as CatalogRow[])
@@ -114,6 +126,14 @@ export default async function Home() {
       </header>
 
 
+
+      {(showLocalDelivery || showFreePickup) && <aside className="local-service-banner" aria-label="Local delivery and pickup">
+        <p className="local-service-banner-heading">{`${localCenter}, we come to you.`}</p>
+        <div className="local-service-banner-options">
+          {showLocalDelivery && <Link href="/shipping-policy"><Truck aria-hidden="true"/><span><strong>Free local delivery</strong><span>{`In ${localCenter} and within ${localRadius} km.`}</span><small>Shipping fees apply elsewhere in Canada.</small></span><ArrowRight aria-hidden="true"/></Link>}
+          {showFreePickup && <Link href="/pickup-policy"><PackageCheck aria-hidden="true"/><span><strong>Free clothing pickup</strong><span>{`For collections with an estimated resale value of ${cad(pickupThreshold)} or more.`}</span>{collectionFee > 0 && <small>{`Service fee: ${cad(collectionFee)} per collection. Offers may apply.`}</small>}</span><ArrowRight aria-hidden="true"/></Link>}
+        </div>
+      </aside>}
 
       <section className="hero" aria-labelledby="home-hero-title">
         <div className="hero-inner">
