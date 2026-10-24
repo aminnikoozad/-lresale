@@ -32,7 +32,8 @@ test("checkout and purchase components use the regression-tested helpers", () =>
 test("guest support copy points to the available unsigned-in contact route", () => {
   const source = readFileSync(new URL("../components/support-hub.tsx", import.meta.url), "utf8");
   assert.match(source, /href="\/contact"/);
-  assert.match(source, /use the contact form without signing in and provide an email address/);
+  assert.match(source, /Create a ticket without signing in/);
+  assert.match(source, /Sign in to track your ticket and read our replies, or contact us without an account/);
   assert.doesNotMatch(source, /a direct support contact is needed/);
 });
 

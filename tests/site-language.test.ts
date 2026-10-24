@@ -4,6 +4,7 @@ import {readFileSync} from "node:fs";
 import vm from "node:vm";
 import ts from "typescript";
 import * as React from "react";
+import * as jsxRuntime from "react/jsx-runtime";
 import {renderToStaticMarkup} from "react-dom/server";
 import {translate} from "../lib/translations.ts";
 const source=readFileSync(new URL('../components/site-language.tsx',import.meta.url),'utf8');
@@ -11,8 +12,10 @@ const js=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.Common
 const evaluated={exports:{} as {LanguageProvider:React.ComponentType<{initialLocale:"en"|"fr";children?:React.ReactNode}>;Localize:React.ComponentType<{children?:React.ReactNode}>}};
 vm.runInNewContext(js,{exports:evaluated.exports,require:(name:string)=>{
  if(name==='react')return React;
- if(name==='react/jsx-runtime')return {jsx:React.createElement,jsxs:React.createElement,Fragment:React.Fragment};
+ if(name==='react/jsx-runtime')return jsxRuntime;
  if(name==='next/navigation')return {useRouter:()=>({refresh(){}})};
+ if(name==='next/link')return {default:(props:React.ComponentProps<'a'>)=>React.createElement('a',props)};
+ if(name==='@/components/brand-wordmark')return {BrandWordmark:()=>React.createElement('span',null,'Shikimomo')};
  if(name==='@/lib/translations')return {translate};
  throw new Error(name);
 }});

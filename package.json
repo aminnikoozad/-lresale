@@ -18,7 +18,8 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "test:pricing": "node --test tests/pricing-engine.test.ts tests/pricing-db.test.ts tests/pricing-payment-generated-db.test.ts tests/pricing-preview-isolation.test.ts tests/pricing-switch-db.test.ts",
     "test:pricing:catalog": "node scripts/pricing-schema-rehearsal.ts",
-    "test:pricing:flow": "node scripts/pricing-flow-rehearsal.ts"
+    "test:pricing:flow": "node scripts/pricing-flow-rehearsal.ts",
+    "test:seo:http": "node scripts/verify-product-seo.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1154.0",
