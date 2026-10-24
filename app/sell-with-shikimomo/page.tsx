@@ -61,7 +61,7 @@ export default async function SellWithShikimomoPage() {
             <article className="good"><h3>What is waived</h3><ul><li>{`The regular ${serviceFee} batch service fee on your first successful collection request.`}</li><li>A Shikimomo Bag remains included when the request meets the Bag eligibility rules.</li><li>Each seller can receive the launch waiver only once.</li></ul></article>
             <article className="avoid"><h3>What is not waived</h3><ul><li>{`The flat ${lowValueFee} pickup transportation fee still applies when the pickup’s estimated resale value is below ${freePickupThreshold}.`}</li><li>{`Creating an account does not consume or reserve one of the ${launchOffer.maxClaims} spots.`}</li><li>{`After claim #${launchOffer.maxClaims}, the regular ${serviceFee} batch service fee applies automatically.`}</li></ul></article>
           </div>
-          <p className="guide-note">{`Eligibility is finalized at successful submission because multiple sellers can submit at the same time. The database prevents more than ${launchOffer.maxClaims} launch waivers.`}</p>
+          <p className="guide-note">{`Your spot is confirmed when you submit your first request. The offer is limited to ${launchOffer.maxClaims} sellers.`}</p>
         </section>
       ) : null}
 
@@ -78,7 +78,7 @@ export default async function SellWithShikimomoPage() {
       </section>
 
       <section className="guide-section guide-fees" id="fees">
-        <div className="guide-heading"><p className="eyebrow dark">Fees & earnings</p><h2>No surprise charges.</h2><p>The regular batch service fee is shown before you submit a new collection request and is snapshotted on that request.{launchOffer.active ? " When the active launch offer applies, the waiver is also snapshotted on the successful request." : ""}</p></div>
+        <div className="guide-heading"><p className="eyebrow dark">Fees & earnings</p><h2>No surprise charges.</h2><p>You’ll see your service fee before requesting a pickup. It won’t change for that request.{launchOffer.active ? " Any launch discount is saved with your request too." : ""}</p></div>
         <div className="fee-cards">
           <article><span>Regular batch service fee</span><strong>{serviceFee}</strong><p>Once per new batch/pickup. This single fee covers processing and includes a Shikimomo Bag if you request one. There is no separate Bag charge.{launchOffer.active ? " An eligible first collection can receive the active launch waiver." : ""}</p></article>
           <article><span>Use your own bag / box</span><strong>No extra charge</strong><p>{`You still have the same regular ${serviceFee} batch service fee; using your own suitable bag or box does not add another fee.`}{launchOffer.active ? " If your first collection successfully claims the active launch offer, that regular service fee is waived." : ""}</p></article>
@@ -86,7 +86,7 @@ export default async function SellWithShikimomoPage() {
         </div>
 
         <div className="commission-wrap">
-          <div><h3>How much you keep</h3><p>Your commission tier is based on the item’s initial approved price and stays locked when pricing is finalized.</p></div>
+          <div><h3>How much you keep</h3><p>Your percentage is set by the first approved price. It stays the same if the price later changes.</p></div>
           <div className="commission-table" role="table" aria-label="Seller commission tiers">
             <div className="commission-row head" role="row"><span>Initial approved price</span><span>You keep</span></div>
             {rules.commissionTiers.map((tier) => <div className="commission-row" role="row" key={`${tier.minCents}-${tier.maxCents ?? "plus"}`}><span>{tierPriceLabel(tier)}</span><strong>{tier.sellerBps / 100}%</strong></div>)}
@@ -103,13 +103,13 @@ export default async function SellWithShikimomoPage() {
         <div className="guide-heading"><p className="eyebrow dark">What we accept</p><h2>Send items that have a realistic second life.</h2></div>
         <div className="accept-grid">
           <article className="good"><h3>Good to send</h3><ul><li>Clean, resale-ready pieces in our currently accepted categories: {acceptingCategories}.</li><li>Items in good wearable condition, without stains, tears, holes, significant damage or missing parts.</li><li>Pieces with a likely individual resale value of at least {formatCadFromCents(rules.minimumIndividualItemValueCents)}.</li><li>Lower-value compatible pieces that may make sense as a bundle.</li><li>Items with clear brand, size and care labels when available.</li></ul></article>
-          <article className="avoid"><h3>Usually not a fit</h3><ul><li>Heavily stained, damaged, incomplete or unhygienic items.</li><li>Items whose condition cannot be verified safely.</li><li>Pieces with very low resale demand or value unless they can be bundled.</li><li>Items that do not match the categories currently enabled in the pilot.</li></ul></article>
+          <article className="avoid"><h3>Usually not a fit</h3><ul><li>Heavily stained, damaged, incomplete or unhygienic items.</li><li>Items whose condition cannot be verified safely.</li><li>Pieces with very low resale demand or value unless they can be bundled.</li><li>Items outside the categories listed above.</li></ul></article>
         </div>
         <p className="guide-note">Submitting an item does not guarantee acceptance. Women’s, men’s and kids’ clothing each have their own sizing and categories. Check the currently accepted categories above before packing. Final acceptance happens after physical inspection.</p>
       </section>
 
       <section className="guide-section split-section" id="pricing">
-        <div><p className="eyebrow dark">How we price</p><h2>Pricing is reviewed item by item.</h2><p>Shikimomo considers the brand, category, condition, current resale demand, comparable market pricing and the item’s overall sellability. You see the initial approved price and your commission before publishing.</p><p>If an item is rejected, the seller-facing reason and evidence photo are kept separate from internal notes so you can understand the decision.</p></div>
+        <div><p className="eyebrow dark">How we price</p><h2>Pricing is reviewed item by item.</h2><p>Shikimomo considers the brand, category, condition, current resale demand, comparable market pricing and the item’s overall sellability. You see the initial approved price and your commission before publishing.</p><p>If we can’t accept an item, you’ll see the reason and a photo in your account.</p></div>
         <div className="send-checklist"><h3>What should I send?</h3><p><b>Batch minimum:</b> {collectionMinimum} estimated combined resale value for collection. This is an estimate, not a promise of acceptance or final pricing.</p><p><b>Best candidates:</b> clean, current, easy-to-identify pieces in strong condition with realistic resale demand.</p><p><b>Rejected after inspection:</b> unhygienic, stained, torn, incomplete or significantly damaged items, or items unsuitable for resale.</p><p><b>Before pickup:</b> wash or clean items as appropriate, fold them neatly and describe known flaws honestly.</p></div>
       </section>
 

@@ -195,11 +195,11 @@ export function Dashboard({
         <article className="balance-stat">
           <div>
             <Wallet />
-            <span>Completed wallet balance</span>
+            <span>Confirmed account balance</span>
           </div>
           <strong>{balance}</strong>
-          <small>Completed wallet balance recorded in your account</small>
-          <Link href="/account/seller/earnings">View earnings &amp; settlement →</Link>
+          <small>Confirmed balance in your account</small>
+          <Link href="/account/seller/earnings">View earnings &amp; payouts →</Link>
         </article>
         <article>
           <div>
@@ -207,7 +207,7 @@ export function Dashboard({
             <span>Active items</span>
           </div>
           <strong>{activeItemCount}</strong>
-          <small>{pilotEnabled ? `${activeCategoryLabels || "Selected categories"} during the pilot` : "Accepted Shikimomo inventory"}</small>
+          <small>{pilotEnabled ? `${activeCategoryLabels || "Selected categories"} accepted now` : "Accepted Shikimomo inventory"}</small>
         </article>
         <article>
           <div>
@@ -215,7 +215,7 @@ export function Dashboard({
             <span>Total earned</span>
           </div>
           <strong>{totalEarned}</strong>
-          <small>Completed sale credits</small>
+          <small>Confirmed sale earnings</small>
         </article>
       </section>
       <section className="account-panel">
@@ -223,14 +223,14 @@ export function Dashboard({
           <TabsList>
             <TabsTrigger value="items">My items</TabsTrigger>
             <TabsTrigger value="requests">My batches</TabsTrigger>
-            <TabsTrigger value="payout">Earnings &amp; settlement</TabsTrigger>
+            <TabsTrigger value="payout">Earnings &amp; payouts</TabsTrigger>
           </TabsList>
           <TabsContent value="items">
             <div className="panel-title">
               <div>
                 <h2>Items we’re handling for you</h2>
                 <p>
-                  Follow inspection, Shikimomo pricing, your locked commission and each item through sale and settlement.
+                  Follow each item from inspection and pricing to sale and your earnings.
                 </p>
               </div>
               <RequestDialog
@@ -314,10 +314,10 @@ export function Dashboard({
             <div className="payout-box">
               <Wallet />
               <div>
-                <h2>Completed wallet balance: {balance}</h2>
-                <p>Online bank payouts are not available yet. View your earnings activity or contact support about settlement.</p>
+                <h2>Confirmed account balance: {balance}</h2>
+                <p>Bank payouts aren’t available online yet. Check your earnings or contact Support.</p>
               </div>
-              <Link href="/account/seller/earnings">View earnings &amp; settlement →</Link>
+              <Link href="/account/seller/earnings">View earnings &amp; payouts →</Link>
             </div>
           </TabsContent>
         </Tabs>
@@ -464,7 +464,7 @@ function RequestDialog({
               <summary>View collection terms &amp; fees</summary>
               <p>{launchEligible
                 ? `The regular batch service fee is ${processingFee}. It is waived only if a launch spot remains at successful submission; signing up does not reserve a spot.`
-                : `This batch records one ${processingFee} service fee, including a Shikimomo Bag if requested. It is deducted from seller earnings when settlement is available, not charged to your card upfront.`}</p>
+                : `One ${processingFee} service fee includes a Shikimomo Bag if requested. It comes out of your earnings when payouts are available, not your card upfront.`}</p>
               {paidPickup ? <p>One flat {lowValuePickupFee} pickup fee applies below {threshold}; the launch offer does not waive this pickup fee.</p> : null}
             <div className="terms-box">
               <b>Required terms for {collectionLabel}</b>
@@ -479,7 +479,7 @@ function RequestDialog({
                   <p>• Individual listings normally require an approved resale value of at least {itemMinimum}. Lower-value eligible items may be combined into a bundle.</p>
                   <p>• Clothes must be freshly washed or cleaned as appropriate, hygienic, complete and in good wearable condition, without stains, tears, holes or significant damage. Disclose any flaws before pickup.</p>
                   <p>• Shikimomo inspects every item after collection and rejects any item that fails these conditions, even if the estimated batch total met {collectionMinimum}.</p>
-                  <p>• Accepted fashion items are listed for up to 90 days. Unsold item choices can be managed from your item operations page.</p>
+                  <p>• Accepted fashion items are listed for up to 90 days. Choose what happens to unsold items in your account.</p>
                 </>
               ) : (
                 <>

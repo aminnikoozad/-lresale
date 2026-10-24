@@ -83,7 +83,7 @@ export default function CartPage() {
               <span><LockKeyhole /> Server-side price & availability check</span>
               <span><Truck /> Delivery details collected before payment</span>
             </div>
-            <small>No card is charged on the current checkout flow. Payment will be activated only through a secure payment provider.</small>
+            <small>Payment isn’t available yet. Your card won’t be charged.</small>
           </aside>
         </div>
       )}

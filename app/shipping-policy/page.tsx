@@ -57,21 +57,21 @@ export default async function ShippingPolicyPage() {
         <div className="policy-hero">
           <p className="eyebrow dark">Shopping delivery</p>
           <h1>Canada-wide delivery policy.</h1>
-          <p>Shikimomo&apos;s shipping policy is configured for delivery across Canada. Local delivery pricing depends on the verified delivery address.</p>
+          <p>Delivery options and fees depend on your address.</p>
         </div>
 
-        <section className="policy-highlight"><PackageCheck/><div><h2>Canada-wide availability</h2><p>{policy.canadaWideEnabled ? "Canada-wide delivery is enabled in the current shipping policy." : "Canada-wide delivery is temporarily disabled."}</p></div></section>
+        <section className="policy-highlight"><PackageCheck/><div><h2>Canada-wide availability</h2><p>{policy.canadaWideEnabled ? "We deliver across Canada." : "Delivery across Canada is temporarily unavailable."}</p></div></section>
 
         <div className="shipping-note-grid">
-          <div><MapPin/><b>Local area</b><span>{policy.localCenterName} and addresses within approximately {policy.localFreeRadiusKm} km of the configured local centre.</span></div>
-          <div><Truck/><b>Local delivery</b><span>Eligible local delivery is free when the verified delivery address falls inside the configured local radius.</span></div>
+          <div><MapPin/><b>Local area</b><span>{policy.localCenterName} and up to about {policy.localFreeRadiusKm} km nearby.</span></div>
+          <div><Truck/><b>Local delivery</b><span>Delivery is free within our local area.</span></div>
           <div><PackageCheck/><b>Outside local area</b><span>Orders elsewhere in Canada use {outsideText}.</span></div>
         </div>
 
-        <section><h2>Postal parcel weight groups</h2><p>Canada Post quotes use the actual packed weight, package dimensions and destination postal code. These groups are not fixed-price postage bands.</p>{Array.isArray(bands) ? <ul>{bands.map((grams: number, i: number) => <li key={i}><strong>{BAND_NAMES[i]}</strong>: {i === 0 ? "up to" : `over ${bands[i-1]/1000} kg and up to`} {grams/1000} kg</li>)}</ul> : <p>Parcel limits are confirmed during shipping review.</p>}<p>Missing measurements, oversized packages and restricted items require manual review. A quote is only confirmed when a carrier rate is returned; no rate is invented if the connection is unavailable. Rates include carrier shipping taxes and surcharges and are valid for 10 minutes. Canadian destinations only; international shipping requires separate review.</p></section>
-        <section><h2>Address verification</h2><p>The final delivery option and fee are confirmed from the delivery address before an order is finalized. A city name alone is not enough to guarantee free local delivery.</p></section>
-        <section><h2>Remote and oversized shipments</h2><p>Carrier availability, oversized parcels and remote destinations may require a different shipping service or additional review before an order is finalized.</p></section>
-        <section><h2>Pickup and seller collection are separate</h2><p>This delivery policy applies to buyers receiving purchases. Seller pickup pricing and Bag / Box eligibility are governed by the separate Pickup Policy.</p></section>
+        <section><h2>Parcel weight ranges</h2><p>Canada Post rates depend on the packed weight, parcel size and destination. These weight ranges do not have fixed prices.</p>{Array.isArray(bands) ? <ul>{bands.map((grams: number, i: number) => <li key={i}><strong>{BAND_NAMES[i]}</strong>: {i === 0 ? "up to" : `over ${bands[i-1]/1000} kg and up to`} {grams/1000} kg</li>)}</ul> : <p>We’ll check parcel limits before shipping.</p>}<p>We may need to check missing measurements, large parcels or restricted items. If a rate is unavailable, we’ll ask you to try again. Rates include shipping taxes and carrier surcharges and are valid for 10 minutes. We currently ship within Canada only.</p></section>
+        <section><h2>Your delivery address</h2><p>We confirm delivery options and fees using your full address before you place your order. Your city alone doesn’t confirm free delivery.</p></section>
+        <section><h2>Remote and oversized shipments</h2><p>Large parcels or remote addresses may need another delivery service. We’ll check the options before you place your order.</p></section>
+        <section><h2>Pickup and seller collection are separate</h2><p>This page covers delivery of your purchases. For seller pickups and bags or boxes, see our Pickup Policy.</p></section>
         <Link className="policy-back" href="/"><ArrowLeft/> Back to Shikimomo</Link>
       </article>
     </main>

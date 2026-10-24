@@ -187,11 +187,11 @@ export function BuyerAccountTools() {
                   )}
 
                   {order.payment_status === "not_configured" ? (
-                    <div className="order-payment-note">Payment processing is not active yet. No charge has been made for this prepared order.</div>
+                    <div className="order-payment-note">Payment isn’t available yet. You haven’t been charged for this order.</div>
                   ) : null}
                   {order.status === "awaiting_payment" && order.reservation_expires_at ? <div className="order-payment-note">Reservation ends {date(order.reservation_expires_at)} at {reservationTime(order.reservation_expires_at)}. Return to your bag to check availability afterward.</div> : null}
                   {order.status === "awaiting_payment" && order.payment_status === "not_configured" ? (
-                    <Button type="button" size="sm" variant="outline" onClick={() => void cancelPreparedOrder(order.id)}>Cancel prepared checkout</Button>
+                    <Button type="button" size="sm" variant="outline" onClick={() => void cancelPreparedOrder(order.id)}>Cancel unpaid order</Button>
                   ) : null}
 
                   {items.map((item) => {

@@ -139,13 +139,13 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
         <div className="payment-pending">
           <CreditCard />
           <div>
-            <b>Payment connection is the next step</b>
-            <span>No charge has been made. This order remains Awaiting Payment until a secure payment provider is connected and confirms payment.</span>
+            <b>Payment isn’t available yet</b>
+            <span>You haven’t been charged. Your order is waiting for payment, which isn’t available yet.</span>
           </div>
         </div>
         <div className="checkout-readiness-card">
           <ShieldCheck />
-          <div><b>Prepared order details</b><span>Buyer identity, selected inventory, server-verified prices, delivery details and the accepted policy versions are attached to this order.</span></div>
+          <div><b>Your saved order</b><span>Your items, checked prices, delivery details and accepted terms are saved with your order.</span></div>
         </div>
         <Button asChild><Link href="/account/buyer">View My Purchases</Link></Button>
       </section>
@@ -169,7 +169,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
             <div><p className="eyebrow dark">Secure checkout</p><h1>Delivery details</h1></div>
           </div>
 
-          <p className="checkout-intro">Enter the address that will be used for shipping quotes, tax calculation and the final payment step once payment processing is connected.</p>
+          <p className="checkout-intro">Enter your delivery address to calculate shipping and taxes. Payment isn’t available yet.</p>
           {initialDelivery ? <div className="checkout-prefill-note"><Check /> We prefilled the delivery details saved in your Shikimomo profile. Review them before continuing.</div> : null}
           {authenticated === false ? <div className="checkout-login-note">You’ll be asked to sign in before the order can be prepared.</div> : null}
           {error ? <div className="checkout-error">{error}</div> : null}
@@ -191,7 +191,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
           </div>
 
           <PostalEstimator itemIds={itemIds} destination={destination} onSelect={setPostalSelection}/>
-          {!postalSelection ? <p>Without a selected postal service, delivery details are saved for review only; shipping remains unconfirmed.</p> : null}
+          {!postalSelection ? <p>Choose a delivery service to confirm shipping. Otherwise, we’ll save your address for review.</p> : null}
 
           <FirstPurchaseOffer itemIds={itemIds} onChange={onOfferChange} />
           <div className="checkout-field-section">
@@ -200,16 +200,16 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
               <input type="checkbox" name="buyer_terms_accepted" value="accepted" checked={termsAccepted} onChange={e => setTermsAccepted(e.target.checked)} required />
               <span>I accept the <Link href="/terms" target="_blank" rel="noopener noreferrer">Terms of Use</Link> and <Link href="/returns" target="_blank" rel="noopener noreferrer">Returns & Refunds Policy</Link>, and acknowledge the <Link href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</Link>.</span>
             </label>
-            <small>The policy versions and acceptance time are recorded with this prepared order. You will review the final price, tax and delivery total again before any payment is charged.</small>
+            <small>Your accepted terms are saved with your order. You’ll review the full total, including taxes and delivery, before paying.</small>
           </div>
 
           <div className="checkout-next-step-preview">
             <CreditCard />
-            <div><b>Next: Payment</b><span>Card or wallet fields will appear here after the payment provider is connected. They are intentionally disabled today.</span></div>
+            <div><b>Next: Payment</b><span>Payment isn’t available yet. You won’t be charged at this step.</span></div>
           </div>
 
           <Button type="submit" size="lg" disabled={submitting || !quoteReady || !termsAccepted}>{submitting ? "Checking availability…" : "Save delivery & prepare payment"}</Button>
-          <small>Preparing checkout does not charge your card. The database verifies current price and availability again before creating the order.</small>
+          <small>Saving your order won’t charge your card. We’ll check prices and availability again.</small>
         </form>
 
         <aside className="checkout-summary">
@@ -228,7 +228,7 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
           <div className="cart-total"><span>Subtotal</span><strong>{quote ? cad(subtotal-discountCents) : "—"}</strong></div>
           <div className="checkout-assurance-list">
             <span><ShieldCheck /> Inspected inventory</span>
-            <span><LockKeyhole /> Server-verified price</span>
+            <span><LockKeyhole /> Price checked</span>
             <span><Truck /> Canada delivery details captured</span>
           </div>
           <p>Postal quotes include shipping taxes. Item taxes and the final payable total are confirmed separately before payment.</p>

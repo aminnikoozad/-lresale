@@ -247,7 +247,7 @@ export function AssistantWorkspace({ available = false, chatEnabled = true, voic
     });
     const data = await response.json();
     if (data?.code === "image_not_supported")
-      throw new Error(t("Please describe the item in words; photo matching is not enabled on this local model.", "Décrivez l’article : la recherche par photo n’est pas activée sur ce modèle local."));
+      throw new Error(t("Please describe the item. Photo search isn’t available yet.", "Décrivez l’article. La recherche par photo n’est pas encore disponible."));
     if (!response.ok || data?.error)
       throw new Error(
         t(

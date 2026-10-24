@@ -85,7 +85,7 @@ export default async function SellerOperationsPage({ searchParams }: Props) {
 
         {!mandate.error && mandate.data ? <section className="seller-review-box">
           <div><h2>Pricing by Shikimomo</h2>
-            <p>After inspection, Shikimomo sets the price and locks your commission tier. With your one-time authorization, each item can be published without a separate price approval. You can follow prices and earnings in your account.</p>
+            <p>After inspection, we set the price and your percentage. Authorize us once to list items without asking you to approve each price. Track prices and earnings in your account.</p>
             <p>Previously locked prices and commission tiers stay unchanged. This authorization covers your current unapproved items and future items, including bundles.</p>
             <Link href="/seller-terms">Read the seller terms</Link>
           </div>
@@ -133,7 +133,7 @@ export default async function SellerOperationsPage({ searchParams }: Props) {
 
               {!['sold','closed'].includes(item.stage) ? (
                 <section className="unsold-choice">
-                  <div><h3>If this item does not sell</h3><p>Choose the default end-of-selling-period action. You can change this before the item sells.</p></div>
+                  <div><h3>If this item does not sell</h3><p>Choose what happens if your item doesn’t sell. You can change this before it sells.</p></div>
                   <div className="choice-actions">
                     <form action={setUnsoldPreference}>
                       <input type="hidden" name="item_id" value={item.itemId} />
