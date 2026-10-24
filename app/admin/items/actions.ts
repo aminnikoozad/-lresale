@@ -1,5 +1,6 @@
 "use server";
 
+import { processListingPhoto } from "@/lib/listing-photo-processing";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -193,6 +194,18 @@ export async function createAdminItem(formData: FormData) {
     } catch (error) {
       console.error("[admin/items] rejection evidence failed", error);
       redirect(itemsMessage("The item was rejected, but seller-facing evidence could not be saved. Add the evidence before closing the intake.", "error"));
+    }
+  }
+
+  const visualIntake = text(formData, "visual_intake_id");
+  if (/^[a-f0-9-]{36}$/i.test(visualIntake) && photos[0]) {
+    try {
+      const source = await processListingPhoto(new Uint8Array(await photos[0].arrayBuffer()));
+      const linked = await supabase.rpc("admin_attach_visual_intake", {target:visualIntake,item:itemId,photo_sha256:source.sha256});
+      if (linked.error) throw new Error("visual_link_failed");
+    } catch {
+      revalidatePath("/admin/items");
+      redirect(itemsMessage("Item saved. Its earlier photo estimate could not be linked; review the saved item in the pricing queue before retrying.", "error"));
     }
   }
 

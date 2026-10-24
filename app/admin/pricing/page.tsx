@@ -41,6 +41,7 @@ export default async function PricingQueue({
       <nav className="pricing-nav">
         <Link href="/admin/items">← Items</Link>
         <Link href="/admin/pricing">First page</Link>
+        <Link href="/admin/visual-pricing">Photo price suggestions</Link>
       </nav>
       <h1>AI Pricing</h1>
       {message ? <p role="status" className={type === "error" ? "pricing-warning" : "pricing-notice"}>{message}</p> : null}

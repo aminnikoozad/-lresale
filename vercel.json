@@ -7,6 +7,13 @@
     }
   },
   "crons": [
-    { "path": "/api/cron/expire-checkouts", "schedule": "0 3 * * *" }
+    {
+      "path": "/api/cron/expire-checkouts",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/visual-pricing",
+      "schedule": "15 3 * * *"
+    }
   ]
 }

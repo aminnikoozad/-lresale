@@ -23,6 +23,7 @@ const contentSecurityPolicy = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: { serverActions: { bodySizeLimit: "4mb" } },
   async redirects() {
     // Send an HTTP redirect before rendering streams the root page shell.
     return [{ source: "/", destination: "/shop", permanent: true }];
