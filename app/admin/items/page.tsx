@@ -103,6 +103,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
             <p className="eyebrow dark">Admin → Items</p>
             <h1>Item & Bundle Management</h1>
             <Link href="/admin/pricing">Open pricing queue →</Link>
+            <Link href="/admin/visual-pricing">Photo price suggestions</Link>
             <p>
               Identify the seller by Customer ID, inspect and photograph every item, set brand, size,
               category, subcategory and price, then publish approved inventory to the live shop.

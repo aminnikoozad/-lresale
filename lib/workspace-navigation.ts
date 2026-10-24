@@ -32,6 +32,7 @@ export function adminNavigation(access: MenuAccess): WorkspaceLink[] {
       { href: "/admin/customers", label: "Customers" },
       { href: "/admin/items", label: "Items" },
       { href: "/admin/pricing", label: "AI Pricing" },
+      { href: "/admin/visual-pricing", label: "Photo price suggestions" },
       { href: "/admin/marketplace", label: "Marketplace moderation" },
       { href: "/admin/processing", label: "Processing" },
       { href: "/admin/home-decor", label: "Home inventory" },

@@ -22,13 +22,14 @@ async function exchangeRates(signal:AbortSignal):Promise<FxRates|null> {
     return {date:row.d,rates:{USD:Number(row.FXUSDCAD?.v),EUR:Number(row.FXEURCAD?.v),GBP:Number(row.FXGBPCAD?.v)}};
   } catch {return null;}
 }
-export async function processVisualPricingJob() {
+export async function processVisualPricingJob(intakeId?:string) {
   if(!visualSearchReady()) throw new Error("Visual search is not configured");
   const storage=createClient(getSupabaseConfig().url,(process.env.SUPABASE_SECRET_KEY||process.env.SUPABASE_SERVICE_ROLE_KEY)!,{auth:{persistSession:false,autoRefreshToken:false}});
-  const claimed=await storage.rpc("claim_visual_pricing_job");
+  let claimed=await storage.rpc("claim_visual_intake_job",{target:intakeId??null});
+  if(!claimed.error&&!claimed.data&&!intakeId) claimed=await storage.rpc("claim_visual_pricing_job");
   if(claimed.error) throw new Error("Visual queue unavailable");
   if(!claimed.data) return {claimed:0,completed:0};
-  const job=claimed.data as {id:string;token:string;image:{key?:string;provider?:string;url?:string}};
+  const job=claimed.data as {id:string;token:string;kind?:string;image:{key?:string;provider?:string;url?:string}};
   let result:ReturnType<typeof estimateVisual>|null=null, failure:string|null=null;
   try {
     let image:string|null=null;
@@ -50,7 +51,7 @@ export async function processVisualPricingJob() {
     // Persist only normalized matches, never API keys, signed input URLs or raw provider payloads.
     result=estimateVisual(payload,fx);
   } catch {failure="search_unavailable";}
-  const saved=await storage.rpc("finish_visual_pricing_job",{target:job.id,token:job.token,result,failure_code:failure});
+  const saved=await storage.rpc(job.kind==="intake"?"finish_visual_intake_job":"finish_visual_pricing_job",{target:job.id,token:job.token,result,failure_code:failure});
   if(saved.error) throw new Error("Visual result could not be saved");
   return {claimed:1,completed:failure?0:1};
 }
