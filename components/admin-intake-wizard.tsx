@@ -47,8 +47,8 @@ export function AdminIntakeWizard({customers,ownerDefault,collectionRequestId,ac
   const [rejectionPhoto,setRejectionPhoto] = useState<File|null>(null);
   const attributes = catalogAttributeOptions(category);
   const titles = fr
-    ? ["Photos", "Suggestion de prix", "Client et article", "Catégorie", "Marque", "Taille", "État et détails", "Vérification"]
-    : ["Photos", "Price suggestion", "Customer and item", "Category", "Brand", "Size", "Condition and details", "Review"];
+    ? ["Client et photos", "Suggestion de prix", "Article", "Catégorie", "Marque", "Taille", "État et détails", "Vérification"]
+    : ["Customer and photos", "Price suggestion", "Item", "Category", "Brand", "Size", "Condition and details", "Review"];
   useEffect(() => {
     mounted.current = true;
     return () => { priceAbort.current?.abort(); mounted.current = false; previewUrls.current.forEach(url=>URL.revokeObjectURL(url)); };
@@ -136,6 +136,7 @@ export function AdminIntakeWizard({customers,ownerDefault,collectionRequestId,ac
     {collectionRequestId ? <input type="hidden" name="collection_request_id" value={collectionRequestId}/> : null}
     <div className="intake-progress" aria-live="polite"><span>{step+1} / {titles.length}</span><h3>{titles[step]}</h3><progress value={step+1} max={titles.length} aria-label={t("Item intake progress","Progression de l’ajout")}/></div>
     <section data-intake-step="0" hidden={step!==0}>
+      <CustomerPicker customers={customers} initial={ownerDefault} customerIdFirst/>
       <label className="photo-field">{t("Start with the item photos","Commencez par les photos de l’article")}
         <input type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif" multiple disabled={preparing||pending} onChange={event=>{void photos(Array.from(event.target.files??[]));event.target.value="";}}/>
         <span>{t("Choose photos or take a photo on your phone. We reduce their size automatically. Up to 8 photos.","Choisissez des photos ou prenez-en une avec votre téléphone. Leur taille est réduite automatiquement. Jusqu’à 8 photos.")}</span>
@@ -161,7 +162,6 @@ export function AdminIntakeWizard({customers,ownerDefault,collectionRequestId,ac
       <button type="button" disabled={pricingBusy||preparing} onClick={()=>void requestPrice()}>{t("Retry price search","Réessayer la recherche de prix")}</button>
     </section>
     <section data-intake-step="2" hidden={step!==2}>
-      <CustomerPicker customers={customers} initial={ownerDefault}/>
       <label>{t("Item name","Nom de l’article")}<input name="name" minLength={2} maxLength={160} required placeholder={t("e.g. wool coat","p. ex. manteau en laine")}/></label>
     </section>
     <section data-intake-step="3" hidden={step!==3}>
