@@ -51,7 +51,11 @@ export async function generateMetadata(): Promise<Metadata> {
     description,
   },
   manifest: "/manifest.webmanifest",
-  icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
+  icons: {
+    icon: [{ url: "/favicon.svg?v=shikimomo-2", type: "image/svg+xml" }, { url: "/brand/favicon-48.png", sizes: "48x48", type: "image/png" }],
+    shortcut: "/favicon.svg?v=shikimomo-2",
+    apple: [{ url: "/apple-touch-icon.png?v=shikimomo-2", sizes: "180x180", type: "image/png" }],
+  },
 };
 }
 
