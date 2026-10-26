@@ -144,7 +144,7 @@ export default async function Home() {
       <SellingHero />
 
       <div className="market-service-strip" aria-label="How Shikimomo is different">
-        <span><ShieldCheck aria-hidden="true" /><span><strong>Checked before listing</strong>Every piece checked by our team.</span></span>
+        <span><ShieldCheck aria-hidden="true" /><span><strong>Reviewed before listing</strong>Managed pieces inspected. Personal listings reviewed.</span></span>
         <span><PackageCheck aria-hidden="true" /><span><strong>Details before you decide</strong>Size, colour, condition and price.</span></span>
         <span><PackageCheck aria-hidden="true" /><span><strong>Know where you stand</strong>Delivery and return details up front.</span></span>
       </div>
@@ -153,7 +153,7 @@ export default async function Home() {
 
       <section className="shipping-strip" aria-label="Canada delivery policy"><Truck aria-hidden="true" /><div><strong>{shipping.canadaWideEnabled === false ? "Delivery, with the details up front." : "Finds worth sending across Canada."}</strong><span>{shippingSummary}</span></div><Link href="/shipping-policy">Delivery details <ArrowRight aria-hidden="true" /></Link></section>
 
-      <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Checked by our team</p><h2>We inspect and photograph every item.</h2><p>{pilot.enabled ? "For now, we accept women’s, men’s and kids’ clothing." : "We check each item before listing it."} If an item doesn’t match its listing, contact Support. We’ll look into it.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
+      <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Know your seller</p><h2>Two ways to shop secondhand.</h2><p>{pilot.enabled ? "For now, we accept women’s, men’s and kids’ clothing." : "Check each listing for its selling method."} Managed pieces are inspected and shipped by Shikimomo. Personal listings are described and shipped by their sellers.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
 
       <footer>
         <div className="brand"><BrandWordmark /></div>
