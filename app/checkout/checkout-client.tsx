@@ -103,7 +103,9 @@ export function CheckoutClient({ itemIds, initialDelivery = null }: CheckoutClie
       const preparedOrderId = String(data || "");
       if (!/^[0-9a-f-]{36}$/i.test(preparedOrderId)) throw new Error("Invalid prepared order");
 
-      setSavedShipping(postalSelection);
+      const {data:prepared,error:shippingError}=await supabase.from("orders").select("shipping_cents").eq("id",preparedOrderId).eq("buyer_id",user.id).single();
+      if(shippingError || !prepared || !Number.isInteger(prepared.shipping_cents) && postalSelection) throw new Error("Shipping confirmation unavailable");
+      setSavedShipping(postalSelection ? {...postalSelection,totalCents:prepared.shipping_cents} : null);
       setOrderId(preparedOrderId);
     } catch (cause) {
       console.error("[checkout] order preparation failed", cause);
