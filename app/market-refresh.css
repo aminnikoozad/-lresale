@@ -133,7 +133,7 @@
 .seller-guide-shell .seller-guide-hero>p:not(.eyebrow){color:var(--text-secondary)}
 .seller-guide-shell .guide-primary,.seller-guide-shell .guide-cta a{background:var(--brand);color:#fff;border-radius:5px}
 .seller-guide-shell .guide-secondary{border-color:var(--brand);color:var(--brand);border-radius:5px}
-.seller-guide-shell .guide-steps li,.seller-guide-shell .accept-grid article,.seller-guide-shell .send-checklist,.seller-guide-shell .fee-cards article,.seller-guide-shell .earnings-calculator{border-radius:6px}
+.seller-guide-shell .guide-steps li,.seller-guide-shell .accept-grid article,.seller-guide-shell .send-checklist,.seller-guide-shell .fee-cards article{border-radius:6px}
 .seller-guide-shell .guide-fees{background:#f5f5f5!important}
 .seller-guide-shell .guide-fees h2,.seller-guide-shell .guide-fees h3{color:#fff!important}
 .seller-guide-shell .guide-fees .eyebrow{color:#555555!important}
@@ -209,7 +209,7 @@
 .market-home .process-intro [data-slot="button"]{background:#242424!important;border-color:#242424!important;color:#fff!important}
 .seller-guide-shell .guide-fees{color:#242424!important;border-block:1px solid #e5e5e5}
 .seller-guide-shell .guide-fees h2,.seller-guide-shell .guide-fees h3{color:#242424!important}
-.seller-guide-shell .guide-fees .guide-heading p,.seller-guide-shell .guide-fees .calculator-wrap>div>p,.seller-guide-shell .guide-fees .commission-wrap>div>p,.seller-guide-shell .fee-cards p,.seller-guide-shell .fee-cards span{color:#555!important}
+.seller-guide-shell .guide-fees .guide-heading p,.seller-guide-shell .guide-fees .commission-wrap>div>p,.seller-guide-shell .fee-cards p,.seller-guide-shell .fee-cards span{color:#555!important}
 .seller-guide-shell .commission-table,.seller-guide-shell .commission-row{border-color:#dedede}
 .seller-guide-shell .commission-row.head{background:#eeeeee;color:#555}
 .seller-guide-shell .seller-guide-hero{border-bottom:1px solid #e5e5e5}
