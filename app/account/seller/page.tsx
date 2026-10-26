@@ -238,7 +238,6 @@ export default async function AccountPage({ searchParams }: Props) {
           processingFeeCents: sellingRules.pickupRules.processingFeeCents,
           rewearBagFeeCents: sellingRules.pickupRules.rewearBagFeeCents,
           freePickupThresholdCents: sellingRules.pickupRules.freePickupThresholdCents,
-          lowValuePickupItemFeeCents: sellingRules.pickupRules.lowValuePickupItemFeeCents,
           bagMinimumEstimatedValueCents: sellingRules.pickupRules.bagMinimumEstimatedValueCents,
         }}
         items={rawItems.map((item) => {

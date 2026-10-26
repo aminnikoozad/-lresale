@@ -51,7 +51,7 @@ export const DEFAULT_SELLING_RULES: SellingRules = {
     secondMissedPickupFeeCents: 0,
     suspendFreePickupAfterMisses: 2,
     freePickupThresholdCents: 10_000,
-    lowValuePickupItemFeeCents: 500,
+    lowValuePickupItemFeeCents: 0,
     bagMinimumEstimatedValueCents: 6_000,
     priorityPickupAtOrAboveThreshold: true,
     processingFeeCents: 1_200,
@@ -144,10 +144,8 @@ export function normalizeSellingRules(value: unknown): SellingRules {
         pickup.freePickupThresholdCents,
         DEFAULT_SELLING_RULES.pickupRules.freePickupThresholdCents,
       ),
-      lowValuePickupItemFeeCents: integer(
-        pickup.lowValuePickupItemFeeCents,
-        DEFAULT_SELLING_RULES.pickupRules.lowValuePickupItemFeeCents,
-      ),
+      // Retired surcharge: stale rule versions must never restore it.
+      lowValuePickupItemFeeCents: 0,
       bagMinimumEstimatedValueCents: integer(
         pickup.bagMinimumEstimatedValueCents,
         DEFAULT_SELLING_RULES.pickupRules.bagMinimumEstimatedValueCents,

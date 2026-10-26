@@ -25,7 +25,6 @@ export default async function PickupPolicyPage() {
     loadLaunchSellerOffer(supabase),
   ]);
   const threshold = formatCadFromCents(rules.pickupRules.freePickupThresholdCents);
-  const lowValuePickupFee = formatCadFromCents(rules.pickupRules.lowValuePickupItemFeeCents);
   const bagMinimum = formatCadFromCents(rules.pickupRules.bagMinimumEstimatedValueCents);
   const collectionMinimum = formatCadFromCents(rules.minimumPickupEstimatedValueCents);
   const serviceFee = formatCadFromCents(rules.pickupRules.processingFeeCents);
@@ -35,15 +34,13 @@ export default async function PickupPolicyPage() {
   return <Localize>{<main className="pickup-policy-page">
     <header className="policy-header"><Link href="/" className="brand"><BrandWordmark /></Link><Link href="/account">My account</Link></header>
     <article className="legal-policy">
-      <div className="policy-hero"><p className="eyebrow dark">Customer policy</p><h1>Pickup &amp; Intake Fee Policy</h1><p>You’ll see pickup and service fees before you send your request. Any offer you qualify for is applied when you submit.</p><small>Updated September 25, 2026</small></div>
+      <div className="policy-hero"><p className="eyebrow dark">Customer policy</p><h1>Pickup &amp; Intake Fee Policy</h1><p>You’ll see pickup and service fees before you send your request. Any offer you qualify for is applied when you submit.</p><small>Updated October 26, 2026</small></div>
 
       {launchOffer.active ? (
-        <section className="policy-highlight"><BadgeCheck/><div><h2>Launch Offer — First {launchOffer.maxClaims} Sellers</h2><p>{`The first ${launchOffer.maxClaims} eligible sellers to successfully submit their first collection request receive a waiver of the regular ${waivedServiceFee} batch service fee on that first batch. ${launchOffer.remaining} launch spots currently remain.`}</p><p><strong>Creating an account does not reserve or consume a spot.</strong> Your spot is confirmed when you submit your first pickup request. This offer is for first-time sellers only, once per seller.</p><p>{`The offer has no scheduled calendar end date. It ends automatically when claim #${launchOffer.maxClaims} is used. After that, the regular ${serviceFee} batch service fee applies to all new batches. The flat ${lowValuePickupFee} pickup transportation fee for pickups below ${threshold} is separate and is not waived.`}</p></div></section>
+        <section className="policy-highlight"><BadgeCheck/><div><h2>Launch Offer — First {launchOffer.maxClaims} Sellers</h2><p>{`The first ${launchOffer.maxClaims} eligible sellers to successfully submit their first collection request receive a waiver of the regular ${waivedServiceFee} batch service fee on that first batch. ${launchOffer.remaining} launch spots currently remain.`}</p><p><strong>Creating an account does not reserve or consume a spot.</strong> Your spot is confirmed when you submit your first pickup request. This offer is for first-time sellers only, once per seller.</p><p>{`The offer has no scheduled calendar end date. It ends automatically when claim #${launchOffer.maxClaims} is used. After that, the regular ${serviceFee} batch service fee applies to all new batches.`}</p></div></section>
       ) : null}
 
-      <section className="policy-highlight"><Truck/><div><h2>{threshold}+ Free Priority Pickup</h2><p>{`When the estimated combined resale value of your pickup is ${threshold} CAD or more, the transportation portion of pickup is free and the request receives priority handling.`}</p><p>{`A regular ${serviceFee} batch service fee applies once per new batch unless an active promotion validly waives it. It covers processing and includes a Shikimomo Bag if you request one.`}</p></div></section>
-
-      <section><h2>Pickups Below {threshold}</h2><p>{`Pickup requests below ${threshold} in estimated combined resale value are allowed, but one flat transportation fee of ${lowValuePickupFee} CAD per pickup applies in addition to the regular ${serviceFee} batch service fee unless that service fee is validly waived by an active promotion.`}</p><p>{`The ${lowValuePickupFee} pickup fee is charged once for the whole pickup, regardless of how many items are included, and is shown before submission. The launch service-fee waiver does not remove this transportation fee.`}</p></section>
+      <section className="policy-highlight"><Truck/><div><h2>Pickup &amp; processing</h2><p>{`One ${serviceFee} fee covers pickup and processing for each new collection, unless an active promotion waives it. No additional transportation charge applies based on the estimated resale value.`}</p><p>{`Collections estimated at ${threshold} or more may receive priority handling. This does not change the fee.`}</p></div></section>
 
       <section className="policy-highlight"><BadgeCheck/><div><h2>Shikimomo Bag vs. Your Own Bag / Box</h2><p>A Shikimomo Bag request is available when the submitted items have an estimated combined resale value of at least <strong>{bagMinimum}</strong>.</p><p>{`The Shikimomo Bag is included in the same regular ${serviceFee} batch service fee. There is no separate Bag charge. You may also use your own suitable bag or box. When an eligible promotion waives the batch service fee, there is still no separate Bag charge.`}</p></div></section>
 
@@ -55,7 +52,7 @@ export default async function PickupPolicyPage() {
 
       <section><h2>What Counts as a Missed Pickup?</h2><p>A true missed pickup is recorded only after the seller confirmed the appointment and Shikimomo attempted the pickup, but it could not be completed because the seller or items were unavailable.</p><p>A request that was never confirmed is not treated as the same thing as a driver no-show event.</p></section>
 
-      <section><h2>Repeated Confirmed No-Shows</h2><p>{`There’s no cash penalty for the first two missed pickups. After ${missLimit} confirmed missed pickups, free pickup may be suspended. Other options may still be available.`}</p><p>This rule is intended to protect route capacity and driver time, not to punish customers who cancel early.</p></section>
+      <section><h2>Repeated Confirmed No-Shows</h2><p>{`There’s no cash penalty for the first two missed pickups. After ${missLimit} confirmed missed pickups, pickup eligibility may be suspended. Other options may still be available.`}</p><p>This rule is intended to protect route capacity and driver time, not to punish customers who cancel early.</p></section>
 
       <section><h2>Pickup Eligibility</h2><p>A collection request requires an estimated combined resale value of at least <strong>{collectionMinimum}</strong>. This is the seller’s estimate, not a guarantee of final pricing. Before approval, we may request the approximate number of items, categories, brands, estimated resale value and photos. Clothing must be clean, hygienic, complete and in good wearable condition. Stained, torn, holed or significantly damaged items may be rejected after physical inspection, even when the estimated batch minimum was met.</p></section>
 

@@ -82,7 +82,6 @@ type FeeRules = {
   processingFeeCents: number;
   rewearBagFeeCents: number;
   freePickupThresholdCents: number;
-  lowValuePickupItemFeeCents: number;
   bagMinimumEstimatedValueCents: number;
 };
 type LaunchOffer = {
@@ -325,8 +324,7 @@ export function Dashboard({
       <section className="mini-rules">
         <b>Quick check before sending</b>
         <span>✓ Items must pass inspection before listing</span>
-        <span>✓ {cad(feeRules.freePickupThresholdCents)}+ estimated collections qualify for free priority pickup</span>
-        <span>✓ Below {cad(feeRules.freePickupThresholdCents)}, one flat {cad(feeRules.lowValuePickupItemFeeCents)} pickup fee applies to the whole pickup</span>
+        <span>✓ Pickup and processing are covered by the batch service fee, with no extra transportation charge</span>
         {showLaunchOffer ? (
           <span>✓ Launch offer: regular {cad(feeRules.processingFeeCents)} first-batch service fee is waived if one of the remaining {launchOffer.remaining} spots is claimed at successful submission</span>
         ) : (
@@ -365,13 +363,9 @@ function RequestDialog({
   const [category, setCategory] = useState<string>(mixedClothing ? "clothing" : activeCategories[0] ?? "women");
   const [estimatedValue, setEstimatedValue] = useState(feeRules.freePickupThresholdCents / 100);
   const availableSlots = pickupSlots;
-  const paidPickup = type === "pickup" && estimatedValue > 0 && estimatedValue * 100 < feeRules.freePickupThresholdCents;
   const fashionCategory = category === "clothing" || FASHION_CATEGORIES.includes(category as CatalogCategory);
   const collectionLabel = category === "clothing" ? "Mixed clothing" : categoryLabel(category);
   const categoryOptions = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value));
-  const threshold = cad(feeRules.freePickupThresholdCents);
-  const lowValuePickupFee = cad(feeRules.lowValuePickupItemFeeCents);
-  const bagMinimum = cad(feeRules.bagMinimumEstimatedValueCents);
   const collectionMinimum = cad(feeRules.minimumPickupEstimatedValueCents);
   const itemMinimum = cad(feeRules.minimumItemValueCents);
   const processingFee = cad(feeRules.processingFeeCents);
@@ -413,18 +407,10 @@ function RequestDialog({
             <div className="hold-card">
               <Truck />
               <div>
-                <b>{launchEligible ? "Launch offer may apply to this first collection" : type === "bag" ? `Shikimomo Bag · included in ${processingFee}` : paidPickup ? "Own bag / box · smaller pickup" : "Own bag / box · free priority pickup"}</b>
-                <p>
-                  {launchEligible
-                    ? paidPickup
-                      ? `The regular ${processingFee} batch service fee will be waived if a launch spot remains when this first collection is successfully submitted. The flat ${lowValuePickupFee} pickup fee below ${threshold} still applies.`
-                      : `The regular ${processingFee} batch service fee will be waived if a launch spot remains when this first collection is successfully submitted. ${type === "bag" ? `The Shikimomo Bag is included and requires at least ${bagMinimum} estimated resale value.` : `${threshold} or more also qualifies for free priority pickup.`}`
-                    : type === "bag"
-                      ? `Shikimomo Bag requests require at least ${bagMinimum} estimated resale value. One ${processingFee} batch service fee covers processing and includes the Shikimomo Bag; there is no separate Bag fee.`
-                      : paidPickup
-                        ? `This batch records the same ${processingFee} service fee plus one flat ${lowValuePickupFee} pickup fee for the whole pickup because the estimated resale value is below ${threshold}.`
-                        : `This batch records one ${processingFee} service fee; ${threshold} or more qualifies for free priority pickup.`}
-                </p>
+                <b>{launchEligible ? "Launch offer may apply to this first collection" : type === "bag" ? `Shikimomo Bag · included in ${processingFee}` : "Own bag / box · pickup included"}</b>
+                <p>{launchEligible
+                  ? `The regular ${processingFee} pickup and processing fee will be waived if a launch spot remains when this first collection is successfully submitted.`
+                  : `One ${processingFee} fee covers pickup and processing for this batch. A Shikimomo Bag is included if requested.`}</p>
               </div>
             </div>
             <fieldset className="pickup-address-fields">
@@ -465,7 +451,6 @@ function RequestDialog({
               <p>{launchEligible
                 ? `The regular batch service fee is ${processingFee}. It is waived only if a launch spot remains at successful submission; signing up does not reserve a spot.`
                 : `One ${processingFee} service fee includes a Shikimomo Bag if requested. It comes out of your earnings when payouts are available, not your card upfront.`}</p>
-              {paidPickup ? <p>One flat {lowValuePickupFee} pickup fee applies below {threshold}; the launch offer does not waive this pickup fee.</p> : null}
             <div className="terms-box">
               <b>Required terms for {collectionLabel}</b>
               {category === "home_decor" ? (
