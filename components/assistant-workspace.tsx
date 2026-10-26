@@ -1,11 +1,10 @@
 "use client";
-import { CollectionPolicyConsent } from "@/components/collection-policy-consent";
+import { CollectionRequestConfirmation } from "@/components/collection-request-confirmation";
 
 import { BrandWordmark } from "./brand-wordmark";
 import { CustomerSupport } from "./customer-support";
 import { useLocale } from "./site-language";
 import { useRouter } from "next/navigation";
-import { PendingSubmitButton } from "./pending-submit-button";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -1016,14 +1015,13 @@ function OperationReview({
           {Object.entries(op.fields).map(([k, v]) => (
             <input key={k} type="hidden" name={k} value={v} />
           ))}
-          <CollectionPolicyConsent needsPricingConsent />
-          <PendingSubmitButton
+          <CollectionRequestConfirmation needsPricingConsent
             pendingLabel={fr ? "Enregistrement…" : "Submitting…"}
           >
             {fr
               ? "Confirmer et enregistrer le ramassage"
               : "Confirm & submit pickup"}
-          </PendingSubmitButton>
+          </CollectionRequestConfirmation>
         </form>
       ) : (
         <button

@@ -1,5 +1,5 @@
 "use client";
-import { CollectionPolicyConsent } from "@/components/collection-policy-consent";
+import { CollectionRequestConfirmation } from "@/components/collection-request-confirmation";
 import { Localize } from "@/components/site-language";
 import { SellingMethodTabs } from "@/components/selling-method-tabs";
 
@@ -21,7 +21,6 @@ import {
   Truck,
   Wallet,
 } from "lucide-react";
-import { PendingSubmitButton } from "@/components/pending-submit-button";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -439,10 +438,9 @@ function RequestDialog({
               />
             </label>
             <p>We collect batches with an estimated combined resale value of at least {collectionMinimum}. This is your estimate; each item is inspected and priced separately.</p>
-            <CollectionPolicyConsent needsPricingConsent={!teamPricingAccepted} />
           </div>
           <div className="request-form-footer">
-            <PendingSubmitButton disabled={!availableSlots.length} pendingLabel="Submitting request…">Submit collection request</PendingSubmitButton>
+            <CollectionRequestConfirmation needsPricingConsent={!teamPricingAccepted} disabled={!availableSlots.length} pendingLabel="Submitting request…">Submit collection request</CollectionRequestConfirmation>
             <small className="payment-note">Pickup requires confirmation by Shikimomo.</small>
           </div>
         </form>
