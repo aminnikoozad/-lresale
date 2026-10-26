@@ -3,6 +3,7 @@ import { CATALOG_CATEGORIES } from "@/lib/catalog-taxonomy";
 
 import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
+import type { SaleProvenance } from "@/components/sale-provenance-badge";
 
 
 import { connection } from "next/server";
@@ -34,6 +35,8 @@ type CatalogRow = {
   photo_url: string | null;
   price_cents: number;
   published_at: string | null;
+  photo_urls?:string[];
+  sale_mode?:"managed_consignment"|"peer_to_peer";
 };
 
 type ShippingPolicy = {
@@ -46,12 +49,13 @@ export default async function Home() {
   await connection();
   const requestTime = new Date().getTime();
   const supabase = createPublicClient();
-  const [{ data, error }, { data: shippingData, error: shippingError }, { data: homeData, error: homeError }, pilot, { data: sellingData, error: sellingError }] = await Promise.all([
+  const [{ data, error }, { data: shippingData, error: shippingError }, { data: homeData, error: homeError }, pilot, { data: sellingData, error: sellingError }, direct] = await Promise.all([
     supabase.rpc("catalog_items_v3"),
     supabase.rpc("get_shipping_policy"),
     supabase.rpc("home_catalog_details"),
     loadPilotSettings(supabase),
     supabase.rpc("get_public_selling_rules"),
+    supabase.rpc("direct_catalog"),
   ]);
 
   if (error) console.error("[home] catalog load failed", { code: error.code, message: error.message });
@@ -77,7 +81,8 @@ export default async function Home() {
   const cad = (cents: number) => new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: cents % 100 === 0 ? 0 : 2 }).format(cents / 100);
 
   const activeCategories = pilot.enabled ? pilot.categories : CATALOG_CATEGORIES.map((entry) => entry.value);
-  const catalogProducts: CatalogProduct[] = ((data ?? []) as CatalogRow[])
+  const directRows:CatalogRow[]=Array.isArray(direct.data)?direct.data.map(row=>({...row,photo_url:row.photo_urls?.[0]})):[];
+  const catalogProducts: CatalogProduct[] = ([...(data ?? []),...directRows] as CatalogRow[])
     .filter((row) =>
       typeof row.item_id === "string" &&
       typeof row.name === "string" &&
@@ -104,6 +109,7 @@ export default async function Home() {
       pattern: row.pattern,
       photoUrl: row.photo_url!,
       publishedAt: row.published_at,
+      ...(row.sale_mode==="peer_to_peer"?{provenance:{sale_mode:"peer_to_peer",physical_custody:"seller",shipping_responsibility:"seller",team_inspected:false} as SaleProvenance}:{}),
       home: homeMap.get(row.item_id)?.details,
       priceDrop: homeMap.get(row.item_id)?.price_drop ?? false,
     }));

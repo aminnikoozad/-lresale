@@ -55,6 +55,8 @@ type Product = {
   published_at: string | null;
   inspected_at: string | null;
   availability?: "available" | "reserved" | "sold";
+  sale_mode?:"managed_consignment"|"peer_to_peer";
+  checkout_enabled?:boolean;
   clothing_photos?: {url:string;role:string;defect?:string}[];
   measurements?: Record<string,number>;
   disclosed_defects?:string[];
@@ -80,6 +82,10 @@ const loadProduct = cache(async (id: string) => {
   const supabase = createPublicClient();
   let result = await supabase.rpc("buyer_catalog_item_detail", { target_item_id: id });
   if (result.error?.code === "PGRST202") result = await supabase.rpc("catalog_item_detail_v3", { target_item_id: id });
+  if(!result.error&&!result.data?.length) {
+    const direct=await supabase.rpc("direct_catalog",{p_item:id});
+    if(!direct.error&&Array.isArray(direct.data)&&direct.data.length)result=direct;
+  }
   return { product: ((result.data ?? [])[0] ?? null) as Product | null, error: result.error };
 });
 
@@ -110,7 +116,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
   }
 
   if (!product || !product.photo_urls?.length) notFound();
-  const provenance=(await loadSaleProvenance(supabase,[id])).get(id);
+  const provenance=product.sale_mode==="peer_to_peer"?{sale_mode:"peer_to_peer" as const,physical_custody:"seller" as const,shipping_responsibility:"seller" as const,team_inspected:false}:(await loadSaleProvenance(supabase,[id])).get(id);
   const shop=provenance?.sale_mode==="peer_to_peer"?(await supabase.rpc("marketplace_item_shop",{p_item:id})).data as string|null:null;
   const fr=(await cookies()).get("shikimomo-language")?.value==="fr";
 
@@ -168,6 +174,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
                 fill
                 sizes="(max-width: 800px) 100vw, 50vw"
                 priority={index === 0}
+                unoptimized={product.sale_mode==="peer_to_peer"}
               />
               {role ? (
                 <span className="home-gallery-role">{fieldLabel(role)}</span>
@@ -189,7 +196,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
           </p>
 
           <div className="product-actions">
-            {available ? <AddToCartButton item={cartItem} /> : <button disabled className="buyer-status">{product.availability === "sold" ? "Sold" : "Temporarily reserved"}</button>}
+            {product.checkout_enabled===false?<p translate="no">{fr?"Annonce personnelle. Les achats en ligne et les versements seront disponibles après la connexion du prestataire de paiement.":"Personal listing. Online purchases and seller payouts will open after the payment provider is connected."}</p>:available ? <AddToCartButton item={cartItem} /> : <button disabled className="buyer-status">{product.availability === "sold" ? "Sold" : "Temporarily reserved"}</button>}
             <FavoriteButton itemId={product.item_id} />
           </div>
 

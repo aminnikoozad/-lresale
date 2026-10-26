@@ -135,10 +135,7 @@ export default async function AccountPage({ searchParams }: Props) {
       .select("id,batch_code,request_type,category,status,confirmation_status,created_at,item_count,pickup_fee_cents,pickup_pricing_mode,priority_pickup,processing_fee_cents,bag_fee_cents,promotion_claim_number,service_fee_waived_cents")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false }),
-    supabase
-      .from("wallet_transactions")
-      .select("amount_cents,transaction_type,status")
-      .eq("user_id", user.id),
+    supabase.rpc("my_seller_balances"),
     supabase
       .from("service_areas")
       .select("id,city,pickup_mode")
@@ -175,17 +172,10 @@ export default async function AccountPage({ searchParams }: Props) {
     throw new Error("Customer account data could not be loaded.");
   }
 
-  const wallet = walletResult.data ?? [];
-  const balanceCents = wallet
-    .filter((entry) => entry.status === "completed")
-    .reduce((sum, entry) => sum + entry.amount_cents, 0);
-  const earnedCents = wallet
-    .filter(
-      (entry) =>
-        entry.status === "completed" &&
-        entry.transaction_type === "sale_credit",
-    )
-    .reduce((sum, entry) => sum + entry.amount_cents, 0);
+  const managedBalance = walletResult.data?.managed_consignment;
+  if (!managedBalance) throw new Error("Managed earnings are unavailable");
+  const balanceCents = managedBalance.confirmed;
+  const earnedCents = managedBalance.earned;
 
   const profile = profileResult.data as
     | {

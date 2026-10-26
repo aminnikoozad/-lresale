@@ -22,8 +22,8 @@ export default async function SellPage() {
         <h2>{fr ? "Je vends moi-même" : "Sell it myself"}</h2>
         <p>{fr ? "Ajoutez vos photos, vos descriptions et vos prix. Après une vente, vous emballez et expédiez vous-même." : "Add your photos, descriptions and prices. After a sale, you pack and ship the order."}</p>
         <dl><dt>{fr ? "Prix" : "Pricing"}</dt><dd>{fr ? "Vous choisissez" : "You choose"}</dd><dt>{fr ? "Inspection" : "Inspection"}</dt><dd>{fr ? "État déclaré par le vendeur" : "Condition declared by the seller"}</dd><dt>{fr ? "Frais" : "Fees"}</dt><dd>{fr ? "Frais pas encore fixés" : "Fees not yet final"}</dd></dl>
-        <p className="hybrid-notice">{fr ? "En préparation : les brouillons sont privés. La publication, l’achat et les versements ne sont pas encore disponibles." : "In preparation: drafts are private. Publishing, purchasing and payouts are not available yet."}</p>
-        <Link className="hybrid-button" href="/account/seller/direct">{fr ? "Préparer un brouillon" : "Prepare a draft"}</Link>
+        <p className="hybrid-notice">{fr ? "Publiez votre annonce après approbation du contenu. Vos revenus et frais restent distincts du dépôt-vente. Les achats et versements attendent la connexion du paiement." : "Publish your listing after content approval. Your earnings and fees stay separate from managed selling. Purchases and payouts await payment connection."}</p>
+        <Link className="hybrid-button" href="/account/seller/direct">{fr ? "Ajouter mes vêtements" : "List my clothes"}</Link>
       </article>
       <article><span>{fr ? "Vous nous confiez les articles" : "Send your items to our team"}</span>
         <h2>{fr ? "Shikimomo s’en occupe" : "Let Shikimomo handle it"}</h2>

@@ -8,6 +8,7 @@ export type TradeWorkspace={self:string;shops:Array<{id:string;name:string;city:
 // Static RPC definitions are shared by both server adapters. No arbitrary SQL/RPC
 // name or parameter name comes from a request.
 export const communityRpcDefinitions={
+ set_direct_listing_publication:[['p_item','uuid'],['p_version','integer'],['p_publish','boolean'],['p_consent','boolean']],
  marketplace_policy_document:[],
  my_marketplace_drafts:[],
  marketplace_seller_terms_status:[],

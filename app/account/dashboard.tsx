@@ -195,10 +195,10 @@ export function Dashboard({
         <article className="balance-stat">
           <div>
             <Wallet />
-            <span>Confirmed account balance</span>
+            <span>Confirmed managed-selling balance</span>
           </div>
           <strong>{balance}</strong>
-          <small>Confirmed balance in your account</small>
+          <small>Only items sold by Shikimomo</small>
           <Link href="/account/seller/earnings">View earnings &amp; payouts →</Link>
         </article>
         <article>
@@ -212,7 +212,7 @@ export function Dashboard({
         <article>
           <div>
             <CircleDollarSign />
-            <span>Total earned</span>
+            <span>Earned through Shikimomo</span>
           </div>
           <strong>{totalEarned}</strong>
           <small>Confirmed sale earnings</small>
@@ -314,7 +314,7 @@ export function Dashboard({
             <div className="payout-box">
               <Wallet />
               <div>
-                <h2>Confirmed account balance: {balance}</h2>
+                <h2>Confirmed managed-selling balance: {balance}</h2>
                 <p>Bank payouts aren’t available online yet. Check your earnings or contact Support.</p>
               </div>
               <Link href="/account/seller/earnings">View earnings &amp; payouts →</Link>
