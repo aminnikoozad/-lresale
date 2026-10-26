@@ -5,7 +5,6 @@ import { BrandWordmark } from "@/components/brand-wordmark";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Camera, CheckCircle2, CircleDollarSign, PackageCheck, SearchCheck, Truck } from "lucide-react";
-import { SellerEarningsCalculator } from "@/components/seller-earnings-calculator";
 import { createPublicClient } from "@/lib/supabase/public";
 import { formatCadFromCents, loadSellingRules, tierPriceLabel } from "@/lib/business-rules";
 import { activePilotCategories, loadPilotSettings } from "@/lib/pilot-settings";
@@ -93,10 +92,6 @@ export default async function SellWithShikimomoPage() {
           </div>
         </div>
 
-        <div className="calculator-wrap">
-          <div><h3>Estimate your earnings</h3><p>{`This is an estimate, not a payout promise. The calculator shows the regular ${serviceFee} batch service fee.`}{launchOffer.active ? " If your first collection successfully claims the active launch offer, that service fee is waived on the actual batch." : ""}</p></div>
-          <SellerEarningsCalculator tiers={rules.commissionTiers} processingFeeCents={rules.pickupRules.processingFeeCents} minimumItemValueCents={rules.minimumIndividualItemValueCents} />
-        </div>
       </section>
 
       <section className="guide-section" id="acceptance">
