@@ -1,4 +1,5 @@
 "use client";
+import { CollectionPolicyConsent } from "@/components/collection-policy-consent";
 
 import { BrandWordmark } from "./brand-wordmark";
 import { CustomerSupport } from "./customer-support";
@@ -1015,67 +1016,7 @@ function OperationReview({
           {Object.entries(op.fields).map(([k, v]) => (
             <input key={k} type="hidden" name={k} value={v} />
           ))}
-          <label>
-            <input
-              type="checkbox"
-              name="condition_confirmed"
-              value="accepted"
-              required
-            />
-            {fr
-              ? "Je confirme l’état et l’admissibilité des articles."
-              : "I confirm the condition and eligibility of my items."}
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              name="policy_accepted"
-              value="accepted"
-              required
-            />
-            {fr
-              ? "J’accepte les conditions de vente."
-              : "I accept the seller terms."}{" "}
-            <Link href="/seller-terms" target="_blank">
-              {fr ? "Lire" : "Read"}
-            </Link>
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              name="pickup_policy_accepted"
-              value="accepted"
-              required
-            />
-            {fr
-              ? "J’accepte la politique de ramassage."
-              : "I accept the pickup policy."}
-            <Link href="/pickup-policy" target="_blank">
-              {fr ? "Lire" : "Read"}
-            </Link>
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              name="service_fee_accepted"
-              value="accepted"
-              required
-            />
-            {fr
-              ? "J’accepte les frais de service indiqués dans la politique."
-              : "I accept the service fees shown in the policy."}
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              name="pickup_fee_accepted"
-              value="accepted"
-              required
-            />
-            {fr
-              ? "J’accepte les frais de ramassage applicables indiqués dans la politique."
-              : "I accept the applicable pickup fees shown in the policy."}
-          </label>
+          <CollectionPolicyConsent needsPricingConsent />
           <PendingSubmitButton
             pendingLabel={fr ? "Enregistrement…" : "Submitting…"}
           >

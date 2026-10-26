@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
 import { issueOnlyReturns, withinReturnReportingPeriod } from '../lib/return-policy.ts';
 
-const migration = readFileSync(new URL('../supabase/migrations/20261026143111_confirmed_issue_returns.sql', import.meta.url), 'utf8');
+const migration = readFileSync(new URL('../supabase/migrations/20261026172119_confirmed_issue_returns.sql', import.meta.url), 'utf8');
 const buyer = '00000000-0000-4000-8000-000000000001';
 const stranger = '00000000-0000-4000-8000-000000000002';
 const id = (n: number) => `10000000-0000-4000-8000-${String(n).padStart(12, '0')}`;

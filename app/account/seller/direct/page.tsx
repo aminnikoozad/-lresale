@@ -22,6 +22,7 @@ export default async function DirectDrafts({searchParams}: {searchParams: Promis
     <SellingMethodTabs direct/>
     <Link href="/account/seller">← {t("Selling options", "Options de vente")}</Link>
     <h1>{t("My direct sales", "Mes ventes directes")}</h1>
+    <p><Link href="/marketplace-rules">{t("Personal-selling policy", "Politique de vente personnelle")}</Link></p>
     <PersonalSellingFees fr={fr}/>
     <p className="hybrid-notice">{t("Add your clothes, choose your price and submit for review. After approval, publish the listing in the shop. You keep and ship your own items. Online purchases and payouts will open once the payment provider is connected; your personal sales balance stays separate from items sold by Shikimomo.", "Ajoutez vos vêtements, choisissez votre prix et envoyez l’annonce pour révision. Après approbation, publiez-la dans la boutique. Vous gardez et expédiez vos articles. Les achats et versements ouvriront après la connexion du prestataire de paiement; le solde de vos ventes personnelles reste distinct des articles vendus par Shikimomo.")}</p>
     <p><Link href="/account/marketplace#trade-profile">{t("Set up my seller profile", "Configurer mon profil vendeur")}</Link></p>

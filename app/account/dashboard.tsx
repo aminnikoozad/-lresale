@@ -1,4 +1,5 @@
 "use client";
+import { CollectionPolicyConsent } from "@/components/collection-policy-consent";
 import { Localize } from "@/components/site-language";
 import { SellingMethodTabs } from "@/components/selling-method-tabs";
 
@@ -6,8 +7,6 @@ import { SellingMethodTabs } from "@/components/selling-method-tabs";
 import { HomeIntake } from "@/components/home-intake";
 import {
   CATALOG_CATEGORIES,
-  FASHION_CATEGORIES,
-  categoryLabel,
   type CatalogCategory,
 } from "@/lib/catalog-taxonomy";
 import { useState } from "react";
@@ -360,11 +359,8 @@ function RequestDialog({
   const [category, setCategory] = useState<string>(mixedClothing ? "clothing" : activeCategories[0] ?? "women");
   const [estimatedValue, setEstimatedValue] = useState(feeRules.freePickupThresholdCents / 100);
   const availableSlots = pickupSlots;
-  const fashionCategory = category === "clothing" || FASHION_CATEGORIES.includes(category as CatalogCategory);
-  const collectionLabel = category === "clothing" ? "Mixed clothing" : categoryLabel(category);
   const categoryOptions = CATALOG_CATEGORIES.filter((entry) => activeCategories.includes(entry.value));
   const collectionMinimum = cad(feeRules.minimumPickupEstimatedValueCents);
-  const itemMinimum = cad(feeRules.minimumItemValueCents);
   const processingFee = cad(feeRules.processingFeeCents);
   const launchEligible = launchOffer.active && launchOffer.eligible;
 
@@ -443,46 +439,7 @@ function RequestDialog({
               />
             </label>
             <p>We collect batches with an estimated combined resale value of at least {collectionMinimum}. This is your estimate; each item is inspected and priced separately.</p>
-            <details className="collection-terms-details">
-              <summary>View collection terms &amp; fees</summary>
-              <p>{launchEligible
-                ? `The regular batch service fee is ${processingFee}. It is waived only if a launch spot remains at successful submission; signing up does not reserve a spot.`
-                : `One ${processingFee} service fee includes a Shikimomo Bag if requested. It comes out of your earnings when payouts are available, not your card upfront.`}</p>
-            <div className="terms-box">
-              <b>Required terms for {collectionLabel}</b>
-              {category === "home_decor" ? (
-                <>
-                  <p>• Items must be clean, structurally sound, inspectable and suitable for resale.</p>
-                  <p>• Acceptance depends on current category value requirements, condition and shipping feasibility. Restricted or uncertain items require review.</p>
-                  <p>• Seller information is preliminary. Shikimomo determines listing details after physical inspection.</p>
-                </>
-              ) : fashionCategory ? (
-                <>
-                  <p>• Individual listings normally require an approved resale value of at least {itemMinimum}. Lower-value eligible items may be combined into a bundle.</p>
-                  <p>• Clothes must be freshly washed or cleaned as appropriate, hygienic, complete and in good wearable condition, without stains, tears, holes or significant damage. Disclose any flaws before pickup.</p>
-                  <p>• Shikimomo inspects every item after collection and rejects any item that fails these conditions, even if the estimated batch total met {collectionMinimum}.</p>
-                  <p>• Accepted fashion items are listed for up to 90 days. Choose what happens to unsold items in your account.</p>
-                </>
-              ) : (
-                <>
-                  <p>• Devices must power on, function properly and be free of serious physical damage unless disclosed for review.</p>
-                  <p>• You must verify ownership. We may check identification, serial numbers or IMEI.</p>
-                  <p>• Passwords, user accounts and activation locks must be removed before collection.</p>
-                  <p>• Our technicians test the device and Shikimomo determines its resale value.</p>
-                </>
-              )}
-              <p>{pilotEnabled ? `• Choose an open pickup time in the calendar. Appointments are confirmed by Shikimomo.` : "• Pickup appointments depend on current service-area and scheduling availability."}</p>
-              <p>• Managed commission is calculated once when you request cash-out, based on the gross amount requested. Each recorded sale has a 30-day hold; other items can remain on sale. Processing a valid request takes 3–5 days.</p>
-              <p>• Mixed clothing is welcome. Shikimomo sorts and categorizes each item after inspection.</p>
-              <p>• <Link href="/sell-with-shikimomo" target="_blank">Read acceptance, pricing, fees and earnings in the Seller Guide.</Link></p>
-            </div>
-              <p><Link href="/seller-terms" target="_blank" rel="noopener noreferrer">Seller Terms</Link> · <Link href="/pickup-policy" target="_blank" rel="noopener noreferrer">Pickup &amp; Missed Pickup Policy</Link></p>
-            </details>
-            {!teamPricingAccepted ? <input type="hidden" name="pricing_mandate_version" value="2026-10-15-team-v1" /> : null}
-            <label className="check">
-              <input name="collection_terms_accepted" value="accepted" required type="checkbox" />{" "}
-              <span>I confirm my items meet the requirements and accept the collection terms, commission and displayed fees.{!teamPricingAccepted ? " I authorize Shikimomo to price my current and future items after inspection." : ""}</span>
-            </label>
+            <CollectionPolicyConsent needsPricingConsent={!teamPricingAccepted} />
           </div>
           <div className="request-form-footer">
             <PendingSubmitButton disabled={!availableSlots.length} pendingLabel="Submitting request…">Submit collection request</PendingSubmitButton>
