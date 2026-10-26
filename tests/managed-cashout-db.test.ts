@@ -18,7 +18,7 @@ async function setup(){const db=await marketplaceFixture();await db.exec(sql('20
  create function cron.schedule(text,text,text) returns bigint language sql as $$select 1::bigint$$;
  create function private.pilot_category_active(text) returns boolean language sql as $$select true$$;
  create or replace function public.get_selling_rules() returns jsonb language sql as $$select '{"commissionTiers":[{"minCents":800,"maxCents":9999,"sellerBps":4500,"platformBps":5500},{"minCents":10000,"maxCents":24999,"sellerBps":5000,"platformBps":5000},{"minCents":25000,"maxCents":49999,"sellerBps":5500,"platformBps":4500},{"minCents":50000,"maxCents":null,"sellerBps":6500,"platformBps":3500}]}'::jsonb$$;
- `);await db.exec(sql('20261026051515_separate_seller_ledgers_and_direct_publication'));await db.exec(sql('20261026114342_automatic_seller_statements'));await db.exec(sql('20261026125908_managed_cashout_commission'));return db;}
+ `);await db.exec(sql('20261026051515_separate_seller_ledgers_and_direct_publication'));await db.exec(sql('20261026114342_automatic_seller_statements'));await db.exec(sql('20261026125908_managed_cashout_commission'));await db.exec(sql('20261026134431_mature_verified_cashout_requests'));return db;}
 async function addSale(db:Awaited<ReturnType<typeof setup>>,index:number,amount:number,batch=randomUUID()){
  await db.exec('reset role');await db.query('insert into collection_requests(id,user_id) values($1,$2) on conflict do nothing',[batch,seller]);
  await db.query('update items set collection_request_id=$1 where id=$2',[batch,ids[index]]);
@@ -62,7 +62,8 @@ test('verified payment preserves platform-funded discounts, credits gross withou
   await db.exec('reset role');
   const lines=(await db.query<{seller_cents:number;expected:number}>('select c.seller_cents,oi.unit_price_cents expected from order_seller_credits c join order_items oi on oi.id=c.order_item_id where c.order_id=$1',[order])).rows;
   assert.equal(lines.length,2);for(const line of lines)assert.equal(line.seller_cents,line.expected);
-  await db.exec("update wallet_transactions set status='completed' where transaction_type='sale_credit';update private.managed_sale_releases set available_at=now()-interval '1 second'");
+  await db.exec("update private.managed_sale_releases set available_at=now()-interval '1 second'");
+  assert.equal((await db.query<{status:string}>("select status from wallet_transactions where transaction_type='sale_credit' limit 1")).rows[0].status,'pending');
   await identity(db,seller);const q=await quote(db,6000);assert.equal(q.availableGrossCents,6000);assert.equal(q.preview.commissionCents,3300);const id=randomUUID();await db.query('select public.request_managed_cashout($1,6000,3300,1200,1500)',[id]);
   await db.exec('reset role');await db.query("update orders set payment_status='refunded' where id=$1",[order]);
   assert.equal((await db.query<{status:string}>('select status from private.managed_cashouts where id=$1',[id])).rows[0].status,'invalidated');await identity(db,seller);assert.equal((await quote(db,100)).availableGrossCents,0);
