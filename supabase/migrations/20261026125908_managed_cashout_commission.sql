@@ -305,6 +305,7 @@ revoke all on private.managed_cashouts,private.managed_cashout_allocations,priva
 revoke all on sequence private.managed_cashout_number from public,anon,authenticated,service_role;
 create index managed_cashouts_owner on private.managed_cashouts(seller_id,requested_at desc);
 create index managed_cashout_allocations_wallet on private.managed_cashout_allocations(wallet_id);
+create index managed_cashout_batch_fees_batch on private.managed_cashout_batch_fees(batch_id);
 
 create table private.managed_sale_releases(
  wallet_id uuid primary key references public.wallet_transactions(id),
@@ -386,6 +387,7 @@ begin
  end if;
  -- Lock sources as well as the seller, so simultaneous refunds and holds cannot race.
  perform 1 from public.wallet_transactions where user_id=u and sale_mode='managed_consignment' and transaction_type='sale_credit' order by id for update;
+ perform 1 from public.collection_requests where user_id=u order by id for share;
  q:=private.managed_cashout_quote(u,p_gross);
  if (p_commission,p_fees,p_net) is distinct from ((q->>'commissionCents')::integer,(q->>'serviceFeeCents')::integer,(q->>'netCents')::integer) then raise exception 'Quote changed; review the updated amounts before submitting';end if;
  insert into private.managed_cashouts(id,number,seller_id,gross_cents,commission_bps,commission_cents,service_fee_cents,net_cents,policy_snapshot)
