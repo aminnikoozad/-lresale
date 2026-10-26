@@ -2112,5 +2112,11 @@
   "Confirmed managed sales before cash-out fees:": "Ventes gérées confirmées avant frais de retrait :",
   "• Managed commission is calculated once when you request cash-out, based on the gross amount requested. Each recorded sale has a 30-day hold; other items can remain on sale. Processing a valid request takes 3–5 days.": "• La commission de vente gérée est calculée une seule fois à la demande de retrait selon le montant brut demandé. Chaque vente enregistrée est bloquée 30 jours; les autres articles peuvent rester en vente. Le traitement d’une demande valide prend 3 à 5 jours.",
   "You see the selling price before publication. Managed-selling commission is calculated when you request cash-out.": "Le prix de vente est affiché avant publication. La commission de vente gérée est calculée à la demande de retrait.",
-  "Cash-out requests": "Demandes de retrait"
+  "Cash-out requests": "Demandes de retrait",
+  "Shikimomo considers the brand, category, condition, current resale demand, comparable market pricing and the item’s overall sellability. You see the selling price before publication. Managed-selling commission is calculated when you request cash-out.": "Shikimomo tient compte de la marque, de la catégorie, de l’état, de la demande actuelle, des prix comparables et du potentiel de revente. Le prix de vente est affiché avant publication. La commission de vente gérée est calculée à la demande de retrait.",
+  "Lower-value eligible items may be grouped into one sellable bundle. Follow bundle prices here. Managed commission is calculated when you request cash-out.": "Les articles admissibles de moindre valeur peuvent être regroupés en un lot. Suivez ici le prix des lots. La commission de vente gérée est calculée à la demande de retrait.",
+  "By approving, you accept this bundle’s initial price. Managed-selling commission is calculated when you request cash-out.": "En approuvant, vous acceptez le prix initial du lot. La commission de vente gérée est calculée à la demande de retrait.",
+  "Approve bundle price": "Approuver le prix du lot",
+  "See the selling-method fee policy and cash-out breakdown.": "Consultez les frais de la méthode de vente et le détail du retrait.",
+  "See the selling-method fee policy.": "Consultez les frais de la méthode de vente."
 }
