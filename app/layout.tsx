@@ -1,3 +1,5 @@
+import { ShippingOfferBanner } from "@/components/shipping-offer-banner";
+import "./shipping-offer.css";
 import { cookies } from "next/headers";
 import { LanguageProvider, LanguageSwitch } from "@/components/site-language";
 import type { Metadata } from "next";
@@ -72,7 +74,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   };
   return (
     <html lang={locale} className={`${inter.variable} ${spaceGrotesk.variable}`}>
-      <body><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organization).replace(/</g, "\\u003c") }} /><LanguageProvider initialLocale={locale}><LanguageSwitch /><CartProvider>{children}{!sqlStaging && <><SupportFooter /><PickupConfirmationUi /><ExperienceSwitch /></>}</CartProvider></LanguageProvider></body>
+      <body><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organization).replace(/</g, "\\u003c") }} /><LanguageProvider initialLocale={locale}><div className="site-announcement-header"><ShippingOfferBanner /><LanguageSwitch /></div><CartProvider>{children}{!sqlStaging && <><SupportFooter /><PickupConfirmationUi /><ExperienceSwitch /></>}</CartProvider></LanguageProvider></body>
     </html>
   );
 }

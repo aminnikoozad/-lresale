@@ -151,7 +151,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
 
 
   return <Localize>{(
-    <main className="product-page section-wrap">
+    <main className="product-page section-wrap" data-sale-mode={provenance?.sale_mode ?? product.sale_mode}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(productSeo(product, siteConfig.siteUrl, fr).structuredData) }} />
       <BuyerViewEvent name="view_item" ids={[id]} />
       <div className="product-topbar">
