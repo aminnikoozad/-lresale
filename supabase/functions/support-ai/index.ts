@@ -58,7 +58,7 @@ type SellingRules = {
   commissionTiers?: Array<{ minCents: number; maxCents: number | null; sellerBps: number; platformBps: number }>;
   pickupRules?: {
     freePickupThresholdCents?: number;
-    lowValuePickupItemFeeCents?: number;
+    processingFeeCents?: number;
     firstMissedPickupFeeCents?: number;
     secondMissedPickupFeeCents?: number;
     suspendFreePickupAfterMisses?: number;
@@ -421,23 +421,10 @@ async function tryPolicyCalculation(service: any, question: string, context: str
       }
     }
 
-    if (amount !== null) {
-      const cents = Math.round(amount * 100);
-      const freeThreshold = pickup.freePickupThresholdCents ?? 0;
-      const flatFee = pickup.lowValuePickupItemFeeCents ?? 0;
-      if (freeThreshold > 0 && cents >= freeThreshold) {
-        return `An estimated resale value of ${money(cents)} meets the current ${money(freeThreshold)} threshold for free priority pickup, subject to an eligible service area, available slot and the other collection requirements.`;
-      }
-      if (freeThreshold > 0 && cents < freeThreshold) {
-        return `Pickup can still be requested below ${money(freeThreshold)}. The current below-threshold pickup fee is one flat ${money(flatFee)} fee for the whole pickup. Free priority pickup starts at ${money(freeThreshold)} estimated resale value.`;
-      }
-    }
-
-    if (/free|gratuit|threshold|minimum/.test(q)) {
-      const freeThreshold = pickup.freePickupThresholdCents ?? 0;
-      const flatFee = pickup.lowValuePickupItemFeeCents ?? 0;
-      if (freeThreshold > 0) {
-        return `Free priority pickup starts at ${money(freeThreshold)} estimated resale value. Below that amount, the current pickup fee is one flat ${money(flatFee)} fee for the whole pickup.`;
+    if (amount !== null || /free|gratuit|threshold|minimum|fee|cost|frais|coût|cout/.test(q)) {
+      const fee = pickup.processingFeeCents;
+      if (Number.isInteger(fee) && fee! >= 0) {
+        return `One ${money(fee!)} fee covers pickup and processing per new collection. There is no additional transportation charge based on estimated resale value. An eligible launch offer may waive the first batch fee; final fees are shown before submission.`;
       }
     }
   }

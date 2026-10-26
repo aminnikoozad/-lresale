@@ -32,8 +32,9 @@ test("paid orders require payment and policy evidence", () => {
   assert.doesNotMatch(paymentSql, /payload\s+jsonb/i);
 });
 
-test("support AI describes below-threshold pickup fee as one flat fee", () => {
+test("support AI describes one batch fee without a value-based surcharge", () => {
   assert.match(supportAi, /get_public_selling_rules/);
+  assert.doesNotMatch(supportAi, /lowValuePickupItemFeeCents|below-threshold pickup fee/);
   assert.doesNotMatch(supportAi, /pickup fee is \$\{money\([^)]*\)\} per item/);
   assert.doesNotMatch(supportAi, /itemCount \* perItem/);
 });

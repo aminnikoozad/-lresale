@@ -69,7 +69,6 @@ export async function createCollectionRequest(formData: FormData) {
   const allTermsAccepted = formData.get("collection_terms_accepted") === "accepted";
 
   const isBagRequest = requestType === "bag";
-  const isFreePickupPreview = estimatedValueCents >= rules.pickupRules.freePickupThresholdCents;
 
   if (
     !["bag", "pickup"].includes(requestType) ||
@@ -96,12 +95,6 @@ export async function createCollectionRequest(formData: FormData) {
     ));
   }
 
-  if (!isBagRequest && !isFreePickupPreview && !allTermsAccepted) {
-    redirect(accountMessage(
-      `For pickups below ${cad(rules.pickupRules.freePickupThresholdCents)}, one flat pickup fee of ${cad(rules.pickupRules.lowValuePickupItemFeeCents)} applies to the whole pickup. Please accept the fee before submitting.`,
-      "error",
-    ));
-  }
 
   const homeIntake: Record<string,string|boolean> = {};
   let subcategoryHint: string | null = null;

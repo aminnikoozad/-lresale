@@ -100,14 +100,11 @@ export default async function SellingRulesPage({ searchParams }: Props) {
             <section className="settings-card">
               <div className="settings-card-title">
                 <h2>Pickup pricing</h2>
-                <p>Current policy: collections at or above the threshold are free and can receive priority handling. Lower-value standard pickups have one flat fee for the whole collection. Bag / Box requests have their own minimum.</p>
+                <p>One batch service fee covers pickup and processing. No extra transportation charge applies to lower-value collections. Bag / Box requests have their own minimum.</p>
               </div>
               <div className="settings-grid three">
-                <label>Free priority pickup threshold (CAD)
+                <label>Priority pickup threshold (CAD)
                   <input name="free_pickup_threshold" type="number" min="0.01" step="0.01" defaultValue={dollars(rules.pickupRules.freePickupThresholdCents)} required />
-                </label>
-                <label>Flat pickup fee below threshold (CAD)
-                  <input name="low_value_pickup_item_fee" type="number" min="0" step="0.01" defaultValue={dollars(rules.pickupRules.lowValuePickupItemFeeCents)} required />
                 </label>
                 <label>Bag / Box minimum estimated value (CAD)
                   <input name="bag_minimum_value" type="number" min="0.01" step="0.01" defaultValue={dollars(rules.pickupRules.bagMinimumEstimatedValueCents)} required />
@@ -115,9 +112,9 @@ export default async function SellingRulesPage({ searchParams }: Props) {
               </div>
               <label className="settings-check">
                 <input type="checkbox" name="priority_pickup_enabled" value="enabled" defaultChecked={rules.pickupRules.priorityPickupAtOrAboveThreshold} />
-                Mark pickup requests at or above the free-pickup threshold as priority.
+                Mark pickup requests at or above the priority threshold as priority.
               </label>
-              <p><strong>Current customer rule:</strong> {dollars(rules.pickupRules.freePickupThresholdCents)} CAD or more = free priority pickup. Below that = {dollars(rules.pickupRules.lowValuePickupItemFeeCents)} CAD for the whole pickup. Bag / Box requests require {dollars(rules.pickupRules.bagMinimumEstimatedValueCents)} CAD or more.</p>
+              <p><strong>Current customer rule:</strong> One {dollars(rules.pickupRules.processingFeeCents)} CAD batch fee includes pickup and processing. No surcharge based on collection value. Bag / Box requests require {dollars(rules.pickupRules.bagMinimumEstimatedValueCents)} CAD or more.</p>
             </section>
 
             <section className="settings-card">

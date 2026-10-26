@@ -51,7 +51,7 @@ export async function updateSellingRules(formData: FormData) {
   const minimumPickupEstimatedValueCents = dollarsToCents(number(formData, "minimum_pickup_value"));
   const minimumSellingPriceCents = dollarsToCents(number(formData, "minimum_selling_price"));
   const freePickupThresholdCents = dollarsToCents(number(formData, "free_pickup_threshold"));
-  const lowValuePickupItemFeeCents = dollarsToCents(number(formData, "low_value_pickup_item_fee"));
+  const lowValuePickupItemFeeCents = 0;
   const bagMinimumEstimatedValueCents = dollarsToCents(number(formData, "bag_minimum_value"));
   const sellingPeriodDays = number(formData, "selling_period_days");
   const highValueThresholdCents = dollarsToCents(number(formData, "high_value_threshold"));

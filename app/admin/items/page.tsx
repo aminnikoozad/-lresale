@@ -112,7 +112,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
           <div className="rule-snapshot">
             <span>Individual minimum</span>
             <strong>{formatCadFromCents(rules.minimumIndividualItemValueCents)}</strong>
-            <span>Free pickup threshold</span>
+            <span>Priority pickup threshold</span>
             <strong>{formatCadFromCents(rules.pickupRules.freePickupThresholdCents)}</strong>
           </div>
         </div>
