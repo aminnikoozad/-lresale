@@ -6,9 +6,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Camera, CheckCircle2, CircleDollarSign, PackageCheck, SearchCheck, Truck } from "lucide-react";
 import { createPublicClient } from "@/lib/supabase/public";
-import { formatCadFromCents, loadSellingRules, tierPriceLabel } from "@/lib/business-rules";
-import { activePilotCategories, loadPilotSettings } from "@/lib/pilot-settings";
+import { formatCadFromCents, loadSellingRules } from "@/lib/business-rules";
+import { loadPilotSettings } from "@/lib/pilot-settings";
 import { loadLaunchSellerOffer } from "@/lib/launch-offer";
+import { SellerGuideTables } from "@/components/seller-guide-tables";
 import "./seller-guide.css";
 
 export const dynamic = "force-dynamic";
@@ -23,17 +24,15 @@ export function generateMetadata(): Promise<Metadata> {
 
 export default async function SellWithShikimomoPage() {
   const supabase = createPublicClient();
-  const [rules, launchOffer, pilot] = await Promise.all([
+  const [rules, launchOffer, pilot, personalFeeResult] = await Promise.all([
     loadSellingRules(supabase),
     loadLaunchSellerOffer(supabase),
     loadPilotSettings(supabase),
+    supabase.rpc("personal_selling_fee_policy"),
   ]);
-  const acceptingCategories = activePilotCategories(pilot).map((entry, index) => <span key={entry.value}>{index > 0 ? ", " : ""}{entry.label}</span>);
+  const personalFees = personalFeeResult.error ? null : personalFeeResult.data;
   const serviceFee = formatCadFromCents(rules.pickupRules.processingFeeCents);
-  const freePickupThreshold = formatCadFromCents(rules.pickupRules.freePickupThresholdCents);
-  const lowValueFee = formatCadFromCents(rules.pickupRules.lowValuePickupItemFeeCents);
   const collectionMinimum = formatCadFromCents(rules.minimumPickupEstimatedValueCents);
-  const waivedServiceFee = formatCadFromCents(launchOffer.waivedServiceFeeCents);
 
   return <Localize>{(
     <main className="seller-guide-shell">
@@ -49,20 +48,8 @@ export default async function SellWithShikimomoPage() {
         <div><Link className="guide-primary" href="/account">Start a collection <ArrowRight /></Link><a className="guide-secondary" href="#fees">See fees & earnings</a></div>
       </section>
 
-      {launchOffer.active ? (
-        <section className="guide-section" id="launch-offer">
-          <div className="guide-heading">
-            <p className="eyebrow dark">Launch offer</p>
-            <h2>{`First ${launchOffer.maxClaims} sellers: your first ${waivedServiceFee} batch service fee is waived.`}</h2>
-            <p>{launchOffer.remaining} spots remain. A sign-up alone does not reserve a place. The offer is claimed only when an eligible seller successfully submits their first collection request.</p>
-          </div>
-          <div className="accept-grid">
-            <article className="good"><h3>What is waived</h3><ul><li>{`The regular ${serviceFee} batch service fee on your first successful collection request.`}</li><li>A Shikimomo Bag remains included when the request meets the Bag eligibility rules.</li><li>Each seller can receive the launch waiver only once.</li></ul></article>
-            <article className="avoid"><h3>What is not waived</h3><ul><li>{`The flat ${lowValueFee} pickup transportation fee still applies when the pickup’s estimated resale value is below ${freePickupThreshold}.`}</li><li>{`Creating an account does not consume or reserve one of the ${launchOffer.maxClaims} spots.`}</li><li>{`After claim #${launchOffer.maxClaims}, the regular ${serviceFee} batch service fee applies automatically.`}</li></ul></article>
-          </div>
-          <p className="guide-note">{`Your spot is confirmed when you submit your first request. The offer is limited to ${launchOffer.maxClaims} sellers.`}</p>
-        </section>
-      ) : null}
+      <section lang="en"><SellerGuideTables rules={rules} launchOffer={launchOffer} pilot={pilot} personalFees={personalFees} /></section>
+      <section lang="fr"><SellerGuideTables rules={rules} launchOffer={launchOffer} pilot={pilot} personalFees={personalFees} fr /></section>
 
       <section className="guide-section" id="how-it-works">
         <div className="guide-heading"><p className="eyebrow dark">How it works</p><h2>One managed process, from your door to the buyer.</h2></div>
@@ -74,33 +61,6 @@ export default async function SellWithShikimomoPage() {
           <li><PackageCheck /><b>5. Listing & sale</b><p>We publish the item, manage the buyer and track the item through the selling period.</p></li>
           <li><CircleDollarSign /><b>6. Earnings</b><p>Your seller share and applicable batch fees remain visible in your account.</p></li>
         </ol>
-      </section>
-
-      <section className="guide-section guide-fees" id="fees">
-        <div className="guide-heading"><p className="eyebrow dark">Fees & earnings</p><h2>No surprise charges.</h2><p>You’ll see your service fee before requesting a pickup. It won’t change for that request.{launchOffer.active ? " Any launch discount is saved with your request too." : ""}</p></div>
-        <div className="fee-cards">
-          <article><span>Regular batch service fee</span><strong>{serviceFee}</strong><p>Once per new batch/pickup. This single fee covers processing and includes a Shikimomo Bag if you request one. There is no separate Bag charge.{launchOffer.active ? " An eligible first collection can receive the active launch waiver." : ""}</p></article>
-          <article><span>Use your own bag / box</span><strong>No extra charge</strong><p>{`You still have the same regular ${serviceFee} batch service fee; using your own suitable bag or box does not add another fee.`}{launchOffer.active ? " If your first collection successfully claims the active launch offer, that regular service fee is waived." : ""}</p></article>
-          <article><span>Pickup</span><strong>{freePickupThreshold}+ = free</strong><section lang="en"><p>Pickup is currently available only in Montréal and surrounding areas.</p></section><section lang="fr"><p>La collecte est actuellement offerte uniquement à Montréal et dans les environs.</p></section><p>{`Below ${freePickupThreshold}, one flat ${lowValueFee} pickup transportation fee applies to the whole pickup, regardless of item count. This transportation fee is separate from the batch service fee`}{launchOffer.active ? " and is not covered by the launch waiver" : ""}.</p></article>
-        </div>
-
-        <div className="commission-wrap">
-          <div><h3>How much you keep</h3><p>Your percentage is set by the first approved price. It stays the same if the price later changes.</p></div>
-          <div className="commission-table" role="table" aria-label="Seller commission tiers">
-            <div className="commission-row head" role="row"><span>Initial approved price</span><span>You keep</span></div>
-            {rules.commissionTiers.map((tier) => <div className="commission-row" role="row" key={`${tier.minCents}-${tier.maxCents ?? "plus"}`}><span>{tierPriceLabel(tier)}</span><strong>{tier.sellerBps / 100}%</strong></div>)}
-          </div>
-        </div>
-
-      </section>
-
-      <section className="guide-section" id="acceptance">
-        <div className="guide-heading"><p className="eyebrow dark">What we accept</p><h2>Send items that have a realistic second life.</h2></div>
-        <div className="accept-grid">
-          <article className="good"><h3>Good to send</h3><ul><li>Clean, resale-ready pieces in our currently accepted categories: {acceptingCategories}.</li><li>Items in good wearable condition, without stains, tears, holes, significant damage or missing parts.</li><li>Pieces with a likely individual resale value of at least {formatCadFromCents(rules.minimumIndividualItemValueCents)}.</li><li>Lower-value compatible pieces that may make sense as a bundle.</li><li>Items with clear brand, size and care labels when available.</li></ul></article>
-          <article className="avoid"><h3>Usually not a fit</h3><ul><li>Heavily stained, damaged, incomplete or unhygienic items.</li><li>Items whose condition cannot be verified safely.</li><li>Pieces with very low resale demand or value unless they can be bundled.</li><li>Items outside the categories listed above.</li></ul></article>
-        </div>
-        <p className="guide-note">Submitting an item does not guarantee acceptance. Women’s, men’s and kids’ clothing each have their own sizing and categories. Check the currently accepted categories above before packing. Final acceptance happens after physical inspection.</p>
       </section>
 
       <section className="guide-section split-section" id="pricing">
