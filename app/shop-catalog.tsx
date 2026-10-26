@@ -662,6 +662,7 @@ export function ProductGrid({
               >
                 <Image
                   src={product.photoUrl}
+                  unoptimized={product.provenance?.sale_mode==="peer_to_peer"}
                   alt={`${product.brand} ${product.name}`}
                   fill
                   sizes="(max-width: 700px) 50vw, 260px"
@@ -695,7 +696,7 @@ export function ProductGrid({
               <QuickView product={product} selectedSizes={selectedSizes} />
               <div>
                 <b>{cad(product.priceCents)}</b>
-                <AddToCartButton item={cartItem} compact />
+                {product.provenance?.sale_mode==="peer_to_peer"?<Link href={`/item/${product.id}`}>{locale==="fr"?"Voir l’annonce":"View listing"}</Link>:<AddToCartButton item={cartItem} compact />}
               </div>
             </div>
           </article>
@@ -706,7 +707,7 @@ export function ProductGrid({
 }
 
 function QuickView({ product, selectedSizes }: { product: CatalogProduct; selectedSizes:string[] }) {
-  return <Localize><DialogPrimitive.Root><DialogPrimitive.Trigger asChild><button type="button" className="quick-view-trigger">Quick view</button></DialogPrimitive.Trigger><DialogPrimitive.Portal><DialogPrimitive.Overlay className="filter-sheet-backdrop" /><DialogPrimitive.Content className="quick-view" aria-describedby={undefined}><Localize><DialogPrimitive.Title>{product.brand}</DialogPrimitive.Title><DialogPrimitive.Close asChild><button className="quick-view-close" aria-label="Close quick view"><X /></button></DialogPrimitive.Close><div className="quick-view-photo"><Image src={product.photoUrl} alt={product.name} fill sizes="(max-width: 600px) 90vw, 400px" /></div><h2 translate="no">{product.name}</h2><dl><dt>Type</dt><dd translate="no">{product.subcategory || product.category}</dd><dt>Size</dt><dd translate="no">{product.size || "—"}</dd><dt>Colour</dt><dd translate="no">{product.color || "—"}</dd><dt>Condition</dt><dd>{product.condition || "—"}</dd></dl><b>{cad(product.priceCents)} CAD</b><p>Availability and price are checked before checkout.</p><Link href={`/item/${product.id}${selectedSizes.length ? `?${new URLSearchParams(selectedSizes.map(size=>["sizes",size])).toString()}` : ""}`} onClick={()=>void recordBuyerEvent("select_item",[product.id])}>View full details</Link></Localize></DialogPrimitive.Content></DialogPrimitive.Portal></DialogPrimitive.Root></Localize>;
+  return <Localize><DialogPrimitive.Root><DialogPrimitive.Trigger asChild><button type="button" className="quick-view-trigger">Quick view</button></DialogPrimitive.Trigger><DialogPrimitive.Portal><DialogPrimitive.Overlay className="filter-sheet-backdrop" /><DialogPrimitive.Content className="quick-view" aria-describedby={undefined}><Localize><DialogPrimitive.Title>{product.brand}</DialogPrimitive.Title><DialogPrimitive.Close asChild><button className="quick-view-close" aria-label="Close quick view"><X /></button></DialogPrimitive.Close><div className="quick-view-photo"><Image src={product.photoUrl} unoptimized={product.provenance?.sale_mode==="peer_to_peer"} alt={product.name} fill sizes="(max-width: 600px) 90vw, 400px" /></div><h2 translate="no">{product.name}</h2><dl><dt>Type</dt><dd translate="no">{product.subcategory || product.category}</dd><dt>Size</dt><dd translate="no">{product.size || "—"}</dd><dt>Colour</dt><dd translate="no">{product.color || "—"}</dd><dt>Condition</dt><dd>{product.condition || "—"}</dd></dl><b>{cad(product.priceCents)} CAD</b><p>Availability and price are checked before checkout.</p><Link href={`/item/${product.id}${selectedSizes.length ? `?${new URLSearchParams(selectedSizes.map(size=>["sizes",size])).toString()}` : ""}`} onClick={()=>void recordBuyerEvent("select_item",[product.id])}>View full details</Link></Localize></DialogPrimitive.Content></DialogPrimitive.Portal></DialogPrimitive.Root></Localize>;
 }
 
 

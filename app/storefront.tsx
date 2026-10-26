@@ -3,6 +3,7 @@ import { CATALOG_CATEGORIES } from "@/lib/catalog-taxonomy";
 
 import { Localize } from "@/components/site-language";
 import { BrandWordmark } from "@/components/brand-wordmark";
+import type { SaleProvenance } from "@/components/sale-provenance-badge";
 
 
 import { connection } from "next/server";
@@ -34,6 +35,8 @@ type CatalogRow = {
   photo_url: string | null;
   price_cents: number;
   published_at: string | null;
+  photo_urls?:string[];
+  sale_mode?:"managed_consignment"|"peer_to_peer";
 };
 
 type ShippingPolicy = {
@@ -46,12 +49,13 @@ export default async function Home() {
   await connection();
   const requestTime = new Date().getTime();
   const supabase = createPublicClient();
-  const [{ data, error }, { data: shippingData, error: shippingError }, { data: homeData, error: homeError }, pilot, { data: sellingData, error: sellingError }] = await Promise.all([
+  const [{ data, error }, { data: shippingData, error: shippingError }, { data: homeData, error: homeError }, pilot, { data: sellingData, error: sellingError }, direct] = await Promise.all([
     supabase.rpc("catalog_items_v3"),
     supabase.rpc("get_shipping_policy"),
     supabase.rpc("home_catalog_details"),
     loadPilotSettings(supabase),
     supabase.rpc("get_public_selling_rules"),
+    supabase.rpc("direct_catalog"),
   ]);
 
   if (error) console.error("[home] catalog load failed", { code: error.code, message: error.message });
@@ -77,7 +81,8 @@ export default async function Home() {
   const cad = (cents: number) => new Intl.NumberFormat("en-CA", { style: "currency", currency: "CAD", maximumFractionDigits: cents % 100 === 0 ? 0 : 2 }).format(cents / 100);
 
   const activeCategories = pilot.enabled ? pilot.categories : CATALOG_CATEGORIES.map((entry) => entry.value);
-  const catalogProducts: CatalogProduct[] = ((data ?? []) as CatalogRow[])
+  const directRows:CatalogRow[]=Array.isArray(direct.data)?direct.data.map(row=>({...row,photo_url:row.photo_urls?.[0]})):[];
+  const catalogProducts: CatalogProduct[] = ([...(data ?? []),...directRows] as CatalogRow[])
     .filter((row) =>
       typeof row.item_id === "string" &&
       typeof row.name === "string" &&
@@ -104,6 +109,7 @@ export default async function Home() {
       pattern: row.pattern,
       photoUrl: row.photo_url!,
       publishedAt: row.published_at,
+      ...(row.sale_mode==="peer_to_peer"?{provenance:{sale_mode:"peer_to_peer",physical_custody:"seller",shipping_responsibility:"seller",team_inspected:false} as SaleProvenance}:{}),
       home: homeMap.get(row.item_id)?.details,
       priceDrop: homeMap.get(row.item_id)?.price_drop ?? false,
     }));
@@ -138,7 +144,7 @@ export default async function Home() {
       <SellingHero />
 
       <div className="market-service-strip" aria-label="How Shikimomo is different">
-        <span><ShieldCheck aria-hidden="true" /><span><strong>Checked before listing</strong>Every piece checked by our team.</span></span>
+        <span><ShieldCheck aria-hidden="true" /><span><strong>Reviewed before listing</strong>Managed pieces inspected. Personal listings reviewed.</span></span>
         <span><PackageCheck aria-hidden="true" /><span><strong>Details before you decide</strong>Size, colour, condition and price.</span></span>
         <span><PackageCheck aria-hidden="true" /><span><strong>Know where you stand</strong>Delivery and return details up front.</span></span>
       </div>
@@ -147,7 +153,7 @@ export default async function Home() {
 
       <section className="shipping-strip" aria-label="Canada delivery policy"><Truck aria-hidden="true" /><div><strong>{shipping.canadaWideEnabled === false ? "Delivery, with the details up front." : "Finds worth sending across Canada."}</strong><span>{shippingSummary}</span></div><Link href="/shipping-policy">Delivery details <ArrowRight aria-hidden="true" /></Link></section>
 
-      <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Checked by our team</p><h2>We inspect and photograph every item.</h2><p>{pilot.enabled ? "For now, we accept women’s, men’s and kids’ clothing." : "We check each item before listing it."} If an item doesn’t match its listing, contact Support. We’ll look into it.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
+      <section className="guarantee-section"><div><ShieldCheck /><p className="eyebrow">Know your seller</p><h2>Two ways to shop secondhand.</h2><p>{pilot.enabled ? "For now, we accept women’s, men’s and kids’ clothing." : "Check each listing for its selling method."} Managed pieces are inspected and shipped by Shikimomo. Personal listings are described and shipped by their sellers.</p><Button asChild variant="secondary"><a href="#shop">Browse items</a></Button></div></section>
 
       <footer>
         <div className="brand"><BrandWordmark /></div>

@@ -59,7 +59,7 @@ export function SellingHero() {
       href: "/account/seller/direct",
       image: "/featured-products.webp",
       alt: fr ? "Sélection de vêtements et accessoires d’occasion" : "A selection of secondhand clothing and accessories",
-      note: fr ? "Les annonces restent privées pendant la préparation du lancement de la vente directe." : "Listings stay private while direct selling prepares to launch.",
+      note: fr ? "Publiez après approbation. Les achats et versements seront ouverts après la connexion du paiement." : "Publish after approval. Purchases and payouts will open once payments are connected.",
     },
   ];
 

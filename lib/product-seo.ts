@@ -8,6 +8,7 @@ export type SeoProduct = {
   photo_urls: string[];
   price_cents: number;
   availability?: "available" | "reserved" | "sold";
+  checkout_enabled?:boolean;
 };
 
 export const isItemId = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
@@ -35,7 +36,7 @@ export function productSeo(product: SeoProduct, origin: string, french = false) 
       ...(product.brand && !["unbranded", "no brand", "other"].includes(product.brand.toLowerCase())
         ? { brand: { "@type": "Brand", name: product.brand } } : {}),
       ...(product.size ? { size: product.size } : {}),
-      ...(validPrice ? { offers: {
+      ...(validPrice && product.checkout_enabled!==false ? { offers: {
         "@type": "Offer", url, priceCurrency: "CAD", price: (product.price_cents / 100).toFixed(2), availability,
         itemCondition: product.item_condition === "New" ? "https://schema.org/NewCondition" : "https://schema.org/UsedCondition",
       } } : {}),

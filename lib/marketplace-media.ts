@@ -53,6 +53,15 @@ export async function readProcessedPhoto(ctx:MarketplaceActor,id:string) {
   if(ctx.actor||photo.provider!=="supabase") throw new Error("photo_unavailable");
   const response=await adminStorage().storage.from(bucket).download(photo.key);if(response.error||!response.data) throw new Error("photo_unavailable");return new Uint8Array(await response.data.arrayBuffer());
 }
+export async function readPublicListingPhoto(id:string) {
+ if(isNeonStaging())throw new Error("photo_unavailable");
+ const admin=adminStorage();
+ const {data,error}=await admin.rpc("direct_public_photo",{p_asset:id});
+ if(error||!data||data.provider!=="supabase"||typeof data.key!=="string")throw new Error("photo_unavailable");
+ const result=await admin.storage.from(bucket).download(data.key);
+ if(result.error||!result.data||result.data.size>1_500_000)throw new Error("photo_unavailable");
+ return new Uint8Array(await result.data.arrayBuffer());
+}
 export async function withdrawPhoto(ctx:MarketplaceActor,id:string,version:number) {
   if(ctx.actor) return stagingWithdrawPhoto(ctx.actor,id,version);
   const {error}=await ctx.client!.rpc("withdraw_marketplace_photo",{p_asset:id,p_version:version});if(error) throw new Error("draft_changed");
