@@ -1,4 +1,5 @@
 "use client";
+import { issueOnlyReturns, withinReturnReportingPeriod } from "@/lib/return-policy";
 import { reservationTime } from "@/lib/buyer-flow-navigation";
 import { Localize } from "@/components/site-language";
 
@@ -12,7 +13,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type Favorite = { item_id: string; notify_price_drop: boolean; created_at: string };
 type Alert = { id: string; item_id: string; old_price_cents: number; new_price_cents: number; created_at: string; read_at: string | null };
-type Order = { id: string; status: string; payment_status: string; subtotal_cents: number; shipping_cents: number | null; total_cents: number | null; tracking_number: string | null; reservation_expires_at: string | null; created_at: string };
+type Order = { id: string; status: string; payment_status: string; subtotal_cents: number; shipping_cents: number | null; total_cents: number | null; tracking_number: string | null; reservation_expires_at: string | null; delivered_at: string | null; return_policy_version: string | null; created_at: string };
 type OrderItem = { id: string; order_id: string; item_id: string; item_name: string; brand: string; size: string | null; item_condition: string | null; unit_price_cents: number };
 type ReturnRequest = { id: string; order_id: string; order_item_id: string; reason: string; status: string; created_at: string };
 type CatalogItem = { item_id: string; name: string; brand: string; photo_url: string | null; price_cents: number };
@@ -58,7 +59,7 @@ export function BuyerAccountTools() {
     const [favResult, alertResult, orderResult, catalogResult] = await Promise.all([
       supabase.from("favorites").select("item_id,notify_price_drop,created_at").order("created_at", { ascending: false }),
       supabase.from("price_drop_alerts").select("id,item_id,old_price_cents,new_price_cents,created_at,read_at").order("created_at", { ascending: false }).limit(20),
-      supabase.from("orders").select("id,status,payment_status,subtotal_cents,shipping_cents,total_cents,tracking_number,reservation_expires_at,created_at").order("created_at", { ascending: false }).limit(50),
+      supabase.from("orders").select("id,status,payment_status,subtotal_cents,shipping_cents,total_cents,tracking_number,reservation_expires_at,delivered_at,return_policy_version,created_at").order("created_at", { ascending: false }).limit(50),
       supabase.rpc("catalog_items"),
     ]);
     const nextOrders = (orderResult.data ?? []) as Order[];
@@ -196,6 +197,8 @@ export function BuyerAccountTools() {
 
                   {items.map((item) => {
                     const existingReturn = returns.find((entry) => entry.order_item_id === item.id);
+                    const issueOnly = issueOnlyReturns(order.return_policy_version);
+                    const inReportingPeriod = withinReturnReportingPeriod(order.delivered_at);
                     const eligible = order.status === "delivered" && order.payment_status === "paid" && !existingReturn;
                     return (
                       <div className="purchase-item" key={item.id}>
@@ -204,8 +207,9 @@ export function BuyerAccountTools() {
                           <span className="return-status"><RotateCcw /> Return: {title(existingReturn.status)}</span>
                         ) : eligible ? (
                           <form className="return-form" action={(data) => requestReturn(order, item, data)}>
-                            <select name="reason" required defaultValue=""><option value="" disabled>Return / claim reason</option><option value="not_as_described">Not as described</option><option value="damaged">Damaged</option><option value="wrong_item">Wrong item</option><option value="fit_or_preference">Fit / preference</option><option value="other">Other</option></select>
-                            <input name="details" maxLength={2000} placeholder="Details (optional)" />
+                            {issueOnly ? <p className="return-policy-notice">Report a listing discrepancy or an undisclosed problem within 7 days of delivery. Change-of-mind and selection-error returns are not accepted. Legal warranty claims remain available after 7 days. Requests are reviewed before approval; Shikimomo covers reasonable return shipping for confirmed issues attributable to us.</p> : <p className="return-policy-notice">This order retains its original return policy. <Link href="/returns/2026-10-18">Read the earlier policy</Link>.</p>}
+                            <select name="reason" required defaultValue=""><option value="" disabled>Return / claim reason</option>{!issueOnly || inReportingPeriod ? <><option value="not_as_described">Not as described</option><option value="damaged">Damaged</option><option value="wrong_item">Wrong item</option></> : null}{!issueOnly ? <option value="fit_or_preference">Fit / preference</option> : null}<option value="other">{issueOnly ? "Legal warranty / statutory claim" : "Other"}</option></select>
+                            <input name="details" maxLength={2000} required={issueOnly} placeholder={issueOnly ? "Describe the discrepancy or undisclosed problem" : "Details (optional)"} />
                             <PendingSubmitButton size="sm" variant="outline" pendingLabel="Requesting…">Request review</PendingSubmitButton>
                           </form>
                         ) : null}
