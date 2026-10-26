@@ -1,5 +1,5 @@
 "use client";
-import { Localize } from "@/components/site-language";
+import { Localize, useLocale } from "@/components/site-language";
 
 
 import { BrandWordmark } from "@/components/brand-wordmark";
@@ -13,6 +13,7 @@ import { logout } from "@/app/auth/actions";
 import { isWorkspaceLinkActive, type WorkspaceLink } from "@/lib/workspace-navigation";
 
 export function WorkspaceNavigation({ title, links }: { title: string; links: WorkspaceLink[] }) {
+  const fr=useLocale().locale==="fr";
   const menuButton = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
   const [expandedAt, setExpandedAt] = useState<string | null>(null);
@@ -25,7 +26,7 @@ export function WorkspaceNavigation({ title, links }: { title: string; links: Wo
     </div>
     <div id={id} className="workspace-navigation-panel" data-open={open}>
       <nav aria-label={`${title} sections`}>
-        {links.map((link) => <Link key={link.href} href={link.href} onClick={() => setExpandedAt(null)} aria-current={isWorkspaceLinkActive(pathname, link.href, links) ? "page" : undefined}>{link.label}</Link>)}
+        {links.map((link) => <Link key={link.href} href={link.href} onClick={() => setExpandedAt(null)} aria-current={isWorkspaceLinkActive(pathname, link.href, links) ? "page" : undefined}>{link.label==="Sales statements"?(fr?"Relevés de vente":"Sales statements"):link.label}</Link>)}
       </nav>
       <div className="workspace-navigation-exit"><Link href="/shop">Back to shop</Link><form action={logout}><button type="submit"><LogOut aria-hidden="true" /> Sign out</button></form></div>
     </div>

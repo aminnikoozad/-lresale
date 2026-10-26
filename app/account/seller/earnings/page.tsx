@@ -19,6 +19,7 @@ export default async function SellerEarnings() {
   const t = (en:string,french:string) => fr?french:en;
   return <main className="account-shared-page" translate="no" lang={fr?"fr":"en"}>
     <p className="eyebrow dark">{t("Seller account","Compte vendeur")}</p><h1>{t("Earnings & payouts","Revenus et versements")}</h1>
+    <p><Link href="/account/seller/statements">{t("My sales statements →","Mes relevés de vente →")}</Link></p>
     {summary.error||activity.error||!balances ? <p role="alert">{t("Your earnings could not be loaded. Please try again.","Impossible de charger vos revenus. Réessayez.")}</p> : <>
       <p>{t("Each selling method has its own balance and commission record. Earnings from one method cannot cover a withdrawal from the other.","Chaque méthode possède son propre solde et son historique de commission. Les revenus d’une méthode ne peuvent pas financer un retrait de l’autre.")}</p>
       {(["managed_consignment","peer_to_peer"] as const).map(mode=><section className="account-shared-card" key={mode}>
