@@ -3,12 +3,46 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 import {sellerBalances} from '../lib/seller-ledger.ts';
+import {marketplaceCommission} from '../lib/marketplace.ts';
 import {marketplaceFixture} from './fixtures/marketplace-db.ts';
 import {applySellerPolicy} from './fixtures/marketplace-policy-db.ts';
 import {identity,seller,other,staff,ids} from './fixtures/buyer-sales-db.ts';
 const migration=readFileSync(new URL('../supabase/migrations/20261026051515_separate_seller_ledgers_and_direct_publication.sql',import.meta.url),'utf8');
 const sql=(name:string)=>readFileSync(new URL(`../supabase/migrations/${name}.sql`,import.meta.url),'utf8');
 async function setup(){const db=await marketplaceFixture();await db.exec(sql('20261021114432_marketplace_community_trading'));await applySellerPolicy(db);await db.exec('create schema storage;create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);');await db.exec(sql('20261022115748_direct_submission_rollout'));await db.exec('create function private.pilot_category_active(text) returns boolean language sql as $$select true$$');await db.exec(migration);return db;}
+test('approved personal fee is 15% with a single CAD 1.50 floor, without changing managed rules or opening payments',async()=>{
+ const db=await setup();try{
+  const before=(await db.query('select public.get_selling_rules() v')).rows[0];
+  await db.exec('begin;'+sql('20261026053214_approve_personal_selling_fees')+'commit;');
+  await identity(db,'','anon');
+  const fee=(await db.query<{v:{version:number;commissionBps:number;minimumCommissionCents:number;scope:string}}>('select public.personal_selling_fee_policy() v')).rows[0].v;
+  assert.equal(fee.commissionBps,1500);assert.equal(fee.minimumCommissionCents,150);assert.equal(fee.scope,'seller_suborder');
+  assert.equal(marketplaceCommission(800,fee).commissionCents,150);
+  assert.equal(marketplaceCommission(2000,fee).commissionCents,300);
+  assert.equal(marketplaceCommission(1600,fee).commissionCents,240);
+  await db.exec('reset role');assert.deepEqual((await db.query('select public.get_selling_rules() v')).rows[0],before);
+  const policy=(await db.query<{value:{feesApproved:boolean;newPurchasesEnabled:boolean;commercialApproved:boolean}}>("select value from public.business_setting_versions where setting_key='marketplace_policy' order by version desc limit 1")).rows[0].value;
+  assert.equal(policy.feesApproved,true);assert.equal(policy.newPurchasesEnabled,false);assert.equal(policy.commercialApproved,false);
+ }finally{await db.close();}
+});
+test('cash-out reads keep both balances separate; personal rates cannot rewrite managed credit snapshots or re-charge withdrawals',async()=>{
+ const db=await setup();try{
+  await db.exec('reset role');
+  const credit=(await db.query<{id:string;commission_snapshot:unknown}>("insert into public.wallet_transactions(user_id,item_id,amount_cents,transaction_type,status,description) values($1,$2,480,'sale_credit','completed','Synthetic managed settlement') returning id,commission_snapshot",[seller,ids[0]])).rows[0];
+  await db.exec('begin;'+sql('20261026053214_approve_personal_selling_fees')+'commit;');
+  assert.deepEqual((await db.query<{commission_snapshot:unknown}>('select commission_snapshot from public.wallet_transactions where id=$1',[credit.id])).rows[0].commission_snapshot,credit.commission_snapshot);
+  await identity(db,seller);
+  const balances=(await db.query<{v:{managed_consignment:{confirmed:number};peer_to_peer:{confirmed:number}}}>('select public.my_seller_balances() v')).rows[0].v;
+  assert.equal(balances.managed_consignment.confirmed,480);assert.equal(balances.peer_to_peer.confirmed,0);
+  await identity(db,other);assert.equal((await db.query<{v:{managed_consignment:{confirmed:number}}}>('select public.my_seller_balances() v')).rows[0].v.managed_consignment.confirmed,0);
+  await db.exec('reset role');
+  for(const mode of ['managed_consignment','peer_to_peer'])await assert.rejects(db.query("insert into public.wallet_transactions(user_id,sale_mode,amount_cents,transaction_type,status,description) values($1,$2,-100,'payout_debit','completed','Synthetic withdrawal blocked')",[seller,mode]),/verified payout provider/);
+  await assert.rejects(db.query("update public.wallet_transactions set commission_snapshot='{}'::jsonb where id=$1",[credit.id]),/immutable/);
+  await db.query("insert into public.wallet_transactions(user_id,item_id,amount_cents,transaction_type,status,description) values($1,$2,-480,'adjustment','completed','Synthetic refund reversal')",[seller,ids[0]]);
+  await identity(db,seller);const after=(await db.query<{v:{managed_consignment:{confirmed:number};peer_to_peer:{confirmed:number}}}>('select public.my_seller_balances() v')).rows[0].v;
+  assert.equal(after.managed_consignment.confirmed,0);assert.equal(after.peer_to_peer.confirmed,0);
+ }finally{await db.close();}
+});
 test('sale balances never blend sources, debit purchases or count reversed/pending money as confirmed',()=>{
  const rows=[
   {sale_mode:'managed_consignment',transaction_type:'sale_credit',status:'completed',amount_cents:6000},
