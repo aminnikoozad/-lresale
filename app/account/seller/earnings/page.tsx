@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { type SellerBalances } from "@/lib/seller-ledger";
 import { createClient } from "@/lib/supabase/server";
+import { PersonalSellingFees } from "@/components/personal-selling-fees";
 
 function cad(cents:number) { return new Intl.NumberFormat("en-CA",{style:"currency",currency:"CAD"}).format(cents/100); }
 export default async function SellerEarnings() {
@@ -23,7 +24,7 @@ export default async function SellerEarnings() {
       {(["managed_consignment","peer_to_peer"] as const).map(mode=><section className="account-shared-card" key={mode}>
         <h2>{mode==="managed_consignment"?t("Sold by Shikimomo","Vendu par Shikimomo"):t("My personal sales","Mes ventes personnelles")}</h2>
         <dl><dt>{t("Pending earnings","Revenus en attente")}</dt><dd>{cad(balances[mode].pending)}</dd><dt>{t("Confirmed balance","Solde confirmé")}</dt><dd>{cad(balances[mode].confirmed)}</dd></dl>
-        <p>{mode==="managed_consignment"?t("The percentage agreed for each item is preserved. Collection and service fees apply only to this managed balance.","Le pourcentage convenu pour chaque article est conservé. Les frais de collecte et de service concernent uniquement ce solde géré."):t("Personal sales use a separate fee policy. Managed consignment percentages and collection fees do not apply here. The final personal-selling fee will be shown before paid sales open.","Les ventes personnelles utilisent des frais distincts. Les pourcentages du dépôt-vente et les frais de collecte ne s’appliquent pas ici. Les frais définitifs seront affichés avant l’ouverture des ventes payantes.")}</p>
+        {mode==="managed_consignment"?<p>{t("The percentage agreed for each item is preserved. Collection and service fees apply only to this managed balance.","Le pourcentage convenu pour chaque article est conservé. Les frais de collecte et de service concernent uniquement ce solde géré.")}</p>:<PersonalSellingFees fr={fr}/>}
         <p>{t("Commission is recorded with the sale, not recalculated at cash-out. Online bank withdrawals are not available until a payout provider is connected.","La commission est enregistrée lors de la vente, sans nouveau calcul au retrait. Les retraits bancaires en ligne seront disponibles après la connexion d’un prestataire de versement.")}</p>
         <Link href={`/account/messages?topic=${mode}`}>{t("Contact Support about this balance →","Contacter le soutien pour ce solde →")}</Link>
         <h3>{t("Activity for this selling method","Activité de cette méthode")}</h3>

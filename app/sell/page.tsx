@@ -2,6 +2,7 @@ import { publicPageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import "./sell.css";
+import { PersonalSellingFees } from "@/components/personal-selling-fees";
 export function generateMetadata() {
   return publicPageMetadata("/sell", {
     title: "Sell Secondhand Clothes in Montréal | Shikimomo",
@@ -21,7 +22,7 @@ export default async function SellPage() {
       <article><span>{fr ? "Vous gardez les articles" : "Keep your items at home"}</span>
         <h2>{fr ? "Je vends moi-même" : "Sell it myself"}</h2>
         <p>{fr ? "Ajoutez vos photos, vos descriptions et vos prix. Après une vente, vous emballez et expédiez vous-même." : "Add your photos, descriptions and prices. After a sale, you pack and ship the order."}</p>
-        <dl><dt>{fr ? "Prix" : "Pricing"}</dt><dd>{fr ? "Vous choisissez" : "You choose"}</dd><dt>{fr ? "Inspection" : "Inspection"}</dt><dd>{fr ? "État déclaré par le vendeur" : "Condition declared by the seller"}</dd><dt>{fr ? "Frais" : "Fees"}</dt><dd>{fr ? "Frais pas encore fixés" : "Fees not yet final"}</dd></dl>
+        <dl><dt>{fr ? "Prix" : "Pricing"}</dt><dd>{fr ? "Vous choisissez" : "You choose"}</dd><dt>{fr ? "Inspection" : "Inspection"}</dt><dd>{fr ? "État déclaré par le vendeur" : "Condition declared by the seller"}</dd><dt>{fr ? "Frais" : "Fees"}</dt><dd><PersonalSellingFees fr={fr} summary/></dd></dl>
         <p className="hybrid-notice">{fr ? "Publiez votre annonce après approbation du contenu. Vos revenus et frais restent distincts du dépôt-vente. Les achats et versements attendent la connexion du paiement." : "Publish your listing after content approval. Your earnings and fees stay separate from managed selling. Purchases and payouts await payment connection."}</p>
         <Link className="hybrid-button" href="/account/seller/direct">{fr ? "Ajouter mes vêtements" : "List my clothes"}</Link>
       </article>
