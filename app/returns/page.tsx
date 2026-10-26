@@ -14,7 +14,7 @@ export function generateMetadata(): Promise<Metadata> {
 export default function ReturnsPage() {
   return <Localize>{<main className="shipping-policy-page"><header className="policy-header"><Link href="/" className="brand"><BrandWordmark /></Link><Link href="/account">My account</Link></header><article className="legal-policy">
     <div className="policy-hero"><p className="eyebrow dark">Buyer protection</p><h1>Returns & Refunds</h1><p>Effective October 26, 2026</p></div>
-    <section lang="fr"><h2>Français</h2>
+    <section lang="fr"><h2>Français</h2><p>Cette politique concerne les articles vendus et expédiés par Shikimomo. Pour les annonces où le vendeur garde et expédie son article, consultez la <Link href="/marketplace-rules">politique distincte de vente personnelle</Link>.</p>
       <p>Cette version s’applique aux nouvelles commandes acceptant la politique du 26 octobre 2026. Les commandes antérieures conservent les conditions acceptées lors de l’achat.</p>
       <h3>Demande sous 7 jours après livraison</h3>
       <p>Signalez un article erroné, une différence importante avec la description, un défaut non déclaré ou un dommage de transport dans les 7 jours civils suivant la livraison, depuis votre compte acheteur ou auprès du soutien. Indiquez le problème et fournissez des photos pour permettre son examen. Une demande ne constitue pas une autorisation de retour.</p>
@@ -30,7 +30,7 @@ export default function ReturnsPage() {
       <p>Le délai de signalement de 7 jours et ces conditions ne limitent pas les garanties légales, les droits d’annulation des contrats à distance ni les autres droits obligatoires au Québec. Vous pouvez signaler une réclamation légale depuis votre compte ou auprès du soutien, y compris après ce délai. Les recours, délais et frais prévus par la loi continuent de s’appliquer. La vente d’occasion ne supprime pas ces droits.</p>
       <p>Commandes antérieures : <Link href="/returns/2026-10-18">politique du 18 octobre 2026</Link>.</p>
     </section>
-    <section lang="en"><h2>English</h2>
+    <section lang="en"><h2>English</h2><p>This policy covers items sold and shipped by Shikimomo. For listings where the seller keeps and ships the item, see the separate <Link href="/marketplace-rules">personal-selling policy</Link>.</p>
       <p>This version applies to new orders accepting the October 26, 2026 policy. Earlier orders retain the terms accepted at purchase.</p>
       <h3>Report a problem within 7 days of delivery</h3>
       <p>Report a wrong item, a material difference from the listing, an undisclosed defect or transit damage within 7 calendar days after delivery through your buyer account or Support. Describe the problem and provide photos for review. Submitting a request does not authorize a return.</p>
