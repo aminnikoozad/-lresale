@@ -64,7 +64,7 @@ export default async function SellWithShikimomoPage() {
       </section>
 
       <section className="guide-section split-section" id="pricing">
-        <div><p className="eyebrow dark">How we price</p><h2>Pricing is reviewed item by item.</h2><p>Shikimomo considers the brand, category, condition, current resale demand, comparable market pricing and the item’s overall sellability. You see the initial approved price and your commission before publishing.</p><p>If we can’t accept an item, you’ll see the reason and a photo in your account.</p></div>
+        <div><p className="eyebrow dark">How we price</p><h2>Pricing is reviewed item by item.</h2><p>Shikimomo considers the brand, category, condition, current resale demand, comparable market pricing and the item’s overall sellability. You see the selling price before publication. Managed-selling commission is calculated when you request cash-out.</p><p>If we can’t accept an item, you’ll see the reason and a photo in your account.</p></div>
         <div className="send-checklist"><h3>What should I send?</h3><p><b>Batch minimum:</b> {collectionMinimum} estimated combined resale value for collection. This is an estimate, not a promise of acceptance or final pricing.</p><p><b>Best candidates:</b> clean, current, easy-to-identify pieces in strong condition with realistic resale demand.</p><p><b>Rejected after inspection:</b> unhygienic, stained, torn, incomplete or significantly damaged items, or items unsuitable for resale.</p><p><b>Before pickup:</b> wash or clean items as appropriate, fold them neatly and describe known flaws honestly.</p></div>
       </section>
 

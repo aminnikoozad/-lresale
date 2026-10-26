@@ -214,7 +214,7 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                   <div><dt>Condition</dt><dd>{item.item_condition || "—"}</dd></div>
                   <div><dt>Photos</dt><dd>{item.photo_urls?.length ?? 0}</dd></div>
                   <div><dt>Pickup request</dt><dd>{item.collection_request_id ? `${item.collection_request_id.slice(0, 8)}…` : "—"}</dd></div>
-                  <div><dt>Seller share</dt><dd>{item.seller_bps == null ? "Not locked" : `${item.seller_bps / 100}%`}</dd></div>
+                  <div><dt>Commission</dt><dd>See the selling-method fee policy.</dd></div>
                   <div><dt>Pricing</dt><dd>{item.seller_approved_at ? "Finalized / locked" : "Pending"}</dd></div>
                   <div><dt>Shop</dt><dd>{item.status === "listed" ? "LIVE" : "Not live"}</dd></div>
                 </dl>
@@ -248,14 +248,14 @@ export default async function AdminItemsPage({ searchParams }: Props) {
                     <button type="submit">Save review</button>
                   </form>
                 ) : item.status === "listed" ? (
-                  <p className="locked-note">Live in the shop. Commission and initial approved price remain locked.</p>
+                  <p className="locked-note">Live in the shop. The initial approved price is recorded. Managed commission is calculated at cash-out.</p>
                 ) : item.photo_urls?.length ? (
                   <form className="review-form publish-form" action={publishAdminItem}>
                     <input type="hidden" name="item_id" value={item.item_id} />
                     <label>Shop price (CAD)
                       <input name="listed_price" type="number" min="8" readOnly step="0.01" defaultValue={dollars(item.listed_price_cents ?? item.initial_price_cents)} required />
                     </label>
-                    <div className="publish-note">This must match the final admin-approved price in AI Pricing. The locked commission tier does not change.</div>
+                    <div className="publish-note">This must match the final admin-approved price in AI Pricing. Managed-selling commission is calculated on the gross withdrawal requested.</div>
                     <label><input type="checkbox" name="inspection_passed" value="yes" required /> I confirm the physical inspection passed: clean, intact and suitable for resale. Clothing and accessories are wearable without stains, tears, holes or significant damage.</label>
                     <button type="submit">Publish to Shop</button>
                   </form>

@@ -2107,5 +2107,10 @@
   "Own bag / box · pickup included": "Votre sac ou boîte · collecte comprise",
   "Pickup & processing": "Collecte et traitement",
   "Updated October 26, 2026": "Mise à jour le 26 octobre 2026",
-  "Priority pickup threshold (CAD)": "Seuil de collecte prioritaire (CAD)"
+  "Priority pickup threshold (CAD)": "Seuil de collecte prioritaire (CAD)",
+  "Calculated at cash-out": "Calculée au retrait",
+  "Confirmed managed sales before cash-out fees:": "Ventes gérées confirmées avant frais de retrait :",
+  "• Managed commission is calculated once when you request cash-out, based on the gross amount requested. Each recorded sale has a 30-day hold; other items can remain on sale. Processing a valid request takes 3–5 days.": "• La commission de vente gérée est calculée une seule fois à la demande de retrait selon le montant brut demandé. Chaque vente enregistrée est bloquée 30 jours; les autres articles peuvent rester en vente. Le traitement d’une demande valide prend 3 à 5 jours.",
+  "You see the selling price before publication. Managed-selling commission is calculated when you request cash-out.": "Le prix de vente est affiché avant publication. La commission de vente gérée est calculée à la demande de retrait.",
+  "Cash-out requests": "Demandes de retrait"
 }
