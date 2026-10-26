@@ -1,0 +1,16 @@
+.market-home .selling-hero{display:block!important;height:auto!important;min-height:0!important}
+.selling-hero-viewport{overflow:hidden;border-radius:4px;touch-action:pan-y pinch-zoom}
+.selling-hero-track{display:flex;align-items:stretch;transition:transform .5s ease}
+.market-home .selling-hero-slide{flex:0 0 100%;width:100%;min-width:0}
+.market-home .selling-hero h2{color:var(--market-ink);font-size:clamp(2.7rem,4.2vw,4.4rem);font-weight:550;line-height:1.03;letter-spacing:-.06em;margin:0 0 24px}
+.selling-hero-note{display:block;max-width:420px;margin-top:16px;color:var(--market-muted);line-height:1.5;font-size:.78rem}
+.selling-hero-controls{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 0}
+.selling-hero-controls button{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;background:transparent;border:1px solid transparent;border-radius:50%;color:var(--market-ink);cursor:pointer}
+.selling-hero-controls button:hover{background:#f2f5f3}
+.selling-hero-controls button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.selling-hero-controls svg{width:19px;height:19px}
+.selling-hero-dots{display:flex}
+.selling-hero-dots span{width:8px;height:8px;border-radius:50%;background:#bfc9c3;transition:width .2s}
+.selling-hero-dots [aria-current=true] span{width:24px;border-radius:6px;background:var(--brand)}
+@media(max-width:600px){.market-home .selling-hero h2{font-size:2.7rem}.market-home .selling-hero-slide .hero-copy{min-height:365px}}
+@media(prefers-reduced-motion:reduce){.selling-hero-track,.selling-hero-dots span{transition:none}}
