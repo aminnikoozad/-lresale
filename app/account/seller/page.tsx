@@ -7,16 +7,11 @@ import { CustomerBundles } from "@/components/customer-bundles";
 import { createClient } from "@/lib/supabase/server";
 import { isPhoneVerificationRequired } from "@/lib/canadian-phone";
 import {
-  commissionTierForInitialPrice,
   loadSellingRules,
 } from "@/lib/business-rules";
 import { CATALOG_CATEGORIES } from "@/lib/catalog-taxonomy";
 import { loadLaunchSellerOffer } from "@/lib/launch-offer";
 import { loadPilotSettings, pilotAllowsPickupDate } from "@/lib/pilot-settings";
-import {
-  commissionPercent,
-  earningsFromSalePrice,
-} from "@/lib/commission";
 import "../account.css";
 import "../commission-account.css";
 
@@ -241,32 +236,7 @@ export default async function AccountPage({ searchParams }: Props) {
           bagMinimumEstimatedValueCents: sellingRules.pickupRules.bagMinimumEstimatedValueCents,
         }}
         items={rawItems.map((item) => {
-          let previewTier: { sellerBps: number; platformBps: number } | null = null;
-          if (item.initial_approved_price_cents != null) {
-            try {
-              previewTier = commissionTierForInitialPrice(
-                item.initial_approved_price_cents,
-                sellingRules,
-              );
-            } catch {
-              previewTier = null;
-            }
-          }
-          const sellerBps =
-            item.locked_seller_commission_bps ?? previewTier?.sellerBps ?? null;
-          const platformBps =
-            item.locked_platform_commission_bps ??
-            previewTier?.platformBps ??
-            null;
-          const currentPriceCents =
-            item.listed_price_cents ?? item.initial_approved_price_cents;
-          const estimatedEarningsCents =
-            item.estimated_seller_earnings_cents ??
-            (currentPriceCents != null && sellerBps != null
-              ? earningsFromSalePrice(currentPriceCents, sellerBps)
-                  .sellerEarningsCents
-              : null);
-
+          const currentPriceCents = item.listed_price_cents ?? item.initial_approved_price_cents;
           return {
             id: item.id,
             name: item.name,
@@ -282,19 +252,10 @@ export default async function AccountPage({ searchParams }: Props) {
               currentPriceCents != null
                 ? money(currentPriceCents)
                 : "Not priced",
-            sellerRate:
-              sellerBps != null ? commissionPercent(sellerBps) : "Pending",
-            platformRate:
-              platformBps != null ? commissionPercent(platformBps) : "Pending",
-            estimatedEarnings:
-              estimatedEarningsCents != null
-                ? money(estimatedEarningsCents)
-                : "Pending",
-            finalEarnings:
-              item.sold_price_cents != null &&
-              item.final_seller_earnings_cents != null
-                ? money(item.final_seller_earnings_cents)
-                : "—",
+            sellerRate: "At cash-out",
+            platformRate: "At cash-out",
+            estimatedEarnings: "Calculated at cash-out",
+            finalEarnings: "See earnings account",
 
           };
         })}

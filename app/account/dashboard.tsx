@@ -265,10 +265,7 @@ export function Dashboard({
                     <dl>
                       <div><dt>Initial approved price</dt><dd>{item.initialPrice}</dd></div>
                       <div><dt>Current selling price</dt><dd>{item.currentPrice}</dd></div>
-                      <div><dt>Your share</dt><dd>{item.sellerRate}</dd></div>
-                      <div><dt>Platform commission</dt><dd>{item.platformRate}</dd></div>
-                      <div><dt>Estimated earnings</dt><dd>{item.estimatedEarnings}</dd></div>
-                      <div><dt>Final earnings after sale</dt><dd>{item.finalEarnings}</dd></div>
+                      <div><dt>Commission</dt><dd>Calculated at cash-out</dd></div>
                     </dl>
 
                   </article>
@@ -313,7 +310,7 @@ export function Dashboard({
             <div className="payout-box">
               <Wallet />
               <div>
-                <h2>Confirmed managed-selling balance: {balance}</h2>
+                <h2>Confirmed managed sales before cash-out fees: {balance}</h2>
                 <p>Bank payouts aren’t available online yet. Check your earnings or contact Support.</p>
               </div>
               <Link href="/account/seller/earnings">View earnings &amp; payouts →</Link>
@@ -475,7 +472,7 @@ function RequestDialog({
                 </>
               )}
               <p>{pilotEnabled ? `• Choose an open pickup time in the calendar. Appointments are confirmed by Shikimomo.` : "• Pickup appointments depend on current service-area and scheduling availability."}</p>
-              <p>• Your commission is locked from the initial approved item price. Current tiers: {feeRules.commissionTiers.map((tier) => `${cad(tier.minCents)}${tier.maxCents === null ? "+" : `–${cad(tier.maxCents)}`}: ${tier.sellerBps / 100}%`).join("; ")} seller share.</p>
+              <p>• Managed commission is calculated once when you request cash-out, based on the gross amount requested. Each recorded sale has a 30-day hold; other items can remain on sale. Processing a valid request takes 3–5 days.</p>
               <p>• Mixed clothing is welcome. Shikimomo sorts and categorizes each item after inspection.</p>
               <p>• <Link href="/sell-with-shikimomo" target="_blank">Read acceptance, pricing, fees and earnings in the Seller Guide.</Link></p>
             </div>

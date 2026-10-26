@@ -369,21 +369,7 @@ async function tryPolicyCalculation(service: any, question: string, context: str
   if (!rules) return null;
 
   if (cls.category === "Selling" && cls.subcategory === "Commission") {
-    const amount = extractMoney(question, true) ?? extractMoney(context, true);
-    if (amount === null) return null;
-    const cents = Math.round(amount * 100);
-    const tier = (rules.commissionTiers ?? []).find((t) => cents >= t.minCents && (t.maxCents === null || cents <= t.maxCents));
-    if (!tier) {
-      const min = rules.minimumIndividualItemValueCents ?? 0;
-      if (min > 0 && cents < min) {
-        return `Individual items normally need an approved resale value of at least ${money(min)}. Lower-value eligible items may be bundled instead of listed individually.`;
-      }
-      return null;
-    }
-    const sellerPct = tier.sellerBps / 100;
-    const platformPct = tier.platformBps / 100;
-    const sellerAtSamePrice = Math.round(cents * tier.sellerBps / 10000);
-    return `At an initial approved price of ${money(cents)}, the seller share is ${sellerPct}% and the Shikimomo platform share is ${platformPct}%. If the item sells at the same ${money(cents)} price, the seller share would be about ${money(sellerAtSamePrice)}. The percentage is locked from the initial approved price; if the item is later discounted, the percentage stays the same but the dollar earnings can change with the final selling price.`;
+    return "For sales managed by Shikimomo, commission is deducted once at cash-out, using the gross amount requested rather than each item's price. Each recorded sale has a 30-day hold; you do not wait for the rest of the batch. Processing a valid request takes 3–5 days. Personal-selling fees remain separate. See the current fee table and review your exact withdrawal breakdown before confirming.";
   }
 
   if (cls.category === "Pickup") {

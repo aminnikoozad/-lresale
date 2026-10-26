@@ -32,6 +32,7 @@ export function adminNavigation(access: MenuAccess): WorkspaceLink[] {
     { href: "/admin", label: "Dashboard" },
     ...(access.can_manage_items ? [
       { href: "/admin/customers", label: "Customers" },
+      { href: "/admin/cashouts", label: "Cash-out requests" },
       { href: "/admin/items", label: "Items" },
       { href: "/admin/pricing", label: "AI Pricing" },
       { href: "/admin/visual-pricing", label: "Photo price suggestions" },

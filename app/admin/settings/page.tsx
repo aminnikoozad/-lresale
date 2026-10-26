@@ -119,7 +119,7 @@ export default async function SellingRulesPage({ searchParams }: Props) {
 
             <section className="settings-card">
               <div className="settings-card-title">
-                <h2>Commission tiers</h2>
+                <h2>Managed cash-out commission tiers</h2>
                 <p>Commission locks permanently when the seller approves the initial listing price. Later discounts do not change the locked percentage.</p>
               </div>
               <div className="tier-table">
@@ -185,7 +185,7 @@ export default async function SellingRulesPage({ searchParams }: Props) {
             <section className="settings-card publish-card">
               <div>
                 <h2>Publish a new rules version</h2>
-                <p>Every change is immutable, versioned and written to the Audit Log. Previously locked item commissions are never recalculated.</p>
+                <p>Every change is immutable, versioned and written to the Audit Log. Recorded sales and submitted cash-out fee snapshots are preserved. New managed withdrawals use the current withdrawal tier.</p>
               </div>
               <div className="settings-grid two">
                 <label>Effective date/time (optional)
