@@ -7,7 +7,7 @@ import { BrandWordmark } from "@/components/brand-wordmark";
 
 import { connection } from "next/server";
 import type { HomeData } from "@/lib/home-decor";
-import Image from "next/image";
+import { SellingHero } from "@/components/selling-hero";
 import Link from "next/link";
 import { ArrowRight, ShieldCheck, Truck, UserRound, PackageCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -135,20 +135,7 @@ export default async function Home() {
         </div>
       </aside>}
 
-      <section className="hero" aria-labelledby="home-hero-title">
-        <div className="hero-inner">
-          <div className="hero-copy">
-            <h1 id="home-hero-title">Give your clothes<br />a second life.</h1>
-            <p>We collect, inspect, photograph and sell your pieces. You earn when they sell.</p>
-            <div className="hero-actions">
-              <Button asChild size="lg"><Link href="/sell-with-shikimomo">Sell with Shikimomo <ArrowRight aria-hidden="true" /></Link></Button>
-            </div>
-          </div>
-          <div className="hero-media">
-            <Image src="/fashion-hero.webp" alt="An editorial clothing rail with folded knitwear and denim" fill priority sizes="(max-width: 900px) 100vw, 52vw" />
-          </div>
-        </div>
-      </section>
+      <SellingHero />
 
       <div className="market-service-strip" aria-label="How Shikimomo is different">
         <span><ShieldCheck aria-hidden="true" /><span><strong>Checked before listing</strong>Every piece checked by our team.</span></span>

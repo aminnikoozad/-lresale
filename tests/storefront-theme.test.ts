@@ -32,7 +32,7 @@ test("primary and secondary neutral text meet normal-text contrast", () => {
 
 test("simple hero removes decorative lettering and card numbering without removing search/navigation", () => {
   assert.doesNotMatch(page, /market-image-caption|market-discover-number|<em>/);
-  assert.match(page, /Give your clothes<br \/>a second life\./);
+  assert.match(page, /<SellingHero \/>/);
   assert.match(page, /<ShopCatalog products=\{catalogProducts\}/);
   const catalog=readFileSync(new URL("../app/shop-catalog.tsx",import.meta.url),"utf8");
   assert.match(catalog, /aria-label="Search items"/);
